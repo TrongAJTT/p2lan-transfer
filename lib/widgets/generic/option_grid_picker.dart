@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/widgets/generic/option_item.dart';
+import 'package:p2lan/widgets/generic/option_item.dart';
 
 enum LabelAlign { left, center, right }
 

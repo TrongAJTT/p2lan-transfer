@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/utils/localization_utils.dart';
-import 'package:p2lantransfer/utils/url_utils.dart';
-import 'package:p2lantransfer/variables.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+
+import 'package:p2lan/utils/localization_utils.dart';
+import 'package:p2lan/utils/url_utils.dart';
+import 'package:p2lan/variables.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -130,7 +130,7 @@ class VersionCheckService {
   }
 
   static void showVersionDialog(BuildContext context) async {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     // Show loading dialog
     showDialog(
       context: context,
@@ -181,7 +181,7 @@ class VersionCheckService {
 
   static void _showReleaseInfoDialog(BuildContext context,
       ReleaseInfo releaseInfo, PackageInfo packageInfo, bool isLatest) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final isMobile = MediaQuery.of(context).size.width < 600;
 
     showDialog(
@@ -449,7 +449,7 @@ class VersionCheckService {
     final filteredAssets = _filterAssetsByPlatform(assets);
     final showAllAssets = filteredAssets.isEmpty;
     final assetsToShow = showAllAssets ? assets : filteredAssets;
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final isMobile = MediaQuery.of(context).size.width < 600;
 
     showDialog(
@@ -615,7 +615,7 @@ class VersionCheckService {
 
   static void _showDownloadConfirmation(
       BuildContext context, ReleaseAsset asset) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
 
     showDialog(
       context: context,
@@ -646,7 +646,7 @@ class VersionCheckService {
   }
 
   static void _showErrorDialog(BuildContext context, String message) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
 
     showDialog(
       context: context,

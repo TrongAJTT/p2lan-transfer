@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
 
 class ColorPickerDialog extends StatefulWidget {
   final Color initialColor;

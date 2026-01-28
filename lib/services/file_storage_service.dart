@@ -2,8 +2,8 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/variables.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/variables.dart';
 
 class FileStorageService {
   static FileStorageService? _instance;

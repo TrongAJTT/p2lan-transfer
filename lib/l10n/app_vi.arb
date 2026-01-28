@@ -15,19 +15,11 @@
   "githubRepoDesc": "Xem mã nguồn của ứng dụng trên GitHub.",
   "creditAck": "Ghi công tác giả",
   "creditAckDesc": "Danh sách các thư viện, công cụ và nguồn tài nguyên đã sử dụng trong ứng dụng này.",
-  "donorsAck": "Ghi công người ủng hộ",
-  "donorsAckDesc": "Danh sách đánh giá của những người ủng hộ công khai. Cảm ơn các bạn rất nhiều!",
   "supportDesc": "P2Lan Transfer giúp đỡ bạn truyền dữ liệu giữa các thiết bị trong cùng mạng dễ dàng hơn. Nếu bạn thấy ứng dụng hữu ích, hãy cân nhắc hỗ trợ mình để giúp mình duy trì và phát triển ứng dụng này. Cảm ơn bạn rất nhiều!",
-  "supportOnGitHub": "Hỗ trợ trên GitHub",
+  "githubSponsorsDesc": "Trang hỗ trợ chính thức của dự án trên GitHub",
+  "buyMeACoffeeDesc": "Trong trường hợp bạn không có tài khoản Github Sponsors",
   "donate": "Ủng hộ",
   "donateDesc": "Hỗ trợ mình nếu bạn thấy ứng dụng hữu ích.",
-  "oneTimeDonation": "Ủng hộ một lần",
-  "momoDonateDesc": "Ủng hộ mình qua Momo",
-  "donorBenefits": "Quyền lợi của người ủng hộ",
-  "donorBenefit1": "Được ghi danh trong phần cảm ơn và chia sẻ ý kiến của bạn (nếu bạn muốn).",
-  "donorBenefit2": "Được ưu tiên xem xét phản hồi.",
-  "donorBenefit3": "Truy cập vào các phiên bản beta (gỡ lỗi), tuy nhiên các bản cập nhật sẽ không đợc hứa hẹn thường xuyên.",
-  "donorBenefit4": "Truy cập vào kho lưu trữ dev (chỉ dành cho người ủng hộ trên GitHub).",
   "checkForNewVersion": "Kiểm tra phiên bản mới",
   "checkForNewVersionDesc": "Kiểm tra xem có phiên bản mới của ứng dụng không và tải về bản mới nhất nếu có",
   "platform": "Nền tảng",
@@ -89,6 +81,34 @@
   "cancel": "Hủy",
   "search": "Tìm kiếm",
   "searchHint": "Tìm kiếm...",
+  "remoteControl": "Điều khiển từ xa",
+  "beingRemoteControlled": "Đang bị điều khiển từ xa",
+  "remoteControlling": "Đang điều khiển từ xa",
+  "screenSharing": "Chia sẻ màn hình",
+  "sharingScreen": "Đang chia sẻ màn hình",
+  "viewingScreen": "Đang xem màn hình",
+  "isControllingThisDevice": "{userName} đang điều khiển thiết bị này",
+  "controllingUser": "Đang điều khiển {userName}",
+  "endSession": "Kết thúc phiên",
+  "duration": "Thời gian",
+  "started": "Bắt đầu",
+  "disconnectRemoteControl": "Ngắt kết nối điều khiển từ xa",
+  "disconnectRemoteControlConfirm": "Bạn có chắc chắn muốn ngắt kết nối với {userName}?",
+  "disconnect": "Ngắt kết nối",
+  "connectingTo": "Đang kết nối với {userName}...",
+  "connectedTo": "Đã kết nối với {userName}",
+  "controlsInfo": "Thông tin điều khiển",
+  "touchpadArea": "Khu vực touchpad",
+  "moveFingerToControlMouse": "Di chuyển ngón tay để điều khiển chuột",
+  "leftClick": "Chuột trái",
+  "middleClick": "Chuột giữa",
+  "rightClick": "Chuột phải",
+  "scrollUp": "Cuộn lên",
+  "scrollDown": "Cuộn xuống",
+  "remoteControlHelp": "Trợ giúp điều khiển từ xa",
+  "howToControlRemoteComputer": "Cách điều khiển máy tính từ xa:",
+  "noteWindowsOnly": "Lưu ý: Tính năng này chỉ hoạt động khi điều khiển máy tính Windows.",
+  "gotIt": "Đã hiểu",
   "history": "Lịch sử",
   "aboutDesc": "Thông tin ứng dụng và các ghi nhận",
   "random": "Trình tạo ngẫu nhiên",
@@ -395,7 +415,7 @@
   "sendFiles": "Gửi file",
   "addFiles": "Thêm file",
   "noFilesSelected": "Chưa chọn file nào",
-  "tapRightClickForOptions": "Nhấn hoặc chuột phải để xem tùy chọn",
+  "tapRightClickForOptions": "Nhấn giữ hoặc chuột phải để xem tùy chọn",
   "unlimited": "Không giới hạn",
   "udpDescription": "Nhanh hơn nhưng kém tin cậy hơn, tốt cho các file lớn",
   "createDateFolders": "Tạo thư mục theo ngày",
@@ -412,6 +432,14 @@
   "displayNameDescription": "Tùy chỉnh cách thiết bị của bạn xuất hiện với người dùng khác",
   "enterDisplayName": "Nhập tên hiển thị",
   "defaultDisplayName": "Mặc định: {name}",
+  "@defaultDisplayName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "displayNameHasReset": "Tên hiển thị đã được đặt lại",
   "deviceDisplayNameLabel": "Tên hiển thị thiết bị",
   "deviceDisplayNameHint": "Nhập tên hiển thị tùy chỉnh...",
   "userPreferences": "Tùy chọn người dùng",
@@ -470,11 +498,14 @@
   "connectedViaMobileData": "Kết nối qua dữ liệu di động (an toàn)",
   "connectedToWifi": "Kết nối đến {name} ({security})",
   "connectedViaEthernet": "Kết nối qua Ethernet (an toàn)",
+  "pausedNoInternet": "Đã tạm dừng (Không có internet)",
   "noNetworkConnection": "Không có kết nối mạng",
   "maxConcurrentTasks": "Tác vụ đồng thời tối đa",
   "customDisplayName": "Tên hiển thị tùy chỉnh",
+  "yourProfile": "Hồ sơ của bạn",
   "deviceName": "Tên thiết bị",
-  "deviceNameHint": "Nhập tên thiết bị tùy chỉnh...",
+  "deviceNameDesc": "Tên hiển thị của thiết bị của bạn với người dùng khác",
+  "deviceNameEditDesc": "Tùy chỉnh tên hiển thị của thiết bị của bạn với người dùng khác",
   "appInstallationId": "ID phiên cài ứng dụng",
   "ipAddress": "Địa chỉ IP",
   "port": "Cổng",
@@ -484,6 +515,7 @@
   "receiverLocationSizeLimitsDesc": "Thư mục tải xuống, tổ chức tệp & giới hạn kích thước",
   "networkSpeed": "Mạng & Tốc độ",
   "networkSpeedDesc": "Cài đặt giao thức, tinh chỉnh hiệu suất & tối ưu hóa",
+  "estimatedSpeed": "Tốc độ ước tính",
   "advanced": "Nâng cao",
   "advancedDesc": "Cài đặt bảo mật, mã hóa & nén",
   "openSettings": "Mở Cài đặt",
@@ -491,6 +523,8 @@
   "secondsPlural": "giây",
   "onlineDevices": "Thiết Bị Trực Tuyến",
   "newDevices": "Thiết Bị Mới",
+  "blockedDevices": "Thiết Bị Đã Chặn",
+  "blockedDevicesSubtitle": "Các thiết bị này đã bị chặn và không thể liên lạc với bạn",
   "p2pTemporarilyDisabled": "P2P tạm thời bị vô hiệu hóa - đang chờ kết nối internet",
   "concurrentTransfersSubtitle": "Nhiều luồng truyền hơn = tổng thể nhanh hơn nhưng sử dụng CPU cao hơn",
   "transferChunkSizeSubtitle": "Kích thước lớn hơn = truyền nhanh hơn nhưng sử dụng nhiều bộ nhớ hơn",
@@ -512,11 +546,39 @@
   "moveTo": "Di chuyển vào",
   "moveOrCopyAndRename": "Di chuyển hoặc sao chép và đổi tên",
   "share": "Chia sẻ",
-  "confirmDelete": "Bạn có chắc muốn xóa file",
+  "confirmDelete": "Xác nhận xóa",
+  "confirmDeleteFileNumber": "Bạn có chắc muốn xóa {number} file(s)",
+  "@confirmDeleteFileNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "confirmDeleteFolderNumber": "Bạn có chắc muốn xóa {number} thư mục(s)",
+  "@confirmDeleteFolderNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "confirmDeleteFoldersAndFilesNumber": "Bạn có chắc muốn xóa {numberFolder} thư mục(s) và {numberFile} file(s)",
+  "@confirmDeleteFoldersAndFilesNumber": {
+    "placeholders": {
+      "numberFolder": {
+        "type": "int"
+      },
+      "numberFile": {
+        "type": "int"
+      }
+    }
+  },
   "removeSelected": "Xóa nội dung đã chọn",
   "noFilesFound": "Không tìm thấy file nào khớp",
   "emptyFolder": "Thư mục trống",
   "file": "Tệp",
+  "folder": "Thư mục",
   "fileInfo": "Thông tin tệp",
   "quickAccess": "Truy cập nhanh",
   "clearStorageSettingsTitle": "Xóa Cài Đặt Lưu Trữ",
@@ -532,8 +594,7 @@
   "size": "Kích thước",
   "type": "Loại",
   "modified": "Sửa đổi",
-  "p2lanOptionRememberBatchExpandState": "Nhớ trạng thái lô tác vụ",
-  "p2lanOptionRememberBatchExpandStateDesc": "Nhớ trạng thái mở rộng của mỗi lô tác vụ khi ứng dụng đóng và mở lại",
+
   "securityAndEncryption": "Bảo mật và Mã hóa",
   "security": "Bảo mật",
   "p2lanOptionEncryptionNoneDesc": "Không mã hóa (tốc độ nhanh nhất)",
@@ -609,28 +670,11 @@
   "clearTransferBatchDesc": "Bạn có chắc muốn xóa lô tác vụ này? Hành động này sẽ xóa tất cả các tác vụ trong lô và không thể hoàn tác.",
   "clearTransferBatchWithFiles": "Xóa lô tác vụ và tập tin",
   "clearTransferBatchWithFilesDesc": "Bạn có chắc muốn xóa lô tác vụ này và tất cả các tập tin đã gửi? Hành động này sẽ xóa tất cả các tác vụ trong lô và không thể hoàn tác.",
-  "dataCompression": "Nén dữ liệu",
-  "enableCompression": "Bật nén dữ liệu",
-  "enableCompressionDesc": "Nén dữ liệu để giảm kích thước truyền tải và tăng tốc độ, nhưng có thể làm tăng mức sử dụng CPU.",
-  "compressionAlgorithm": "Thuật toán nén",
-  "compressionAlgorithmAuto": "Tự động (lựa chọn thông minh)",
-  "compressionAlgorithmGZIP": "GZIP (Nén tốt nhất)",
-  "compressionAlgorithmDEFLATE": "DEFLATE (Nhanh nhất)",
-  "compressionAlgorithmNone": "Không (Tắt)",
-  "estimatedSpeed": "Tốc độ ước tính",
-  "compressionThreshold": "Ngưỡng nén",
-  "compressionThresholdDesc": "Chỉ nén dữ liệu nếu kích thước vượt quá ngưỡng này. Giúp tiết kiệm CPU cho các tập tin nhỏ.",
-  "adaptiveCompression": "Nén thích ứng",
-  "adaptiveCompressionDesc": "Tự động điều chỉnh mức độ nén dựa trên kích thước và loại dữ liệu để tối ưu hóa hiệu suất.",
   "performanceInfo": "Thông tin hiệu suất",
   "performanceInfoEncrypt": "Mã hóa",
-  "performanceInfoCompress": "Nén",
-  "performanceInfoExpectedImprovement": "Cải thiện dự kiến",
   "performanceInfoSecuLevel": "Mức độ bảo mật",
-  "compressionBenefits": "Lợi ích khi nén",
-  "compressionBenefitsInfo": "• Tệp văn bản: 3-5x tốc độ truyền nhanh hơn\n• Mã nguồn: 2-4x tốc độ truyền nhanh hơn\n• Dữ liệu JSON/XML: 4-6x tốc độ truyền nhanh hơn\n• Tệp phương tiện: Không có chi phí (tự động phát hiện)",
   "performanceWarning": "Cảnh báo hiệu suất",
-  "performanceWarningInfo": "Mã hóa và nén có thể gây ra sự cố trên một số thiết bị Android, đặc biệt là các mẫu cũ hơn hoặc cấp thấp hơn. Nếu bạn gặp sự cố, hãy tắt các tính năng này để có truyền tải ổn định.",
+  "performanceWarningInfo": "Mã hóa có thể gây ra sự cố trên một số thiết bị Android, đặc biệt là các mẫu cũ hơn hoặc cấp thấp hơn. Nếu bạn gặp sự cố, hãy tắt tính năng này để có truyền tải ổn định.",
   "resetToSafeDefaults": "Đặt lại về mặc định an toàn",
   "ddefault": "Mặc định",
   "aggressive": "Tích cực",
@@ -772,10 +816,6 @@
   "refresh": "Làm mới",
   "thanksLibAuthor": "Cảm ơn các tác giả thư viện!",
   "thanksLibAuthorDesc": "Ứng dụng này sử dụng nhiều thư viện mã nguồn mở giúp mọi thứ trở nên khả thi. Chúng tôi biết ơn tất cả các tác giả vì sự nỗ lực và cống hiến của họ.",
-  "thanksDonors": "Cảm ơn các nhà tài trợ!",
-  "thanksDonorsDesc": "Đặc biệt cảm ơn những người đã ủng hộ sự phát triển của ứng dụng này. Sự đóng góp của bạn giúp chúng tôi tiếp tục cải thiện và duy trì dự án.",
-  "thanksForUrSupport": "Cảm ơn sự hỗ trợ của bạn!",
-  "supporterS": "Người ủng hộ",
   "pressBackAgainToExit": "Nhấn quay lại lần nữa để thoát ứng dụng",
 
   "canNotOpenFile": "Không thể mở file",
@@ -941,5 +981,99 @@
         "type": "int"
       }
     }
-  }
+  },
+
+  "processingNumberOfTotal": "Đang xử lý {current} trên {total} tệp",
+  "@processingNumberOfTotal": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "waitingForFileSelection": "Chờ người dùng chọn tệp và xử lý tài nguyên tệp",
+
+  "expand": "Mở rộng",
+  "collapse": "Thu gọn",
+  "block": "Chặn",
+  "blockTitle": "Chặn người dùng này",
+  "blockDesc": "Bạn có chắc chắn muốn chặn người dùng này không?\nNgười dùng này sẽ không thể liên lạc với bạn cho đến khi bạn gỡ chặn.",
+  "unblock": "Bỏ chặn",
+  "unblockTitle": "Bỏ chặn người dùng này",
+  "unblockDesc": "Bạn có chắc chắn muốn bỏ chặn người dùng này không?\nNgười dùng này sẽ có thể liên lạc với bạn.",
+  "connectToDevice": "Kết nối với thiết bị",
+  "enterDeviceIpAddress": "Nhập địa chỉ IP của thiết bị bạn muốn kết nối:",
+  "connectToDeviceHint": "Đảm bảo thiết bị đang cùng mạng và đã bật chế độ P2P networking.",
+  "connecting": "Đang kết nối...",
+
+  "customStatusCards": "Tùy chỉnh thẻ trạng thái",
+  "customStatusCardsDesc": "Chọn các thẻ trạng thái để hiển thị",
+  "endRemoteToCustomizeStatus": "Kết thúc phiên điều khiển để có thể tùy chỉnh trạng thái",
+  "noStatusCardsEnabled": "Không có thẻ trạng thái nào được bật",
+  "useTheCustomizeButtonToEnableStatusCards": "Sử dụng nút tùy chỉnh để bật các thẻ trạng thái",
+  "thisDeviceDesc": "Thông tin thiết bị và cài đặt",
+  "connectionStatusDesc": "Thông tin kết nối mạng và debug",
+  "statisticsDesc": "Thống kê chuyển và thiết bị",
+
+  "remoteControlRequest": "Yêu cầu điều khiển từ xa",
+  "remoteControlRequestMessage": "{userName} muốn điều khiển máy tính của bạn từ xa.",
+  "@remoteControlRequestMessage": {
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  "reason": "Lý do",
+  "securityWarning": "Cảnh báo bảo mật",
+  "securityWarningMessage": "Cấp quyền điều khiển từ xa cho phép người dùng khác:",
+  "controlMouseCursor": "Điều khiển con trỏ chuột của bạn",
+  "clickAnywhere": "Nhấp vào bất kỳ đâu trên màn hình của bạn",
+  "scrollScreen": "Cuộn trên màn hình của bạn",
+  "trustWarning": "Chỉ chấp nhận yêu cầu từ những người dùng bạn tin tưởng.",
+  "confirmRemoteControlAccess": "Xác nhận quyền điều khiển từ xa",
+  "confirmRemoteControlMessage": "Giữ để xác nhận rằng bạn muốn cho phép {userName} điều khiển máy tính của bạn.",
+  "@confirmRemoteControlMessage": {
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  "holdToAllowControl": "GIỮ ĐỂ CHO PHÉP ĐIỀU KHIỂN",
+  "allowing": "Đang cho phép...",
+  "controlInstruction": "Điều này sẽ cho {userName} quyền điều khiển chuột và màn hình của bạn.",
+  "@controlInstruction": {
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  "requestRemoteControl": "Yêu cầu điều khiển từ xa",
+  "sendRemoteControlRequest": "Gửi yêu cầu điều khiển từ xa đến {userName}?",
+  "@sendRemoteControlRequest": {
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  "reasonOptional": "Lý do (tùy chọn)",
+  "reasonHint": "Tại sao bạn cần quyền điều khiển từ xa?",
+  "remoteControlAccess": "Quyền điều khiển từ xa",
+  "remoteControlAccessMessage": "Nếu được chấp nhận, bạn sẽ có thể:",
+  "controlRemoteMouse": "Điều khiển con trỏ chuột từ xa",
+  "clickRemoteScreen": "Nhấp vào bất kỳ đâu trên màn hình từ xa",
+  "scrollRemoteScreen": "Cuộn trên màn hình từ xa",
+  "requestExpiresIn60": "Yêu cầu sẽ hết hạn trong 60 giây.",
+  "sendRequest": "Gửi yêu cầu",
+  "sendText": "Gửi văn bản",
+  "sendTextHint": "Nhập văn bản cần gửi...",
+  "textSentSuccessfully": "Văn bản đã được gửi",
+  "textSendError": "Lỗi gửi văn bản: {error}",
+  "send": "Gửi"
 }

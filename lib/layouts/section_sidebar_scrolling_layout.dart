@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/utils/size_utils.dart';
-import 'package:p2lantransfer/utils/widget_layout_render_helper.dart';
-import 'package:p2lantransfer/widgets/generic/section_list_view.dart';
-import 'package:p2lantransfer/widgets/generic/section_item.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/utils/size_utils.dart';
+import 'package:p2lan/utils/widget_layout_render_helper.dart';
+import 'package:p2lan/widgets/generic/section_list_view.dart';
+import 'package:p2lan/widgets/generic/section_item.dart';
 
 // New mobile section selection screen
 class MobileSectionSelectionScreen extends StatelessWidget {
@@ -20,7 +20,7 @@ class MobileSectionSelectionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(title ?? loc.settings),
@@ -110,6 +110,20 @@ class _SectionSidebarScrollingLayoutState
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(covariant SectionSidebarScrollingLayout oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // If a new selectedSectionId is provided, scroll to it
+    if (widget.selectedSectionId != null &&
+        widget.selectedSectionId != oldWidget.selectedSectionId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _scrollToSection(widget.selectedSectionId!);
+        }
+      });
+    }
+  }
+
   void _onScroll() {
     if (_isScrolling) return;
 
@@ -183,7 +197,7 @@ class _SectionSidebarScrollingLayoutState
   }
 
   Widget _buildDesktopContent() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: [
         // Sidebar (30% width) - Removed header/appbar
@@ -380,7 +394,7 @@ class _SectionSidebarScrollingLayoutState
           ? null
           : AppBar(
               title:
-                  Text(widget.title ?? AppLocalizations.of(context)!.settings),
+                  Text(widget.title ?? AppLocalizations.of(context).settings),
               actions: [
                 IconButton(
                   icon: const Icon(Icons.menu),

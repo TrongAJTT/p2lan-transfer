@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:p2lantransfer/widgets/p2p/local_file_manager_widget.dart';
-import 'package:p2lantransfer/controllers/p2p_controller.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
+import 'package:p2lan/widgets/p2p/local_file_manager_widget.dart';
+import 'package:p2lan/view_models/p2p_view_model.dart';
+import 'package:p2lan/services/app_logger.dart';
 
 class P2LanLocalFilesScreen extends StatefulWidget {
   const P2LanLocalFilesScreen({super.key});
@@ -16,48 +16,48 @@ class P2LanLocalFilesScreen extends StatefulWidget {
 class _P2LanLocalFilesScreenState extends State<P2LanLocalFilesScreen> {
   String? _localPath;
   bool _isLoading = true;
-  late P2PController _controller;
+  late P2PViewModel _viewModel;
   late AppLocalizations _loc;
 
   @override
   void initState() {
     super.initState();
-    _controller = P2PController();
+    _viewModel = P2PViewModel();
     _initializeLocalPath();
   }
 
   @override
   void didChangeDependencies() {
-    _loc = AppLocalizations.of(context)!;
+    _loc = AppLocalizations.of(context);
     super.didChangeDependencies();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _viewModel.dispose();
     super.dispose();
   }
 
   Future<void> _initializeLocalPath() async {
     try {
       // Wait for controller initialization
-      await _controller.initialize();
+      await _viewModel.initialize();
 
       // Get the actual path used by P2P service
       String basePath;
-      if (_controller.transferSettings != null) {
-        basePath = _controller.transferSettings!.downloadPath;
+      if (_viewModel.transferSettings != null) {
+        basePath = _viewModel.transferSettings!.downloadPath;
         logInfo('Using P2P service download path: $basePath');
       } else {
         // Fallback to default calculation if settings not available
         if (Platform.isAndroid) {
           final appDocDir = await getApplicationDocumentsDirectory();
-          basePath = '${appDocDir.parent.path}/files/p2lan_transfer';
+          basePath = '${appDocDir.parent.path}/files';
         } else if (Platform.isIOS) {
           final appDocDir = await getApplicationDocumentsDirectory();
-          basePath = '${appDocDir.path}/P2LAN';
+          basePath = appDocDir.path;
         } else {
-          basePath = '${Platform.environment['HOME']}/Downloads/P2LAN';
+          basePath = '${Platform.environment['HOME']}/Downloads';
         }
         logInfo('Using fallback path: $basePath');
       }

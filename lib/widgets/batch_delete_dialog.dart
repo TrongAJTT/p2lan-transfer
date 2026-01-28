@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/widgets/hold_to_confirm_dialog.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/widgets/hold_to_confirm_dialog.dart';
 
 class BatchDeleteDialog extends StatelessWidget {
   final int templateCount;

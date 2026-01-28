@@ -1,6 +1,6 @@
 import 'package:isar/isar.dart';
 import 'package:uuid/uuid.dart';
-import 'package:p2lantransfer/utils/isar_utils.dart';
+import 'package:p2lan/utils/isar_utils.dart';
 
 part 'p2p_models.g.dart';
 
@@ -51,6 +51,24 @@ enum EncryptionType {
   chaCha20,
 }
 
+enum KeyExchangeStatus {
+  none, // No key exchange
+  requested, // Key exchange requested
+  exchanging, // Keys being exchanged
+  completed, // Key exchange completed
+  failed, // Key exchange failed
+}
+
+enum UserPlatform {
+  android,
+  ios,
+  windows,
+  macos,
+  linux,
+  web,
+  unknown,
+}
+
 @Collection()
 class P2PUser {
   Id get isarId => fastHash(id);
@@ -76,8 +94,27 @@ class P2PUser {
   bool isTrusted;
 
   DateTime? pairedAt;
+  // Indicates if this is a stored/saved connection
+  bool isStored;
+  // Whether the user is blocked
+  bool isBlocked;
+  // Temporarily stored record (e.g., created when blocking from pairing dialog)
+  bool isTempStored;
 
-  bool isStored; // Indicates if this is a stored/saved connection
+  // ECDH Key Exchange fields
+  @Enumerated(EnumType.ordinal)
+  KeyExchangeStatus keyExchangeStatus;
+
+  // Public key fingerprint for verification (stored as hex string)
+  String? publicKeyFingerprint;
+
+  // Platform information
+  @Enumerated(EnumType.ordinal)
+  UserPlatform platform;
+
+  // Session ID for encryption (temporary, not persisted)
+  @ignore
+  String? sessionId;
 
   P2PUser({
     required this.id,
@@ -91,7 +128,27 @@ class P2PUser {
     this.isTrusted = false,
     this.pairedAt,
     this.isStored = false,
+    this.isBlocked = false,
+    this.isTempStored = false,
+    this.keyExchangeStatus = KeyExchangeStatus.none,
+    this.publicKeyFingerprint,
+    this.platform = UserPlatform.unknown,
+    this.sessionId,
   });
+
+  factory P2PUser.onlyIp({
+    required String ipAddress,
+    required int port,
+  }) =>
+      P2PUser(
+        id: const Uuid().v4(),
+        displayName: '',
+        profileId: '',
+        ipAddress: ipAddress,
+        port: port,
+        lastSeen: DateTime.now(),
+        platform: UserPlatform.unknown,
+      );
 
   factory P2PUser.create({
     required String displayName,
@@ -104,6 +161,8 @@ class P2PUser {
     bool isTrusted = false,
     DateTime? pairedAt,
     bool isStored = false,
+    bool isTempStored = false,
+    UserPlatform platform = UserPlatform.unknown,
   }) =>
       P2PUser(
         id: const Uuid().v4(),
@@ -117,6 +176,8 @@ class P2PUser {
         isTrusted: isTrusted,
         pairedAt: pairedAt,
         isStored: isStored,
+        isTempStored: isTempStored,
+        platform: platform,
       );
 
   // Backward compatibility getters
@@ -151,6 +212,9 @@ class P2PUser {
         'isTrusted': isTrusted,
         'pairedAt': pairedAt?.toIso8601String(),
         'isStored': isStored,
+        'isBlocked': isBlocked,
+        'isTempStored': isTempStored,
+        'platform': platform.name,
       };
 
   factory P2PUser.fromJson(Map<String, dynamic> json) => P2PUser(
@@ -170,7 +234,19 @@ class P2PUser {
         pairedAt:
             json['pairedAt'] != null ? DateTime.parse(json['pairedAt']) : null,
         isStored: json['isStored'] ?? false,
+        isBlocked: json['isBlocked'] ?? false,
+        isTempStored: json['isTempStored'] ?? false,
+        platform: json['platform'] != null
+            ? UserPlatform.values.firstWhere(
+                (p) => p.name == json['platform'],
+                orElse: () => UserPlatform.unknown,
+              )
+            : UserPlatform.unknown,
       );
+
+  String getIpAndPort() {
+    return '$ipAddress:$port';
+  }
 }
 
 @Collection()
@@ -686,6 +762,10 @@ class P2PMessageTypes {
   static const String heartbeat = 'heartbeat';
   static const String disconnect = 'disconnect';
   static const String trustRequest = 'trust_request';
+  // ECDH Key Exchange messages
+  static const String keyExchangeRequest = 'key_exchange_request';
+  static const String keyExchangeResponse = 'key_exchange_response';
+  static const String encryptedDataChunk = 'encrypted_data_chunk';
   static const String trustResponse = 'trust_response';
   // File transfer pre-request messages
   static const String fileTransferRequest = 'file_transfer_request';
@@ -696,6 +776,16 @@ class P2PMessageTypes {
   static const String chatRequestFileBackward = 'chat_request_file_backward';
   static const String chatRequestFileLost = 'chat_response_file_lost';
   static const String chatFileTransferRequest = 'chat_file_transfer_request';
+  // Remote control messages
+  static const String remoteControlRequest = 'remote_control_request';
+  static const String remoteControlResponse = 'remote_control_response';
+  static const String remoteControlEvent = 'remote_control_event';
+  static const String remoteControlDisconnect = 'remote_control_disconnect';
+  // Screen sharing messages
+  static const String screenSharingRequest = 'screen_sharing_request';
+  static const String screenSharingResponse = 'screen_sharing_response';
+  static const String screenSharingData = 'screen_sharing_data';
+  static const String screenSharingDisconnect = 'screen_sharing_disconnect';
 }
 
 // Workmanager task constants
@@ -720,12 +810,7 @@ class P2PDataTransferSettings {
   String? customDisplayName;
   int uiRefreshRateSeconds;
   bool enableNotifications;
-  bool rememberBatchExpandState;
   EncryptionType encryptionType;
-  bool enableCompression;
-  String compressionAlgorithm; // 'auto', 'gzip', 'deflate', 'none'
-  double compressionThreshold; // Only compress if ratio > this value
-  bool adaptiveCompression; // Let system choose best algorithm
   bool autoCleanupCompletedTasks; // Auto cleanup completed transfer tasks
   bool autoCleanupCancelledTasks; // Auto cleanup cancelled transfer tasks
   bool autoCleanupFailedTasks; // Auto cleanup failed transfer tasks
@@ -745,12 +830,7 @@ class P2PDataTransferSettings {
     this.enableNotifications =
         false, // Default to false to reduce notification spam
     this.createSenderFolders = false,
-    this.rememberBatchExpandState = false,
     this.encryptionType = EncryptionType.none,
-    this.enableCompression = true, // Enable compression by default
-    this.compressionAlgorithm = 'auto', // Let system choose
-    this.compressionThreshold = 1.1, // Only compress if 10% or better reduction
-    this.adaptiveCompression = true, // Use smart compression selection
     this.autoCleanupCompletedTasks =
         false, // Auto cleanup completed tasks by default
     this.autoCleanupCancelledTasks =
@@ -780,12 +860,7 @@ class P2PDataTransferSettings {
     int? uiRefreshRateSeconds,
     bool? enableNotifications,
     bool? createSenderFolders,
-    bool? rememberBatchExpandState,
     EncryptionType? encryptionType,
-    bool? enableCompression,
-    String? compressionAlgorithm,
-    double? compressionThreshold,
-    bool? adaptiveCompression,
     bool? autoCleanupCompletedTasks,
     bool? autoCleanupCancelledTasks,
     bool? autoCleanupFailedTasks,
@@ -803,13 +878,7 @@ class P2PDataTransferSettings {
       uiRefreshRateSeconds: uiRefreshRateSeconds ?? this.uiRefreshRateSeconds,
       enableNotifications: enableNotifications ?? this.enableNotifications,
       createSenderFolders: createSenderFolders ?? this.createSenderFolders,
-      rememberBatchExpandState:
-          rememberBatchExpandState ?? this.rememberBatchExpandState,
       encryptionType: encryptionType ?? this.encryptionType,
-      enableCompression: enableCompression ?? this.enableCompression,
-      compressionAlgorithm: compressionAlgorithm ?? this.compressionAlgorithm,
-      compressionThreshold: compressionThreshold ?? this.compressionThreshold,
-      adaptiveCompression: adaptiveCompression ?? this.adaptiveCompression,
       autoCleanupCompletedTasks:
           autoCleanupCompletedTasks ?? this.autoCleanupCompletedTasks,
       autoCleanupCancelledTasks:
@@ -834,12 +903,7 @@ class P2PDataTransferSettings {
       'customDisplayName': customDisplayName,
       'uiRefreshRateSeconds': uiRefreshRateSeconds,
       'enableNotifications': enableNotifications,
-      'rememberBatchExpandState': rememberBatchExpandState,
       'encryptionType': encryptionType.name,
-      'enableCompression': enableCompression,
-      'compressionAlgorithm': compressionAlgorithm,
-      'compressionThreshold': compressionThreshold,
-      'adaptiveCompression': adaptiveCompression,
       'autoCleanupCompletedTasks': autoCleanupCompletedTasks,
       'autoCleanupCancelledTasks': autoCleanupCancelledTasks,
       'autoCleanupFailedTasks': autoCleanupFailedTasks,
@@ -862,7 +926,6 @@ class P2PDataTransferSettings {
       enableNotifications:
           json['enableNotifications'] ?? false, // Default to false
       createSenderFolders: json['createSenderFolders'] ?? false,
-      rememberBatchExpandState: json['rememberBatchExpandState'] ?? false,
       encryptionType: json['encryptionType'] != null
           ? EncryptionType.values.firstWhere(
               (e) => e.name == json['encryptionType'],
@@ -872,10 +935,7 @@ class P2PDataTransferSettings {
               ? EncryptionType
                   .aesGcm // 🚀 Ưu tiên AES-GCM cho performance tốt hơn
               : EncryptionType.none),
-      enableCompression: json['enableCompression'] ?? true,
-      compressionAlgorithm: json['compressionAlgorithm'] ?? 'auto',
-      compressionThreshold: (json['compressionThreshold'] as double?) ?? 1.1,
-      adaptiveCompression: json['adaptiveCompression'] ?? true,
+
       autoCleanupCompletedTasks: json['autoCleanupCompletedTasks'] ?? false,
       autoCleanupCancelledTasks: json['autoCleanupCancelledTasks'] ?? true,
       autoCleanupFailedTasks: json['autoCleanupFailedTasks'] ?? true,
@@ -905,6 +965,7 @@ class DiscoveryScanRequest {
   final String ipAddress;
   final int port;
   final int timestamp;
+  final UserPlatform platform;
 
   const DiscoveryScanRequest({
     required this.fromUserId,
@@ -913,6 +974,7 @@ class DiscoveryScanRequest {
     required this.ipAddress,
     required this.port,
     required this.timestamp,
+    required this.platform,
   });
 
   Map<String, dynamic> toJson() {
@@ -923,6 +985,7 @@ class DiscoveryScanRequest {
       'ipAddress': ipAddress,
       'port': port,
       'timestamp': timestamp,
+      'platform': platform.name,
     };
   }
 
@@ -934,6 +997,12 @@ class DiscoveryScanRequest {
       ipAddress: json['ipAddress'] as String,
       port: json['port'] as int,
       timestamp: json['timestamp'] as int,
+      platform: json['platform'] != null
+          ? UserPlatform.values.firstWhere(
+              (p) => p.name == json['platform'],
+              orElse: () => UserPlatform.unknown,
+            )
+          : UserPlatform.unknown,
     );
   }
 }
@@ -1005,4 +1074,544 @@ enum P2PDeviceCategory {
   newDevices, // Blue - newly discovered devices
   savedDevices, // Gray - offline saved devices
   unknown,
+}
+
+// =============================================================================
+// REMOTE CONTROL MODELS
+// =============================================================================
+
+/// Remote control request model
+class RemoteControlRequest {
+  final String requestId;
+  final String fromUserId;
+  final String fromUserName;
+  final DateTime requestTime;
+  final String? reason; // Optional reason message
+
+  RemoteControlRequest({
+    required this.requestId,
+    required this.fromUserId,
+    required this.fromUserName,
+    required this.requestTime,
+    this.reason,
+  });
+
+  factory RemoteControlRequest.create({
+    required String fromUserId,
+    required String fromUserName,
+    String? reason,
+  }) =>
+      RemoteControlRequest(
+        requestId: 'rcr_${const Uuid().v4()}',
+        fromUserId: fromUserId,
+        fromUserName: fromUserName,
+        requestTime: DateTime.now(),
+        reason: reason,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'requestId': requestId,
+        'fromUserId': fromUserId,
+        'fromUserName': fromUserName,
+        'requestTime': requestTime.toIso8601String(),
+        'reason': reason,
+      };
+
+  factory RemoteControlRequest.fromJson(Map<String, dynamic> json) =>
+      RemoteControlRequest(
+        requestId: json['requestId'] as String,
+        fromUserId: json['fromUserId'] as String,
+        fromUserName: json['fromUserName'] as String,
+        requestTime: DateTime.parse(json['requestTime'] as String),
+        reason: json['reason'] as String?,
+      );
+}
+
+/// Remote control response model
+class RemoteControlResponse {
+  final String requestId;
+  final bool accepted;
+  final String? rejectReason;
+
+  RemoteControlResponse({
+    required this.requestId,
+    required this.accepted,
+    this.rejectReason,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'requestId': requestId,
+        'accepted': accepted,
+        'rejectReason': rejectReason,
+      };
+
+  factory RemoteControlResponse.fromJson(Map<String, dynamic> json) =>
+      RemoteControlResponse(
+        requestId: json['requestId'] as String,
+        accepted: json['accepted'] as bool,
+        rejectReason: json['rejectReason'] as String?,
+      );
+}
+
+/// Remote control event types
+enum RemoteControlEventType {
+  mouseMove,
+  leftClick,
+  rightClick,
+  middleClick,
+  startLeftLongClick,
+  stopLeftLongClick,
+  startMiddleLongClick,
+  stopMiddleLongClick,
+  startRightLongClick,
+  stopRightLongClick,
+  scroll,
+  scrollUp,
+  scrollDown,
+  disconnect,
+  // New touchpad gestures
+  twoFingerScroll,
+  twoFingerTap,
+  twoFingerSlowTap,
+  twoFingerDragDrop,
+  threeFingerSwipeUp,
+  threeFingerSwipeDown,
+  threeFingerSwipeLeft,
+  threeFingerSwipeRight,
+  threeFingerTap,
+  fourFingerTap,
+  // Keyboard
+  keyDown,
+  keyUp,
+  // Text sending
+  sendText,
+}
+
+/// Remote control event model
+class RemoteControlEvent {
+  final RemoteControlEventType type;
+  final double? x; // Mouse position X (0.0 - 1.0 normalized)
+  final double? y; // Mouse position Y (0.0 - 1.0 normalized)
+  final double? deltaX; // Scroll delta X
+  final double? deltaY; // Scroll delta Y
+  final int? fingerCount; // Number of fingers for gesture
+  final String? direction; // Direction for swipe gestures
+  final int? keyCode; // Virtual-Key code for keyboard events
+  final String? text; // Text content for sendText events
+  final DateTime timestamp;
+
+  RemoteControlEvent({
+    required this.type,
+    this.x,
+    this.y,
+    this.deltaX,
+    this.deltaY,
+    this.fingerCount,
+    this.direction,
+    this.keyCode,
+    this.text,
+    DateTime? timestamp,
+  }) : timestamp = timestamp ?? DateTime.now();
+
+  factory RemoteControlEvent.mouseMove(double x, double y) =>
+      RemoteControlEvent(type: RemoteControlEventType.mouseMove, x: x, y: y);
+
+  factory RemoteControlEvent.leftClick() =>
+      RemoteControlEvent(type: RemoteControlEventType.leftClick);
+
+  factory RemoteControlEvent.rightClick() =>
+      RemoteControlEvent(type: RemoteControlEventType.rightClick);
+
+  factory RemoteControlEvent.middleClick() =>
+      RemoteControlEvent(type: RemoteControlEventType.middleClick);
+
+  factory RemoteControlEvent.startLeftLongClick() =>
+      RemoteControlEvent(type: RemoteControlEventType.startLeftLongClick);
+
+  factory RemoteControlEvent.stopLeftLongClick() =>
+      RemoteControlEvent(type: RemoteControlEventType.stopLeftLongClick);
+
+  factory RemoteControlEvent.startMiddleLongClick() =>
+      RemoteControlEvent(type: RemoteControlEventType.startMiddleLongClick);
+
+  factory RemoteControlEvent.stopMiddleLongClick() =>
+      RemoteControlEvent(type: RemoteControlEventType.stopMiddleLongClick);
+
+  factory RemoteControlEvent.startRightLongClick() =>
+      RemoteControlEvent(type: RemoteControlEventType.startRightLongClick);
+
+  factory RemoteControlEvent.stopRightLongClick() =>
+      RemoteControlEvent(type: RemoteControlEventType.stopRightLongClick);
+
+  factory RemoteControlEvent.scroll(double deltaX, double deltaY) =>
+      RemoteControlEvent(
+          type: RemoteControlEventType.scroll, deltaX: deltaX, deltaY: deltaY);
+
+  factory RemoteControlEvent.scrollUp() =>
+      RemoteControlEvent(type: RemoteControlEventType.scrollUp);
+
+  factory RemoteControlEvent.scrollDown() =>
+      RemoteControlEvent(type: RemoteControlEventType.scrollDown);
+
+  factory RemoteControlEvent.disconnect() =>
+      RemoteControlEvent(type: RemoteControlEventType.disconnect);
+
+  // Keyboard events
+  factory RemoteControlEvent.keyDown(int keyCode) => RemoteControlEvent(
+      type: RemoteControlEventType.keyDown, keyCode: keyCode);
+
+  factory RemoteControlEvent.keyUp(int keyCode) =>
+      RemoteControlEvent(type: RemoteControlEventType.keyUp, keyCode: keyCode);
+
+  factory RemoteControlEvent.sendText(String text) =>
+      RemoteControlEvent(type: RemoteControlEventType.sendText, text: text);
+
+  // New touchpad gesture factories
+  factory RemoteControlEvent.twoFingerScroll(double deltaX, double deltaY) =>
+      RemoteControlEvent(
+          type: RemoteControlEventType.twoFingerScroll,
+          deltaX: deltaX,
+          deltaY: deltaY,
+          fingerCount: 2);
+
+  factory RemoteControlEvent.twoFingerTap() => RemoteControlEvent(
+      type: RemoteControlEventType.twoFingerTap, fingerCount: 2);
+
+  factory RemoteControlEvent.twoFingerSlowTap() => RemoteControlEvent(
+      type: RemoteControlEventType.twoFingerSlowTap, fingerCount: 2);
+
+  factory RemoteControlEvent.twoFingerDragDrop(double x, double y) =>
+      RemoteControlEvent(
+          type: RemoteControlEventType.twoFingerDragDrop,
+          x: x,
+          y: y,
+          fingerCount: 2);
+
+  factory RemoteControlEvent.threeFingerSwipe(String direction) =>
+      RemoteControlEvent(
+          type: _getThreeFingerSwipeType(direction),
+          direction: direction,
+          fingerCount: 3);
+
+  factory RemoteControlEvent.threeFingerTap() => RemoteControlEvent(
+      type: RemoteControlEventType.threeFingerTap, fingerCount: 3);
+
+  factory RemoteControlEvent.fourFingerTap() => RemoteControlEvent(
+      type: RemoteControlEventType.fourFingerTap, fingerCount: 4);
+
+  static RemoteControlEventType _getThreeFingerSwipeType(String direction) {
+    switch (direction) {
+      case 'up':
+        return RemoteControlEventType.threeFingerSwipeUp;
+      case 'down':
+        return RemoteControlEventType.threeFingerSwipeDown;
+      case 'left':
+        return RemoteControlEventType.threeFingerSwipeLeft;
+      case 'right':
+        return RemoteControlEventType.threeFingerSwipeRight;
+      default:
+        return RemoteControlEventType.threeFingerSwipeUp;
+    }
+  }
+
+  Map<String, dynamic> toJson() => {
+        'type': type.name,
+        'x': x,
+        'y': y,
+        'deltaX': deltaX,
+        'deltaY': deltaY,
+        'fingerCount': fingerCount,
+        'direction': direction,
+        'keyCode': keyCode,
+        'text': text,
+        'timestamp': timestamp.toIso8601String(),
+      };
+
+  factory RemoteControlEvent.fromJson(Map<String, dynamic> json) =>
+      RemoteControlEvent(
+        type: RemoteControlEventType.values
+            .firstWhere((e) => e.name == json['type']),
+        x: json['x'] as double?,
+        y: json['y'] as double?,
+        deltaX: json['deltaX'] as double?,
+        deltaY: json['deltaY'] as double?,
+        fingerCount: json['fingerCount'] as int?,
+        direction: json['direction'] as String?,
+        keyCode: json['keyCode'] as int?,
+        text: json['text'] as String?,
+        timestamp: DateTime.parse(json['timestamp'] as String),
+      );
+}
+
+/// Remote control session information
+class RemoteControlSession {
+  final String sessionId;
+  final P2PUser controllerUser; // User who is controlling
+  final P2PUser controlledUser; // User being controlled
+  final DateTime startTime;
+  final bool isActive;
+
+  const RemoteControlSession({
+    required this.sessionId,
+    required this.controllerUser,
+    required this.controlledUser,
+    required this.startTime,
+    this.isActive = true,
+  });
+
+  Duration get duration => DateTime.now().difference(startTime);
+
+  RemoteControlSession copyWith({
+    String? sessionId,
+    P2PUser? controllerUser,
+    P2PUser? controlledUser,
+    DateTime? startTime,
+    bool? isActive,
+  }) =>
+      RemoteControlSession(
+        sessionId: sessionId ?? this.sessionId,
+        controllerUser: controllerUser ?? this.controllerUser,
+        controlledUser: controlledUser ?? this.controlledUser,
+        startTime: startTime ?? this.startTime,
+        isActive: isActive ?? this.isActive,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'sessionId': sessionId,
+        'controllerUser': controllerUser.toJson(),
+        'controlledUser': controlledUser.toJson(),
+        'startTime': startTime.toIso8601String(),
+        'isActive': isActive,
+      };
+
+  factory RemoteControlSession.fromJson(Map<String, dynamic> json) =>
+      RemoteControlSession(
+        sessionId: json['sessionId'] as String,
+        controllerUser:
+            P2PUser.fromJson(json['controllerUser'] as Map<String, dynamic>),
+        controlledUser:
+            P2PUser.fromJson(json['controlledUser'] as Map<String, dynamic>),
+        startTime: DateTime.parse(json['startTime'] as String),
+        isActive: json['isActive'] as bool? ?? true,
+      );
+}
+
+// =============================================================================
+// SCREEN SHARING MODELS
+// =============================================================================
+
+/// Screen sharing request model
+class ScreenSharingRequest {
+  final String requestId;
+  final String fromUserId;
+  final String fromUserName;
+  final DateTime requestTime;
+  final String? reason; // Optional reason message
+  final ScreenSharingQuality quality; // Quality preference
+
+  ScreenSharingRequest({
+    required this.requestId,
+    required this.fromUserId,
+    required this.fromUserName,
+    required this.requestTime,
+    this.reason,
+    this.quality = ScreenSharingQuality.medium,
+  });
+
+  factory ScreenSharingRequest.create({
+    required String fromUserId,
+    required String fromUserName,
+    String? reason,
+    ScreenSharingQuality quality = ScreenSharingQuality.medium,
+  }) =>
+      ScreenSharingRequest(
+        requestId: 'ssr_${const Uuid().v4()}',
+        fromUserId: fromUserId,
+        fromUserName: fromUserName,
+        requestTime: DateTime.now(),
+        reason: reason,
+        quality: quality,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'requestId': requestId,
+        'fromUserId': fromUserId,
+        'fromUserName': fromUserName,
+        'requestTime': requestTime.toIso8601String(),
+        'reason': reason,
+        'quality': quality.name,
+      };
+
+  factory ScreenSharingRequest.fromJson(Map<String, dynamic> json) =>
+      ScreenSharingRequest(
+        requestId: json['requestId'] as String,
+        fromUserId: json['fromUserId'] as String,
+        fromUserName: json['fromUserName'] as String,
+        requestTime: DateTime.parse(json['requestTime'] as String),
+        reason: json['reason'] as String?,
+        quality: ScreenSharingQuality.values.firstWhere(
+            (e) => e.name == json['quality'],
+            orElse: () => ScreenSharingQuality.medium),
+      );
+}
+
+/// Screen sharing response model
+class ScreenSharingResponse {
+  final String requestId;
+  final bool accepted;
+  final String? rejectReason;
+  final ScreenSharingQuality? quality; // Accepted quality
+
+  ScreenSharingResponse({
+    required this.requestId,
+    required this.accepted,
+    this.rejectReason,
+    this.quality,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'requestId': requestId,
+        'accepted': accepted,
+        'rejectReason': rejectReason,
+        'quality': quality?.name,
+      };
+
+  factory ScreenSharingResponse.fromJson(Map<String, dynamic> json) =>
+      ScreenSharingResponse(
+        requestId: json['requestId'] as String,
+        accepted: json['accepted'] as bool,
+        rejectReason: json['rejectReason'] as String?,
+        quality: json['quality'] != null
+            ? ScreenSharingQuality.values
+                .firstWhere((e) => e.name == json['quality'])
+            : null,
+      );
+}
+
+/// Screen sharing quality levels
+enum ScreenSharingQuality {
+  low(width: 640, height: 480, fps: 15, bitrate: 500),
+  medium(width: 1280, height: 720, fps: 20, bitrate: 1000),
+  high(width: 1920, height: 1080, fps: 25, bitrate: 2000),
+  auto(width: 0, height: 0, fps: 0, bitrate: 0); // Auto-detect based on network
+
+  const ScreenSharingQuality({
+    required this.width,
+    required this.height,
+    required this.fps,
+    required this.bitrate,
+  });
+
+  final int width;
+  final int height;
+  final int fps;
+  final int bitrate; // kbps
+}
+
+/// Screen sharing session information
+class ScreenSharingSession {
+  final String sessionId;
+  final P2PUser senderUser; // User who is sharing screen
+  final P2PUser receiverUser; // User receiving the screen
+  final DateTime startTime;
+  final bool isActive;
+  final ScreenSharingQuality quality;
+  final int? selectedScreenIndex; // For Windows multi-screen support
+
+  const ScreenSharingSession({
+    required this.sessionId,
+    required this.senderUser,
+    required this.receiverUser,
+    required this.startTime,
+    this.isActive = true,
+    this.quality = ScreenSharingQuality.medium,
+    this.selectedScreenIndex,
+  });
+
+  Duration get duration => DateTime.now().difference(startTime);
+
+  ScreenSharingSession copyWith({
+    String? sessionId,
+    P2PUser? senderUser,
+    P2PUser? receiverUser,
+    DateTime? startTime,
+    bool? isActive,
+    ScreenSharingQuality? quality,
+    int? selectedScreenIndex,
+  }) =>
+      ScreenSharingSession(
+        sessionId: sessionId ?? this.sessionId,
+        senderUser: senderUser ?? this.senderUser,
+        receiverUser: receiverUser ?? this.receiverUser,
+        startTime: startTime ?? this.startTime,
+        isActive: isActive ?? this.isActive,
+        quality: quality ?? this.quality,
+        selectedScreenIndex: selectedScreenIndex ?? this.selectedScreenIndex,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'sessionId': sessionId,
+        'senderUser': senderUser.toJson(),
+        'receiverUser': receiverUser.toJson(),
+        'startTime': startTime.toIso8601String(),
+        'isActive': isActive,
+        'quality': quality.name,
+        'selectedScreenIndex': selectedScreenIndex,
+      };
+
+  factory ScreenSharingSession.fromJson(Map<String, dynamic> json) =>
+      ScreenSharingSession(
+        sessionId: json['sessionId'] as String,
+        senderUser:
+            P2PUser.fromJson(json['senderUser'] as Map<String, dynamic>),
+        receiverUser:
+            P2PUser.fromJson(json['receiverUser'] as Map<String, dynamic>),
+        startTime: DateTime.parse(json['startTime'] as String),
+        isActive: json['isActive'] as bool? ?? true,
+        quality: ScreenSharingQuality.values.firstWhere(
+            (e) => e.name == json['quality'],
+            orElse: () => ScreenSharingQuality.medium),
+        selectedScreenIndex: json['selectedScreenIndex'] as int?,
+      );
+}
+
+/// Screen information for multi-screen support (Windows)
+class ScreenInfo {
+  final int index;
+  final String name;
+  final int width;
+  final int height;
+  final bool isPrimary;
+  final int left;
+  final int top;
+
+  const ScreenInfo({
+    required this.index,
+    required this.name,
+    required this.width,
+    required this.height,
+    this.isPrimary = false,
+    this.left = 0,
+    this.top = 0,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'index': index,
+        'name': name,
+        'width': width,
+        'height': height,
+        'isPrimary': isPrimary,
+        'left': left,
+        'top': top,
+      };
+
+  factory ScreenInfo.fromJson(Map<String, dynamic> json) => ScreenInfo(
+        index: json['index'] as int,
+        name: json['name'] as String,
+        width: json['width'] as int,
+        height: json['height'] as int,
+        isPrimary: json['isPrimary'] as bool? ?? false,
+        left: json['left'] as int? ?? 0,
+        top: json['top'] as int? ?? 0,
+      );
 }

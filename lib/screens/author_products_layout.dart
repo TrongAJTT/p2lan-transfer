@@ -1,11 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/models/author_product_model.dart';
-import 'package:p2lantransfer/services/author_products_service.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/utils/url_utils.dart';
-import 'package:p2lantransfer/variables.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/models/author_product_model.dart';
+import 'package:p2lan/services/author_products_service.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/utils/url_utils.dart';
+import 'package:p2lan/variables.dart';
 
 class AuthorProductsLayout extends StatefulWidget {
   final bool showTitle;

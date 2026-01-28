@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/widgets/generic/generic_dialog.dart';
-import 'package:p2lantransfer/utils/icon_utils.dart';
+import 'package:p2lan/widgets/generic/generic_dialog.dart';
+import 'package:p2lan/utils/icon_utils.dart';
 
 class EnterTextDialog extends StatefulWidget {
   final IconData? icon;

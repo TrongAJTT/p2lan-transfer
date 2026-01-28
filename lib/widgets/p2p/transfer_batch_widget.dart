@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
-import 'package:p2lantransfer/widgets/generic/generic_context_menu.dart';
-import 'package:p2lantransfer/widgets/p2p/data_transfer_progress_widget.dart';
-import 'package:p2lantransfer/utils/generic_dialog_utils.dart';
-import 'package:p2lantransfer/variables.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/models/p2p_models.dart';
+import 'package:p2lan/widgets/p2p/data_transfer_progress_widget.dart';
+import 'package:p2lan/utils/generic_dialog_utils.dart';
+import 'package:p2lan/variables.dart';
 
 class TransferBatchWidget extends StatefulWidget {
   final String? batchId;
@@ -48,14 +47,14 @@ class _TransferBatchWidgetState extends State<TransferBatchWidget> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Initialize localization when dependencies are available
-    _loc = AppLocalizations.of(context)!;
+    _loc = AppLocalizations.of(context);
   }
 
   @override
   void didUpdateWidget(TransferBatchWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Update localization
-    _loc = AppLocalizations.of(context)!;
+    _loc = AppLocalizations.of(context);
     // Update expand state if initialExpanded changed
     if (widget.initialExpanded != oldWidget.initialExpanded) {
       _isExpanded = widget.initialExpanded;
@@ -77,7 +76,7 @@ class _TransferBatchWidgetState extends State<TransferBatchWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildBatchHeader(AppLocalizations.of(context)!),
+          _buildBatchHeader(AppLocalizations.of(context)),
           if (_isExpanded) ...[
             const Divider(height: 1),
             ...widget.tasks.map((task) => _buildTaskInBatch(task)),
@@ -139,135 +138,171 @@ class _TransferBatchWidgetState extends State<TransferBatchWidget> {
       statusText = loc.waiting;
     }
 
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _isExpanded = !_isExpanded;
-        });
-        widget.onExpandChanged?.call(widget.batchId, _isExpanded);
-      },
-      onLongPressStart: (d) => _showBatchContextMenu(d.globalPosition),
-      onSecondaryTapDown: (d) => _showBatchContextMenu(d.globalPosition),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: headerColor,
-                  child: Icon(headerIcon, color: Colors.white, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        sampleTask.isOutgoing
-                            ? _loc.numberFilesSendToUser(
-                                widget.tasks.length, sampleTask.targetUserName)
-                            : _loc.numberFilesReceivedFromUser(
-                                widget.tasks.length, sampleTask.targetUserName),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            sampleTask.isOutgoing
-                                ? Icons.file_upload
-                                : Icons.file_download,
-                            size: 16,
-                            color: sampleTask.isOutgoing
-                                ? sendColor
-                                : receiveColor,
-                          ),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              statusText,
-                              style: TextStyle(
-                                color: headerColor,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+    Widget buildActions() {
+      return PopupMenuButton<String>(
+        // Xác định các mục (items) của menu
+        itemBuilder: (BuildContext context) {
+          return [
+            // Mục "Xóa"
+            const PopupMenuItem<String>(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(Icons.delete_outline),
+                  SizedBox(width: 8),
+                  Text('Delete'),
+                ],
+              ),
+            ),
+            // Mục "Xóa kèm file"
+            if (!sampleTask.isOutgoing)
+              const PopupMenuItem<String>(
+                value: 'deleteWithFile',
+                child: Row(
                   children: [
-                    Text(
-                      _formatFileSize(totalSize),
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    if (transferringTasks > 0)
-                      Text(
-                        '${(overallProgress * 100).toStringAsFixed(1)}%',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: headerColor,
-                            ),
-                      ),
+                    Icon(Icons.delete_forever),
+                    SizedBox(width: 8),
+                    Text('Delete with files'),
                   ],
                 ),
-                const SizedBox(width: 8),
-                Icon(
-                  _isExpanded
-                      ? Icons.keyboard_arrow_up
-                      : Icons.keyboard_arrow_down,
-                  color: Colors.grey[600],
-                ),
-              ],
-            ),
+              ),
+          ];
+        },
+        // Xử lý khi người dùng chọn một mục
+        onSelected: (String result) {
+          switch (result) {
+            case 'delete':
+              _clearBatch(); // Gọi hàm xóa
+              break;
+            case 'deleteWithFile':
+              _clearBatchWithFiles(); // Gọi hàm xóa kèm file
+              break;
+          }
+        },
+        icon: const Icon(Icons.more_vert), // Icon hiển thị trên nút bấm
+      );
+    }
 
-            // Progress bar for batch
-            if (transferringTasks > 0) ...[
-              const SizedBox(height: 8),
-              LinearProgressIndicator(
-                value: overallProgress,
-                backgroundColor: Colors.grey[300],
-                valueColor: AlwaysStoppedAnimation<Color>(headerColor),
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: headerColor,
+                child: Icon(headerIcon, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      sampleTask.isOutgoing
+                          ? _loc.numberFilesSendToUser(
+                              widget.tasks.length, sampleTask.targetUserName)
+                          : _loc.numberFilesReceivedFromUser(
+                              widget.tasks.length, sampleTask.targetUserName),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            statusText,
+                            style: TextStyle(
+                              color: headerColor,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (transferringTasks > 0) ...[
+                          const SizedBox(width: 6),
+                          Text(
+                            '${(overallProgress * 100).toStringAsFixed(1)}%',
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: headerColor,
+                                    ),
+                          ),
+                        ],
+                        const SizedBox(width: 6),
+                        Text(
+                          _formatFileSize(totalSize),
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
+          ),
 
-            // Summary info
+          // Progress bar for batch
+          if (transferringTasks > 0) ...[
             const SizedBox(height: 8),
-            Row(
-              children: [
-                if (completedTasks > 0)
-                  _buildStatusChip(
-                      loc.completedTasksNumber(completedTasks), Colors.green),
-                if (transferringTasks > 0) ...[
-                  if (completedTasks > 0) const SizedBox(width: 8),
-                  _buildStatusChip(
-                      loc.transferringTasksNumber(transferringTasks),
-                      Colors.orange),
-                ],
-                if (failedTasks > 0) ...[
-                  if (completedTasks > 0 || transferringTasks > 0)
-                    const SizedBox(width: 8),
-                  _buildStatusChip(
-                      loc.failedTasksNumber(failedTasks), Colors.red),
-                ],
-              ],
+            LinearProgressIndicator(
+              value: overallProgress,
+              backgroundColor: Colors.grey[300],
+              valueColor: AlwaysStoppedAnimation<Color>(headerColor),
             ),
           ],
-        ),
+
+          // Summary info
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(
+                sampleTask.isOutgoing ? Icons.file_upload : Icons.file_download,
+                size: 20,
+                color: sampleTask.isOutgoing ? sendColor : receiveColor,
+              ),
+              const SizedBox(width: 8),
+              if (completedTasks > 0) ...[
+                const SizedBox(width: 8),
+                _buildStatusChip(
+                    completedTasks.toString(), Icons.check_circle, Colors.green)
+              ],
+              if (transferringTasks > 0) ...[
+                const SizedBox(width: 8),
+                _buildStatusChip(
+                    transferringTasks.toString(), Icons.sync, Colors.orange)
+              ],
+              if (failedTasks > 0) ...[
+                const SizedBox(width: 8),
+                _buildStatusChip(
+                    failedTasks.toString(), Icons.error, Colors.red)
+              ],
+              const Spacer(),
+              buildActions(),
+              IconButton(
+                icon: Icon(_isExpanded
+                    ? Icons.keyboard_arrow_up
+                    : Icons.keyboard_arrow_down),
+                onPressed: () {
+                  setState(() {
+                    _isExpanded = !_isExpanded;
+                  });
+                  widget.onExpandChanged?.call(widget.batchId, _isExpanded);
+                },
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildStatusChip(String label, Color color) {
+  Widget _buildStatusChip(String label, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
@@ -275,13 +310,23 @@ class _TransferBatchWidgetState extends State<TransferBatchWidget> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-        ),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: color,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -329,28 +374,6 @@ class _TransferBatchWidgetState extends State<TransferBatchWidget> {
       return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
     }
     return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
-  }
-
-  void _showBatchContextMenu(Offset? position) {
-    final options = [
-      OptionItem(
-          label: _loc.delete,
-          icon: Icons.delete_outline,
-          onTap: () {
-            _clearBatch();
-          }),
-      OptionItem(
-          label: _loc.deleteWithFile,
-          icon: Icons.delete_forever,
-          onTap: () {
-            _clearBatchWithFiles();
-          }),
-    ];
-    GenericContextMenu.show(
-        context: context,
-        actions: options,
-        position: position,
-        desktopDialogWidth: 240);
   }
 
   void _clearBatch() {

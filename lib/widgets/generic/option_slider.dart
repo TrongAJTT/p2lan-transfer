@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/widgets/generic/option_item.dart';
+import 'package:p2lan/widgets/generic/option_item.dart';
 
 /// A specialized OptionItem for slider values.
 /// Use OptionItem constructor for creating slider options.

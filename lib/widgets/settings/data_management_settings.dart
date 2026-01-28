@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/widgets/generic/option_slider.dart';
-import 'package:p2lantransfer/services/cache_service.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/services/settings_models_service.dart';
-import 'package:p2lantransfer/services/p2p_services/p2p_service_manager.dart';
-import 'package:p2lantransfer/screens/log_viewer_screen.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/widgets/generic/option_slider.dart';
+import 'package:p2lan/services/cache_service.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/services/settings_models_service.dart';
+import 'package:p2lan/services/p2p_services/p2p_service_manager.dart';
+import 'package:p2lan/screens/log_viewer_screen.dart';
 
 /// Data Management Settings Module
 /// Handles cache management and log settings
@@ -49,7 +49,7 @@ class _DataManagementSettingsState extends State<DataManagementSettings> {
   Future<void> _loadCacheInfo() async {
     if (!mounted) return;
 
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     if (mounted) {
       setState(() {
         _cacheInfo = l10n.calculating;
@@ -79,7 +79,7 @@ class _DataManagementSettingsState extends State<DataManagementSettings> {
   }
 
   Future<void> _clearCache() async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     // Show confirmation dialog for clearing cache AND P2P data
     final shouldClear = await showDialog<bool>(
@@ -194,7 +194,7 @@ class _DataManagementSettingsState extends State<DataManagementSettings> {
   Future<void> _loadLogInfo() async {
     if (!mounted) return;
 
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     if (mounted) {
       setState(() {
         _logInfo = l10n.calculating;
@@ -219,18 +219,20 @@ class _DataManagementSettingsState extends State<DataManagementSettings> {
     });
 
     // Update global settings
-    final currentSettings = await ExtensibleSettingsService.getGlobalSettings();
+    final currentSettings =
+        await ExtensibleSettingsService.getDataAndStorageSettings();
     final updatedSettings = currentSettings.copyWith(
       logRetentionDays: days,
     );
-    await ExtensibleSettingsService.updateGlobalSettings(updatedSettings);
+    await ExtensibleSettingsService.updateDataAndStorageSettings(
+        updatedSettings);
 
     // Notify parent
     widget.onLogRetentionChanged?.call(days);
   }
 
   Future<void> _forceCleanupLogs() async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     try {
       // Show loading indicator
@@ -312,7 +314,7 @@ class _DataManagementSettingsState extends State<DataManagementSettings> {
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final isTwoColumnLayout = MediaQuery.of(context).size.width > 1000;
 
     if (_loading) {

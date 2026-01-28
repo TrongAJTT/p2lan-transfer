@@ -42,44 +42,71 @@ const P2PUserSchema = CollectionSchema(
       name: r'ipAddress',
       type: IsarType.string,
     ),
-    r'isOnline': PropertySchema(
+    r'isBlocked': PropertySchema(
       id: 5,
+      name: r'isBlocked',
+      type: IsarType.bool,
+    ),
+    r'isOnline': PropertySchema(
+      id: 6,
       name: r'isOnline',
       type: IsarType.bool,
     ),
     r'isPaired': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'isPaired',
       type: IsarType.bool,
     ),
     r'isStored': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'isStored',
       type: IsarType.bool,
     ),
+    r'isTempStored': PropertySchema(
+      id: 9,
+      name: r'isTempStored',
+      type: IsarType.bool,
+    ),
     r'isTrusted': PropertySchema(
-      id: 8,
+      id: 10,
       name: r'isTrusted',
       type: IsarType.bool,
     ),
+    r'keyExchangeStatus': PropertySchema(
+      id: 11,
+      name: r'keyExchangeStatus',
+      type: IsarType.byte,
+      enumMap: _P2PUserkeyExchangeStatusEnumValueMap,
+    ),
     r'lastSeen': PropertySchema(
-      id: 9,
+      id: 12,
       name: r'lastSeen',
       type: IsarType.dateTime,
     ),
     r'pairedAt': PropertySchema(
-      id: 10,
+      id: 13,
       name: r'pairedAt',
       type: IsarType.dateTime,
     ),
+    r'platform': PropertySchema(
+      id: 14,
+      name: r'platform',
+      type: IsarType.byte,
+      enumMap: _P2PUserplatformEnumValueMap,
+    ),
     r'port': PropertySchema(
-      id: 11,
+      id: 15,
       name: r'port',
       type: IsarType.long,
     ),
     r'profileId': PropertySchema(
-      id: 12,
+      id: 16,
       name: r'profileId',
+      type: IsarType.string,
+    ),
+    r'publicKeyFingerprint': PropertySchema(
+      id: 17,
+      name: r'publicKeyFingerprint',
       type: IsarType.string,
     )
   },
@@ -136,6 +163,12 @@ int _p2PUserEstimateSize(
   bytesCount += 3 + object.id.length * 3;
   bytesCount += 3 + object.ipAddress.length * 3;
   bytesCount += 3 + object.profileId.length * 3;
+  {
+    final value = object.publicKeyFingerprint;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -150,14 +183,19 @@ void _p2PUserSerialize(
   writer.writeString(offsets[2], object.displayName);
   writer.writeString(offsets[3], object.id);
   writer.writeString(offsets[4], object.ipAddress);
-  writer.writeBool(offsets[5], object.isOnline);
-  writer.writeBool(offsets[6], object.isPaired);
-  writer.writeBool(offsets[7], object.isStored);
-  writer.writeBool(offsets[8], object.isTrusted);
-  writer.writeDateTime(offsets[9], object.lastSeen);
-  writer.writeDateTime(offsets[10], object.pairedAt);
-  writer.writeLong(offsets[11], object.port);
-  writer.writeString(offsets[12], object.profileId);
+  writer.writeBool(offsets[5], object.isBlocked);
+  writer.writeBool(offsets[6], object.isOnline);
+  writer.writeBool(offsets[7], object.isPaired);
+  writer.writeBool(offsets[8], object.isStored);
+  writer.writeBool(offsets[9], object.isTempStored);
+  writer.writeBool(offsets[10], object.isTrusted);
+  writer.writeByte(offsets[11], object.keyExchangeStatus.index);
+  writer.writeDateTime(offsets[12], object.lastSeen);
+  writer.writeDateTime(offsets[13], object.pairedAt);
+  writer.writeByte(offsets[14], object.platform.index);
+  writer.writeLong(offsets[15], object.port);
+  writer.writeString(offsets[16], object.profileId);
+  writer.writeString(offsets[17], object.publicKeyFingerprint);
 }
 
 P2PUser _p2PUserDeserialize(
@@ -170,14 +208,23 @@ P2PUser _p2PUserDeserialize(
     displayName: reader.readString(offsets[2]),
     id: reader.readString(offsets[3]),
     ipAddress: reader.readString(offsets[4]),
-    isOnline: reader.readBoolOrNull(offsets[5]) ?? false,
-    isPaired: reader.readBoolOrNull(offsets[6]) ?? false,
-    isStored: reader.readBoolOrNull(offsets[7]) ?? false,
-    isTrusted: reader.readBoolOrNull(offsets[8]) ?? false,
-    lastSeen: reader.readDateTime(offsets[9]),
-    pairedAt: reader.readDateTimeOrNull(offsets[10]),
-    port: reader.readLong(offsets[11]),
-    profileId: reader.readString(offsets[12]),
+    isBlocked: reader.readBoolOrNull(offsets[5]) ?? false,
+    isOnline: reader.readBoolOrNull(offsets[6]) ?? false,
+    isPaired: reader.readBoolOrNull(offsets[7]) ?? false,
+    isStored: reader.readBoolOrNull(offsets[8]) ?? false,
+    isTempStored: reader.readBoolOrNull(offsets[9]) ?? false,
+    isTrusted: reader.readBoolOrNull(offsets[10]) ?? false,
+    keyExchangeStatus: _P2PUserkeyExchangeStatusValueEnumMap[
+            reader.readByteOrNull(offsets[11])] ??
+        KeyExchangeStatus.none,
+    lastSeen: reader.readDateTime(offsets[12]),
+    pairedAt: reader.readDateTimeOrNull(offsets[13]),
+    platform:
+        _P2PUserplatformValueEnumMap[reader.readByteOrNull(offsets[14])] ??
+            UserPlatform.unknown,
+    port: reader.readLong(offsets[15]),
+    profileId: reader.readString(offsets[16]),
+    publicKeyFingerprint: reader.readStringOrNull(offsets[17]),
   );
   return object;
 }
@@ -208,17 +255,63 @@ P _p2PUserDeserializeProp<P>(
     case 8:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     case 9:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 10:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 11:
-      return (reader.readLong(offset)) as P;
+      return (_P2PUserkeyExchangeStatusValueEnumMap[
+              reader.readByteOrNull(offset)] ??
+          KeyExchangeStatus.none) as P;
     case 12:
+      return (reader.readDateTime(offset)) as P;
+    case 13:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 14:
+      return (_P2PUserplatformValueEnumMap[reader.readByteOrNull(offset)] ??
+          UserPlatform.unknown) as P;
+    case 15:
+      return (reader.readLong(offset)) as P;
+    case 16:
       return (reader.readString(offset)) as P;
+    case 17:
+      return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
+
+const _P2PUserkeyExchangeStatusEnumValueMap = {
+  'none': 0,
+  'requested': 1,
+  'exchanging': 2,
+  'completed': 3,
+  'failed': 4,
+};
+const _P2PUserkeyExchangeStatusValueEnumMap = {
+  0: KeyExchangeStatus.none,
+  1: KeyExchangeStatus.requested,
+  2: KeyExchangeStatus.exchanging,
+  3: KeyExchangeStatus.completed,
+  4: KeyExchangeStatus.failed,
+};
+const _P2PUserplatformEnumValueMap = {
+  'android': 0,
+  'ios': 1,
+  'windows': 2,
+  'macos': 3,
+  'linux': 4,
+  'web': 5,
+  'unknown': 6,
+};
+const _P2PUserplatformValueEnumMap = {
+  0: UserPlatform.android,
+  1: UserPlatform.ios,
+  2: UserPlatform.windows,
+  3: UserPlatform.macos,
+  4: UserPlatform.linux,
+  5: UserPlatform.web,
+  6: UserPlatform.unknown,
+};
 
 Id _p2PUserGetId(P2PUser object) {
   return object.isarId;
@@ -1106,6 +1199,16 @@ extension P2PUserQueryFilter
     });
   }
 
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition> isBlockedEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isBlocked',
+        value: value,
+      ));
+    });
+  }
+
   QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition> isOnlineEqualTo(
       bool value) {
     return QueryBuilder.apply(this, (query) {
@@ -1131,6 +1234,16 @@ extension P2PUserQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'isStored',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition> isTempStoredEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isTempStored',
         value: value,
       ));
     });
@@ -1191,6 +1304,62 @@ extension P2PUserQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'isarId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition>
+      keyExchangeStatusEqualTo(KeyExchangeStatus value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'keyExchangeStatus',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition>
+      keyExchangeStatusGreaterThan(
+    KeyExchangeStatus value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'keyExchangeStatus',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition>
+      keyExchangeStatusLessThan(
+    KeyExchangeStatus value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'keyExchangeStatus',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition>
+      keyExchangeStatusBetween(
+    KeyExchangeStatus lower,
+    KeyExchangeStatus upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'keyExchangeStatus',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -1313,6 +1482,59 @@ extension P2PUserQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'pairedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition> platformEqualTo(
+      UserPlatform value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'platform',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition> platformGreaterThan(
+    UserPlatform value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'platform',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition> platformLessThan(
+    UserPlatform value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'platform',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition> platformBetween(
+    UserPlatform lower,
+    UserPlatform upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'platform',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -1502,6 +1724,160 @@ extension P2PUserQueryFilter
       ));
     });
   }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition>
+      publicKeyFingerprintIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'publicKeyFingerprint',
+      ));
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition>
+      publicKeyFingerprintIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'publicKeyFingerprint',
+      ));
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition>
+      publicKeyFingerprintEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'publicKeyFingerprint',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition>
+      publicKeyFingerprintGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'publicKeyFingerprint',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition>
+      publicKeyFingerprintLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'publicKeyFingerprint',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition>
+      publicKeyFingerprintBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'publicKeyFingerprint',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition>
+      publicKeyFingerprintStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'publicKeyFingerprint',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition>
+      publicKeyFingerprintEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'publicKeyFingerprint',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition>
+      publicKeyFingerprintContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'publicKeyFingerprint',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition>
+      publicKeyFingerprintMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'publicKeyFingerprint',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition>
+      publicKeyFingerprintIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'publicKeyFingerprint',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterFilterCondition>
+      publicKeyFingerprintIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'publicKeyFingerprint',
+        value: '',
+      ));
+    });
+  }
 }
 
 extension P2PUserQueryObject
@@ -1571,6 +1947,18 @@ extension P2PUserQuerySortBy on QueryBuilder<P2PUser, P2PUser, QSortBy> {
     });
   }
 
+  QueryBuilder<P2PUser, P2PUser, QAfterSortBy> sortByIsBlocked() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isBlocked', Sort.asc);
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterSortBy> sortByIsBlockedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isBlocked', Sort.desc);
+    });
+  }
+
   QueryBuilder<P2PUser, P2PUser, QAfterSortBy> sortByIsOnline() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isOnline', Sort.asc);
@@ -1607,6 +1995,18 @@ extension P2PUserQuerySortBy on QueryBuilder<P2PUser, P2PUser, QSortBy> {
     });
   }
 
+  QueryBuilder<P2PUser, P2PUser, QAfterSortBy> sortByIsTempStored() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isTempStored', Sort.asc);
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterSortBy> sortByIsTempStoredDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isTempStored', Sort.desc);
+    });
+  }
+
   QueryBuilder<P2PUser, P2PUser, QAfterSortBy> sortByIsTrusted() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isTrusted', Sort.asc);
@@ -1616,6 +2016,18 @@ extension P2PUserQuerySortBy on QueryBuilder<P2PUser, P2PUser, QSortBy> {
   QueryBuilder<P2PUser, P2PUser, QAfterSortBy> sortByIsTrustedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isTrusted', Sort.desc);
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterSortBy> sortByKeyExchangeStatus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'keyExchangeStatus', Sort.asc);
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterSortBy> sortByKeyExchangeStatusDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'keyExchangeStatus', Sort.desc);
     });
   }
 
@@ -1643,6 +2055,18 @@ extension P2PUserQuerySortBy on QueryBuilder<P2PUser, P2PUser, QSortBy> {
     });
   }
 
+  QueryBuilder<P2PUser, P2PUser, QAfterSortBy> sortByPlatform() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'platform', Sort.asc);
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterSortBy> sortByPlatformDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'platform', Sort.desc);
+    });
+  }
+
   QueryBuilder<P2PUser, P2PUser, QAfterSortBy> sortByPort() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'port', Sort.asc);
@@ -1664,6 +2088,19 @@ extension P2PUserQuerySortBy on QueryBuilder<P2PUser, P2PUser, QSortBy> {
   QueryBuilder<P2PUser, P2PUser, QAfterSortBy> sortByProfileIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'profileId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterSortBy> sortByPublicKeyFingerprint() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'publicKeyFingerprint', Sort.asc);
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterSortBy>
+      sortByPublicKeyFingerprintDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'publicKeyFingerprint', Sort.desc);
     });
   }
 }
@@ -1730,6 +2167,18 @@ extension P2PUserQuerySortThenBy
     });
   }
 
+  QueryBuilder<P2PUser, P2PUser, QAfterSortBy> thenByIsBlocked() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isBlocked', Sort.asc);
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterSortBy> thenByIsBlockedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isBlocked', Sort.desc);
+    });
+  }
+
   QueryBuilder<P2PUser, P2PUser, QAfterSortBy> thenByIsOnline() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isOnline', Sort.asc);
@@ -1766,6 +2215,18 @@ extension P2PUserQuerySortThenBy
     });
   }
 
+  QueryBuilder<P2PUser, P2PUser, QAfterSortBy> thenByIsTempStored() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isTempStored', Sort.asc);
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterSortBy> thenByIsTempStoredDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isTempStored', Sort.desc);
+    });
+  }
+
   QueryBuilder<P2PUser, P2PUser, QAfterSortBy> thenByIsTrusted() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isTrusted', Sort.asc);
@@ -1787,6 +2248,18 @@ extension P2PUserQuerySortThenBy
   QueryBuilder<P2PUser, P2PUser, QAfterSortBy> thenByIsarIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isarId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterSortBy> thenByKeyExchangeStatus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'keyExchangeStatus', Sort.asc);
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterSortBy> thenByKeyExchangeStatusDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'keyExchangeStatus', Sort.desc);
     });
   }
 
@@ -1814,6 +2287,18 @@ extension P2PUserQuerySortThenBy
     });
   }
 
+  QueryBuilder<P2PUser, P2PUser, QAfterSortBy> thenByPlatform() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'platform', Sort.asc);
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterSortBy> thenByPlatformDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'platform', Sort.desc);
+    });
+  }
+
   QueryBuilder<P2PUser, P2PUser, QAfterSortBy> thenByPort() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'port', Sort.asc);
@@ -1835,6 +2320,19 @@ extension P2PUserQuerySortThenBy
   QueryBuilder<P2PUser, P2PUser, QAfterSortBy> thenByProfileIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'profileId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterSortBy> thenByPublicKeyFingerprint() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'publicKeyFingerprint', Sort.asc);
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QAfterSortBy>
+      thenByPublicKeyFingerprintDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'publicKeyFingerprint', Sort.desc);
     });
   }
 }
@@ -1877,6 +2375,12 @@ extension P2PUserQueryWhereDistinct
     });
   }
 
+  QueryBuilder<P2PUser, P2PUser, QDistinct> distinctByIsBlocked() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isBlocked');
+    });
+  }
+
   QueryBuilder<P2PUser, P2PUser, QDistinct> distinctByIsOnline() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isOnline');
@@ -1895,9 +2399,21 @@ extension P2PUserQueryWhereDistinct
     });
   }
 
+  QueryBuilder<P2PUser, P2PUser, QDistinct> distinctByIsTempStored() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isTempStored');
+    });
+  }
+
   QueryBuilder<P2PUser, P2PUser, QDistinct> distinctByIsTrusted() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isTrusted');
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QDistinct> distinctByKeyExchangeStatus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'keyExchangeStatus');
     });
   }
 
@@ -1913,6 +2429,12 @@ extension P2PUserQueryWhereDistinct
     });
   }
 
+  QueryBuilder<P2PUser, P2PUser, QDistinct> distinctByPlatform() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'platform');
+    });
+  }
+
   QueryBuilder<P2PUser, P2PUser, QDistinct> distinctByPort() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'port');
@@ -1923,6 +2445,14 @@ extension P2PUserQueryWhereDistinct
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'profileId', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<P2PUser, P2PUser, QDistinct> distinctByPublicKeyFingerprint(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'publicKeyFingerprint',
+          caseSensitive: caseSensitive);
     });
   }
 }
@@ -1965,6 +2495,12 @@ extension P2PUserQueryProperty
     });
   }
 
+  QueryBuilder<P2PUser, bool, QQueryOperations> isBlockedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isBlocked');
+    });
+  }
+
   QueryBuilder<P2PUser, bool, QQueryOperations> isOnlineProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isOnline');
@@ -1983,9 +2519,22 @@ extension P2PUserQueryProperty
     });
   }
 
+  QueryBuilder<P2PUser, bool, QQueryOperations> isTempStoredProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isTempStored');
+    });
+  }
+
   QueryBuilder<P2PUser, bool, QQueryOperations> isTrustedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isTrusted');
+    });
+  }
+
+  QueryBuilder<P2PUser, KeyExchangeStatus, QQueryOperations>
+      keyExchangeStatusProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'keyExchangeStatus');
     });
   }
 
@@ -2001,6 +2550,12 @@ extension P2PUserQueryProperty
     });
   }
 
+  QueryBuilder<P2PUser, UserPlatform, QQueryOperations> platformProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'platform');
+    });
+  }
+
   QueryBuilder<P2PUser, int, QQueryOperations> portProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'port');
@@ -2010,6 +2565,13 @@ extension P2PUserQueryProperty
   QueryBuilder<P2PUser, String, QQueryOperations> profileIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'profileId');
+    });
+  }
+
+  QueryBuilder<P2PUser, String?, QQueryOperations>
+      publicKeyFingerprintProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'publicKeyFingerprint');
     });
   }
 }

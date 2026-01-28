@@ -17,81 +17,50 @@ const P2PDataCacheSchema = CollectionSchema(
   name: r'P2PDataCache',
   id: 5868483008450424708,
   properties: {
-    r'batchId': PropertySchema(
+    r'cacheType': PropertySchema(
       id: 0,
-      name: r'batchId',
+      name: r'cacheType',
       type: IsarType.string,
     ),
-    r'createdTimestamp': PropertySchema(
+    r'createdAt': PropertySchema(
       id: 1,
-      name: r'createdTimestamp',
+      name: r'createdAt',
       type: IsarType.dateTime,
     ),
-    r'expiredTimestamp': PropertySchema(
+    r'data': PropertySchema(
       id: 2,
-      name: r'expiredTimestamp',
+      name: r'data',
+      type: IsarType.string,
+    ),
+    r'expiresAt': PropertySchema(
+      id: 3,
+      name: r'expiresAt',
       type: IsarType.dateTime,
     ),
     r'id': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'id',
       type: IsarType.string,
     ),
     r'isExpired': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'isExpired',
       type: IsarType.bool,
     ),
-    r'isProcessed': PropertySchema(
-      id: 5,
-      name: r'isProcessed',
-      type: IsarType.bool,
-    ),
-    r'metaData': PropertySchema(
+    r'meta': PropertySchema(
       id: 6,
-      name: r'metaData',
+      name: r'meta',
       type: IsarType.string,
     ),
-    r'priority': PropertySchema(
-      id: 7,
-      name: r'priority',
-      type: IsarType.long,
-    ),
     r'status': PropertySchema(
-      id: 8,
+      id: 7,
       name: r'status',
       type: IsarType.string,
     ),
-    r'subtitle': PropertySchema(
-      id: 9,
-      name: r'subtitle',
-      type: IsarType.string,
-    ),
-    r'title': PropertySchema(
-      id: 10,
-      name: r'title',
-      type: IsarType.string,
-    ),
-    r'type': PropertySchema(
-      id: 11,
-      name: r'type',
-      type: IsarType.byte,
-      enumMap: _P2PDataCachetypeEnumValueMap,
-    ),
-    r'updatedTimestamp': PropertySchema(
-      id: 12,
-      name: r'updatedTimestamp',
+    r'updatedAt': PropertySchema(
+      id: 8,
+      name: r'updatedAt',
       type: IsarType.dateTime,
-    ),
-    r'userId': PropertySchema(
-      id: 13,
-      name: r'userId',
-      type: IsarType.string,
-    ),
-    r'value': PropertySchema(
-      id: 14,
-      name: r'value',
-      type: IsarType.string,
     )
   },
   estimateSize: _p2PDataCacheEstimateSize,
@@ -113,81 +82,42 @@ const P2PDataCacheSchema = CollectionSchema(
         )
       ],
     ),
-    r'type': IndexSchema(
-      id: 5117122708147080838,
-      name: r'type',
+    r'cacheType': IndexSchema(
+      id: -6777035758017306870,
+      name: r'cacheType',
       unique: false,
       replace: false,
       properties: [
         IndexPropertySchema(
-          name: r'type',
-          type: IndexType.value,
-          caseSensitive: false,
-        )
-      ],
-    ),
-    r'createdTimestamp': IndexSchema(
-      id: -6330424217074401074,
-      name: r'createdTimestamp',
-      unique: false,
-      replace: false,
-      properties: [
-        IndexPropertySchema(
-          name: r'createdTimestamp',
-          type: IndexType.value,
-          caseSensitive: false,
-        )
-      ],
-    ),
-    r'expiredTimestamp': IndexSchema(
-      id: 1031739888846499515,
-      name: r'expiredTimestamp',
-      unique: false,
-      replace: false,
-      properties: [
-        IndexPropertySchema(
-          name: r'expiredTimestamp',
-          type: IndexType.value,
-          caseSensitive: false,
-        )
-      ],
-    ),
-    r'isProcessed': IndexSchema(
-      id: 2788530510351198829,
-      name: r'isProcessed',
-      unique: false,
-      replace: false,
-      properties: [
-        IndexPropertySchema(
-          name: r'isProcessed',
-          type: IndexType.value,
-          caseSensitive: false,
-        )
-      ],
-    ),
-    r'userId': IndexSchema(
-      id: -2005826577402374815,
-      name: r'userId',
-      unique: false,
-      replace: false,
-      properties: [
-        IndexPropertySchema(
-          name: r'userId',
+          name: r'cacheType',
           type: IndexType.hash,
           caseSensitive: true,
         )
       ],
     ),
-    r'batchId': IndexSchema(
-      id: -5468368523860846432,
-      name: r'batchId',
+    r'createdAt': IndexSchema(
+      id: -3433535483987302584,
+      name: r'createdAt',
       unique: false,
       replace: false,
       properties: [
         IndexPropertySchema(
-          name: r'batchId',
-          type: IndexType.hash,
-          caseSensitive: true,
+          name: r'createdAt',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'expiresAt': IndexSchema(
+      id: 4994901953235663716,
+      name: r'expiresAt',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'expiresAt',
+          type: IndexType.value,
+          caseSensitive: false,
         )
       ],
     )
@@ -206,29 +136,16 @@ int _p2PDataCacheEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
-  {
-    final value = object.batchId;
-    if (value != null) {
-      bytesCount += 3 + value.length * 3;
-    }
-  }
+  bytesCount += 3 + object.cacheType.length * 3;
+  bytesCount += 3 + object.data.length * 3;
   bytesCount += 3 + object.id.length * 3;
-  bytesCount += 3 + object.metaData.length * 3;
+  bytesCount += 3 + object.meta.length * 3;
   {
     final value = object.status;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
     }
   }
-  bytesCount += 3 + object.subtitle.length * 3;
-  bytesCount += 3 + object.title.length * 3;
-  {
-    final value = object.userId;
-    if (value != null) {
-      bytesCount += 3 + value.length * 3;
-    }
-  }
-  bytesCount += 3 + object.value.length * 3;
   return bytesCount;
 }
 
@@ -238,21 +155,15 @@ void _p2PDataCacheSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.batchId);
-  writer.writeDateTime(offsets[1], object.createdTimestamp);
-  writer.writeDateTime(offsets[2], object.expiredTimestamp);
-  writer.writeString(offsets[3], object.id);
-  writer.writeBool(offsets[4], object.isExpired);
-  writer.writeBool(offsets[5], object.isProcessed);
-  writer.writeString(offsets[6], object.metaData);
-  writer.writeLong(offsets[7], object.priority);
-  writer.writeString(offsets[8], object.status);
-  writer.writeString(offsets[9], object.subtitle);
-  writer.writeString(offsets[10], object.title);
-  writer.writeByte(offsets[11], object.type.index);
-  writer.writeDateTime(offsets[12], object.updatedTimestamp);
-  writer.writeString(offsets[13], object.userId);
-  writer.writeString(offsets[14], object.value);
+  writer.writeString(offsets[0], object.cacheType);
+  writer.writeDateTime(offsets[1], object.createdAt);
+  writer.writeString(offsets[2], object.data);
+  writer.writeDateTime(offsets[3], object.expiresAt);
+  writer.writeString(offsets[4], object.id);
+  writer.writeBool(offsets[5], object.isExpired);
+  writer.writeString(offsets[6], object.meta);
+  writer.writeString(offsets[7], object.status);
+  writer.writeDateTime(offsets[8], object.updatedAt);
 }
 
 P2PDataCache _p2PDataCacheDeserialize(
@@ -262,21 +173,14 @@ P2PDataCache _p2PDataCacheDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = P2PDataCache(
-    batchId: reader.readStringOrNull(offsets[0]),
-    createdTimestamp: reader.readDateTime(offsets[1]),
-    expiredTimestamp: reader.readDateTimeOrNull(offsets[2]),
-    id: reader.readString(offsets[3]),
-    isProcessed: reader.readBoolOrNull(offsets[5]) ?? false,
-    metaData: reader.readStringOrNull(offsets[6]) ?? '{}',
-    priority: reader.readLongOrNull(offsets[7]) ?? 0,
-    status: reader.readStringOrNull(offsets[8]),
-    subtitle: reader.readString(offsets[9]),
-    title: reader.readString(offsets[10]),
-    type: _P2PDataCachetypeValueEnumMap[reader.readByteOrNull(offsets[11])] ??
-        P2PDataCacheType.pairingRequest,
-    updatedTimestamp: reader.readDateTime(offsets[12]),
-    userId: reader.readStringOrNull(offsets[13]),
-    value: reader.readString(offsets[14]),
+    cacheType: reader.readString(offsets[0]),
+    createdAt: reader.readDateTime(offsets[1]),
+    data: reader.readString(offsets[2]),
+    expiresAt: reader.readDateTimeOrNull(offsets[3]),
+    id: reader.readString(offsets[4]),
+    meta: reader.readStringOrNull(offsets[6]) ?? '{}',
+    status: reader.readStringOrNull(offsets[7]),
+    updatedAt: reader.readDateTime(offsets[8]),
   );
   return object;
 }
@@ -289,51 +193,27 @@ P _p2PDataCacheDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 1:
       return (reader.readDateTime(offset)) as P;
     case 2:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 3:
       return (reader.readString(offset)) as P;
+    case 3:
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 4:
-      return (reader.readBool(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 5:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
+      return (reader.readBool(offset)) as P;
     case 6:
       return (reader.readStringOrNull(offset) ?? '{}') as P;
     case 7:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 8:
-      return (reader.readStringOrNull(offset)) as P;
-    case 9:
-      return (reader.readString(offset)) as P;
-    case 10:
-      return (reader.readString(offset)) as P;
-    case 11:
-      return (_P2PDataCachetypeValueEnumMap[reader.readByteOrNull(offset)] ??
-          P2PDataCacheType.pairingRequest) as P;
-    case 12:
       return (reader.readDateTime(offset)) as P;
-    case 13:
-      return (reader.readStringOrNull(offset)) as P;
-    case 14:
-      return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
-
-const _P2PDataCachetypeEnumValueMap = {
-  'pairingRequest': 0,
-  'dataTransferTask': 1,
-  'fileTransferRequest': 2,
-};
-const _P2PDataCachetypeValueEnumMap = {
-  0: P2PDataCacheType.pairingRequest,
-  1: P2PDataCacheType.dataTransferTask,
-  2: P2PDataCacheType.fileTransferRequest,
-};
 
 Id _p2PDataCacheGetId(P2PDataCache object) {
   return object.isarId;
@@ -408,34 +288,18 @@ extension P2PDataCacheQueryWhereSort
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhere> anyType() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhere> anyCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'type'),
+        const IndexWhereClause.any(indexName: r'createdAt'),
       );
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhere> anyCreatedTimestamp() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhere> anyExpiresAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'createdTimestamp'),
-      );
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhere> anyExpiredTimestamp() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'expiredTimestamp'),
-      );
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhere> anyIsProcessed() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'isProcessed'),
+        const IndexWhereClause.any(indexName: r'expiresAt'),
       );
     });
   }
@@ -557,135 +421,90 @@ extension P2PDataCacheQueryWhere
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause> typeEqualTo(
-      P2PDataCacheType type) {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause> cacheTypeEqualTo(
+      String cacheType) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'type',
-        value: [type],
+        indexName: r'cacheType',
+        value: [cacheType],
       ));
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause> typeNotEqualTo(
-      P2PDataCacheType type) {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause>
+      cacheTypeNotEqualTo(String cacheType) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'type',
+              indexName: r'cacheType',
               lower: [],
-              upper: [type],
+              upper: [cacheType],
               includeUpper: false,
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'type',
-              lower: [type],
+              indexName: r'cacheType',
+              lower: [cacheType],
               includeLower: false,
               upper: [],
             ));
       } else {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'type',
-              lower: [type],
+              indexName: r'cacheType',
+              lower: [cacheType],
               includeLower: false,
               upper: [],
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'type',
+              indexName: r'cacheType',
               lower: [],
-              upper: [type],
+              upper: [cacheType],
               includeUpper: false,
             ));
       }
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause> typeGreaterThan(
-    P2PDataCacheType type, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'type',
-        lower: [type],
-        includeLower: include,
-        upper: [],
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause> typeLessThan(
-    P2PDataCacheType type, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'type',
-        lower: [],
-        upper: [type],
-        includeUpper: include,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause> typeBetween(
-    P2PDataCacheType lowerType,
-    P2PDataCacheType upperType, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'type',
-        lower: [lowerType],
-        includeLower: includeLower,
-        upper: [upperType],
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause>
-      createdTimestampEqualTo(DateTime createdTimestamp) {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause> createdAtEqualTo(
+      DateTime createdAt) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'createdTimestamp',
-        value: [createdTimestamp],
+        indexName: r'createdAt',
+        value: [createdAt],
       ));
     });
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause>
-      createdTimestampNotEqualTo(DateTime createdTimestamp) {
+      createdAtNotEqualTo(DateTime createdAt) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'createdTimestamp',
+              indexName: r'createdAt',
               lower: [],
-              upper: [createdTimestamp],
+              upper: [createdAt],
               includeUpper: false,
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'createdTimestamp',
-              lower: [createdTimestamp],
+              indexName: r'createdAt',
+              lower: [createdAt],
               includeLower: false,
               upper: [],
             ));
       } else {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'createdTimestamp',
-              lower: [createdTimestamp],
+              indexName: r'createdAt',
+              lower: [createdAt],
               includeLower: false,
               upper: [],
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'createdTimestamp',
+              indexName: r'createdAt',
               lower: [],
-              upper: [createdTimestamp],
+              upper: [createdAt],
               includeUpper: false,
             ));
       }
@@ -693,68 +512,66 @@ extension P2PDataCacheQueryWhere
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause>
-      createdTimestampGreaterThan(
-    DateTime createdTimestamp, {
+      createdAtGreaterThan(
+    DateTime createdAt, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'createdTimestamp',
-        lower: [createdTimestamp],
+        indexName: r'createdAt',
+        lower: [createdAt],
         includeLower: include,
         upper: [],
       ));
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause>
-      createdTimestampLessThan(
-    DateTime createdTimestamp, {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause> createdAtLessThan(
+    DateTime createdAt, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'createdTimestamp',
+        indexName: r'createdAt',
         lower: [],
-        upper: [createdTimestamp],
+        upper: [createdAt],
         includeUpper: include,
       ));
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause>
-      createdTimestampBetween(
-    DateTime lowerCreatedTimestamp,
-    DateTime upperCreatedTimestamp, {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause> createdAtBetween(
+    DateTime lowerCreatedAt,
+    DateTime upperCreatedAt, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'createdTimestamp',
-        lower: [lowerCreatedTimestamp],
+        indexName: r'createdAt',
+        lower: [lowerCreatedAt],
         includeLower: includeLower,
-        upper: [upperCreatedTimestamp],
+        upper: [upperCreatedAt],
         includeUpper: includeUpper,
       ));
     });
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause>
-      expiredTimestampIsNull() {
+      expiresAtIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'expiredTimestamp',
+        indexName: r'expiresAt',
         value: [null],
       ));
     });
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause>
-      expiredTimestampIsNotNull() {
+      expiresAtIsNotNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'expiredTimestamp',
+        indexName: r'expiresAt',
         lower: [null],
         includeLower: false,
         upper: [],
@@ -762,45 +579,45 @@ extension P2PDataCacheQueryWhere
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause>
-      expiredTimestampEqualTo(DateTime? expiredTimestamp) {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause> expiresAtEqualTo(
+      DateTime? expiresAt) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'expiredTimestamp',
-        value: [expiredTimestamp],
+        indexName: r'expiresAt',
+        value: [expiresAt],
       ));
     });
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause>
-      expiredTimestampNotEqualTo(DateTime? expiredTimestamp) {
+      expiresAtNotEqualTo(DateTime? expiresAt) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'expiredTimestamp',
+              indexName: r'expiresAt',
               lower: [],
-              upper: [expiredTimestamp],
+              upper: [expiresAt],
               includeUpper: false,
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'expiredTimestamp',
-              lower: [expiredTimestamp],
+              indexName: r'expiresAt',
+              lower: [expiresAt],
               includeLower: false,
               upper: [],
             ));
       } else {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'expiredTimestamp',
-              lower: [expiredTimestamp],
+              indexName: r'expiresAt',
+              lower: [expiresAt],
               includeLower: false,
               upper: [],
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'expiredTimestamp',
+              indexName: r'expiresAt',
               lower: [],
-              upper: [expiredTimestamp],
+              upper: [expiresAt],
               includeUpper: false,
             ));
       }
@@ -808,227 +625,48 @@ extension P2PDataCacheQueryWhere
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause>
-      expiredTimestampGreaterThan(
-    DateTime? expiredTimestamp, {
+      expiresAtGreaterThan(
+    DateTime? expiresAt, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'expiredTimestamp',
-        lower: [expiredTimestamp],
+        indexName: r'expiresAt',
+        lower: [expiresAt],
         includeLower: include,
         upper: [],
       ));
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause>
-      expiredTimestampLessThan(
-    DateTime? expiredTimestamp, {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause> expiresAtLessThan(
+    DateTime? expiresAt, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'expiredTimestamp',
+        indexName: r'expiresAt',
         lower: [],
-        upper: [expiredTimestamp],
+        upper: [expiresAt],
         includeUpper: include,
       ));
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause>
-      expiredTimestampBetween(
-    DateTime? lowerExpiredTimestamp,
-    DateTime? upperExpiredTimestamp, {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause> expiresAtBetween(
+    DateTime? lowerExpiresAt,
+    DateTime? upperExpiresAt, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'expiredTimestamp',
-        lower: [lowerExpiredTimestamp],
+        indexName: r'expiresAt',
+        lower: [lowerExpiresAt],
         includeLower: includeLower,
-        upper: [upperExpiredTimestamp],
+        upper: [upperExpiresAt],
         includeUpper: includeUpper,
       ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause>
-      isProcessedEqualTo(bool isProcessed) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'isProcessed',
-        value: [isProcessed],
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause>
-      isProcessedNotEqualTo(bool isProcessed) {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'isProcessed',
-              lower: [],
-              upper: [isProcessed],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'isProcessed',
-              lower: [isProcessed],
-              includeLower: false,
-              upper: [],
-            ));
-      } else {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'isProcessed',
-              lower: [isProcessed],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'isProcessed',
-              lower: [],
-              upper: [isProcessed],
-              includeUpper: false,
-            ));
-      }
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause> userIdIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'userId',
-        value: [null],
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause>
-      userIdIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'userId',
-        lower: [null],
-        includeLower: false,
-        upper: [],
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause> userIdEqualTo(
-      String? userId) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'userId',
-        value: [userId],
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause> userIdNotEqualTo(
-      String? userId) {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'userId',
-              lower: [],
-              upper: [userId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'userId',
-              lower: [userId],
-              includeLower: false,
-              upper: [],
-            ));
-      } else {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'userId',
-              lower: [userId],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'userId',
-              lower: [],
-              upper: [userId],
-              includeUpper: false,
-            ));
-      }
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause> batchIdIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'batchId',
-        value: [null],
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause>
-      batchIdIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'batchId',
-        lower: [null],
-        includeLower: false,
-        upper: [],
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause> batchIdEqualTo(
-      String? batchId) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'batchId',
-        value: [batchId],
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterWhereClause> batchIdNotEqualTo(
-      String? batchId) {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'batchId',
-              lower: [],
-              upper: [batchId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'batchId',
-              lower: [batchId],
-              includeLower: false,
-              upper: [],
-            ));
-      } else {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'batchId',
-              lower: [batchId],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'batchId',
-              lower: [],
-              upper: [batchId],
-              includeUpper: false,
-            ));
-      }
     });
   }
 }
@@ -1036,31 +674,13 @@ extension P2PDataCacheQueryWhere
 extension P2PDataCacheQueryFilter
     on QueryBuilder<P2PDataCache, P2PDataCache, QFilterCondition> {
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      batchIdIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'batchId',
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      batchIdIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'batchId',
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      batchIdEqualTo(
-    String? value, {
+      cacheTypeEqualTo(
+    String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'batchId',
+        property: r'cacheType',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -1068,15 +688,15 @@ extension P2PDataCacheQueryFilter
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      batchIdGreaterThan(
-    String? value, {
+      cacheTypeGreaterThan(
+    String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'batchId',
+        property: r'cacheType',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -1084,15 +704,15 @@ extension P2PDataCacheQueryFilter
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      batchIdLessThan(
-    String? value, {
+      cacheTypeLessThan(
+    String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'batchId',
+        property: r'cacheType',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -1100,16 +720,16 @@ extension P2PDataCacheQueryFilter
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      batchIdBetween(
-    String? lower,
-    String? upper, {
+      cacheTypeBetween(
+    String lower,
+    String upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'batchId',
+        property: r'cacheType',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -1120,13 +740,13 @@ extension P2PDataCacheQueryFilter
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      batchIdStartsWith(
+      cacheTypeStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'batchId',
+        property: r'cacheType',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -1134,13 +754,13 @@ extension P2PDataCacheQueryFilter
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      batchIdEndsWith(
+      cacheTypeEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'batchId',
+        property: r'cacheType',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -1148,10 +768,10 @@ extension P2PDataCacheQueryFilter
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      batchIdContains(String value, {bool caseSensitive = true}) {
+      cacheTypeContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
-        property: r'batchId',
+        property: r'cacheType',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -1159,10 +779,10 @@ extension P2PDataCacheQueryFilter
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      batchIdMatches(String pattern, {bool caseSensitive = true}) {
+      cacheTypeMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
-        property: r'batchId',
+        property: r'cacheType',
         wildcard: pattern,
         caseSensitive: caseSensitive,
       ));
@@ -1170,65 +790,65 @@ extension P2PDataCacheQueryFilter
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      batchIdIsEmpty() {
+      cacheTypeIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'batchId',
+        property: r'cacheType',
         value: '',
       ));
     });
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      batchIdIsNotEmpty() {
+      cacheTypeIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'batchId',
+        property: r'cacheType',
         value: '',
       ));
     });
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      createdTimestampEqualTo(DateTime value) {
+      createdAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'createdTimestamp',
+        property: r'createdAt',
         value: value,
       ));
     });
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      createdTimestampGreaterThan(
+      createdAtGreaterThan(
     DateTime value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'createdTimestamp',
+        property: r'createdAt',
         value: value,
       ));
     });
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      createdTimestampLessThan(
+      createdAtLessThan(
     DateTime value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'createdTimestamp',
+        property: r'createdAt',
         value: value,
       ));
     });
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      createdTimestampBetween(
+      createdAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
@@ -1236,7 +856,7 @@ extension P2PDataCacheQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'createdTimestamp',
+        property: r'createdAt',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -1245,64 +865,198 @@ extension P2PDataCacheQueryFilter
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      expiredTimestampIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'expiredTimestamp',
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      expiredTimestampIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'expiredTimestamp',
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      expiredTimestampEqualTo(DateTime? value) {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> dataEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'expiredTimestamp',
+        property: r'data',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
+      dataGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'data',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> dataLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'data',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> dataBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'data',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
+      dataStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'data',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> dataEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'data',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> dataContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'data',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> dataMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'data',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
+      dataIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'data',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
+      dataIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'data',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
+      expiresAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'expiresAt',
+      ));
+    });
+  }
+
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
+      expiresAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'expiresAt',
+      ));
+    });
+  }
+
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
+      expiresAtEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'expiresAt',
         value: value,
       ));
     });
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      expiredTimestampGreaterThan(
+      expiresAtGreaterThan(
     DateTime? value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'expiredTimestamp',
+        property: r'expiresAt',
         value: value,
       ));
     });
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      expiredTimestampLessThan(
+      expiresAtLessThan(
     DateTime? value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'expiredTimestamp',
+        property: r'expiresAt',
         value: value,
       ));
     });
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      expiredTimestampBetween(
+      expiresAtBetween(
     DateTime? lower,
     DateTime? upper, {
     bool includeLower = true,
@@ -1310,7 +1064,7 @@ extension P2PDataCacheQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'expiredTimestamp',
+        property: r'expiresAt',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -1460,16 +1214,6 @@ extension P2PDataCacheQueryFilter
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      isProcessedEqualTo(bool value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'isProcessed',
-        value: value,
-      ));
-    });
-  }
-
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> isarIdEqualTo(
       Id value) {
     return QueryBuilder.apply(this, (query) {
@@ -1525,14 +1269,13 @@ extension P2PDataCacheQueryFilter
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      metaDataEqualTo(
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> metaEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'metaData',
+        property: r'meta',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -1540,7 +1283,7 @@ extension P2PDataCacheQueryFilter
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      metaDataGreaterThan(
+      metaGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -1548,15 +1291,14 @@ extension P2PDataCacheQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'metaData',
+        property: r'meta',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      metaDataLessThan(
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> metaLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -1564,15 +1306,14 @@ extension P2PDataCacheQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'metaData',
+        property: r'meta',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      metaDataBetween(
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> metaBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1581,7 +1322,7 @@ extension P2PDataCacheQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'metaData',
+        property: r'meta',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -1592,49 +1333,50 @@ extension P2PDataCacheQueryFilter
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      metaDataStartsWith(
+      metaStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'metaData',
+        property: r'meta',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      metaDataEndsWith(
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> metaEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'metaData',
+        property: r'meta',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      metaDataContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> metaContains(
+      String value,
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
-        property: r'metaData',
+        property: r'meta',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      metaDataMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> metaMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
-        property: r'metaData',
+        property: r'meta',
         wildcard: pattern,
         caseSensitive: caseSensitive,
       ));
@@ -1642,77 +1384,21 @@ extension P2PDataCacheQueryFilter
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      metaDataIsEmpty() {
+      metaIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'metaData',
+        property: r'meta',
         value: '',
       ));
     });
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      metaDataIsNotEmpty() {
+      metaIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'metaData',
+        property: r'meta',
         value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      priorityEqualTo(int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'priority',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      priorityGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'priority',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      priorityLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'priority',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      priorityBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'priority',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
       ));
     });
   }
@@ -1871,369 +1557,45 @@ extension P2PDataCacheQueryFilter
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      subtitleEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+      updatedAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'subtitle',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      subtitleGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'subtitle',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      subtitleLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'subtitle',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      subtitleBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'subtitle',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      subtitleStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'subtitle',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      subtitleEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'subtitle',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      subtitleContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'subtitle',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      subtitleMatches(String pattern, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'subtitle',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      subtitleIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'subtitle',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      subtitleIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'subtitle',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> titleEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'title',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      titleGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'title',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> titleLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'title',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> titleBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'title',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      titleStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'title',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> titleEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'title',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> titleContains(
-      String value,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'title',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> titleMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'title',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      titleIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'title',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      titleIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'title',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> typeEqualTo(
-      P2PDataCacheType value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'type',
+        property: r'updatedAt',
         value: value,
       ));
     });
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      typeGreaterThan(
-    P2PDataCacheType value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'type',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> typeLessThan(
-    P2PDataCacheType value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'type',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> typeBetween(
-    P2PDataCacheType lower,
-    P2PDataCacheType upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'type',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      updatedTimestampEqualTo(DateTime value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'updatedTimestamp',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      updatedTimestampGreaterThan(
+      updatedAtGreaterThan(
     DateTime value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'updatedTimestamp',
+        property: r'updatedAt',
         value: value,
       ));
     });
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      updatedTimestampLessThan(
+      updatedAtLessThan(
     DateTime value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'updatedTimestamp',
+        property: r'updatedAt',
         value: value,
       ));
     });
   }
 
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      updatedTimestampBetween(
+      updatedAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
@@ -2241,298 +1603,11 @@ extension P2PDataCacheQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'updatedTimestamp',
+        property: r'updatedAt',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      userIdIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'userId',
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      userIdIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'userId',
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> userIdEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'userId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      userIdGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'userId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      userIdLessThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'userId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> userIdBetween(
-    String? lower,
-    String? upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'userId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      userIdStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'userId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      userIdEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'userId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      userIdContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'userId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> userIdMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'userId',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      userIdIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'userId',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      userIdIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'userId',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> valueEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'value',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      valueGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'value',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> valueLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'value',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> valueBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'value',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      valueStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'value',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> valueEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'value',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> valueContains(
-      String value,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'value',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition> valueMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'value',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      valueIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'value',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterFilterCondition>
-      valueIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'value',
-        value: '',
       ));
     });
   }
@@ -2546,43 +1621,51 @@ extension P2PDataCacheQueryLinks
 
 extension P2PDataCacheQuerySortBy
     on QueryBuilder<P2PDataCache, P2PDataCache, QSortBy> {
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByBatchId() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByCacheType() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'batchId', Sort.asc);
+      return query.addSortBy(r'cacheType', Sort.asc);
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByBatchIdDesc() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByCacheTypeDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'batchId', Sort.desc);
+      return query.addSortBy(r'cacheType', Sort.desc);
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy>
-      sortByCreatedTimestamp() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'createdTimestamp', Sort.asc);
+      return query.addSortBy(r'createdAt', Sort.asc);
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy>
-      sortByCreatedTimestampDesc() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'createdTimestamp', Sort.desc);
+      return query.addSortBy(r'createdAt', Sort.desc);
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy>
-      sortByExpiredTimestamp() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByData() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'expiredTimestamp', Sort.asc);
+      return query.addSortBy(r'data', Sort.asc);
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy>
-      sortByExpiredTimestampDesc() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByDataDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'expiredTimestamp', Sort.desc);
+      return query.addSortBy(r'data', Sort.desc);
+    });
+  }
+
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByExpiresAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'expiresAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByExpiresAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'expiresAt', Sort.desc);
     });
   }
 
@@ -2610,40 +1693,15 @@ extension P2PDataCacheQuerySortBy
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByIsProcessed() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByMeta() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isProcessed', Sort.asc);
+      return query.addSortBy(r'meta', Sort.asc);
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy>
-      sortByIsProcessedDesc() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByMetaDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isProcessed', Sort.desc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByMetaData() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'metaData', Sort.asc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByMetaDataDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'metaData', Sort.desc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByPriority() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'priority', Sort.asc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByPriorityDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'priority', Sort.desc);
+      return query.addSortBy(r'meta', Sort.desc);
     });
   }
 
@@ -2659,120 +1717,66 @@ extension P2PDataCacheQuerySortBy
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortBySubtitle() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'subtitle', Sort.asc);
+      return query.addSortBy(r'updatedAt', Sort.asc);
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortBySubtitleDesc() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'subtitle', Sort.desc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByTitle() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'title', Sort.asc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByTitleDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'title', Sort.desc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByType() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'type', Sort.asc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByTypeDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'type', Sort.desc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy>
-      sortByUpdatedTimestamp() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'updatedTimestamp', Sort.asc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy>
-      sortByUpdatedTimestampDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'updatedTimestamp', Sort.desc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByUserId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'userId', Sort.asc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByUserIdDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'userId', Sort.desc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByValue() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'value', Sort.asc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> sortByValueDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'value', Sort.desc);
+      return query.addSortBy(r'updatedAt', Sort.desc);
     });
   }
 }
 
 extension P2PDataCacheQuerySortThenBy
     on QueryBuilder<P2PDataCache, P2PDataCache, QSortThenBy> {
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByBatchId() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByCacheType() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'batchId', Sort.asc);
+      return query.addSortBy(r'cacheType', Sort.asc);
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByBatchIdDesc() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByCacheTypeDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'batchId', Sort.desc);
+      return query.addSortBy(r'cacheType', Sort.desc);
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy>
-      thenByCreatedTimestamp() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'createdTimestamp', Sort.asc);
+      return query.addSortBy(r'createdAt', Sort.asc);
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy>
-      thenByCreatedTimestampDesc() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'createdTimestamp', Sort.desc);
+      return query.addSortBy(r'createdAt', Sort.desc);
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy>
-      thenByExpiredTimestamp() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByData() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'expiredTimestamp', Sort.asc);
+      return query.addSortBy(r'data', Sort.asc);
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy>
-      thenByExpiredTimestampDesc() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByDataDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'expiredTimestamp', Sort.desc);
+      return query.addSortBy(r'data', Sort.desc);
+    });
+  }
+
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByExpiresAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'expiresAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByExpiresAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'expiresAt', Sort.desc);
     });
   }
 
@@ -2800,19 +1804,6 @@ extension P2PDataCacheQuerySortThenBy
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByIsProcessed() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isProcessed', Sort.asc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy>
-      thenByIsProcessedDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isProcessed', Sort.desc);
-    });
-  }
-
   QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByIsarId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isarId', Sort.asc);
@@ -2825,27 +1816,15 @@ extension P2PDataCacheQuerySortThenBy
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByMetaData() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByMeta() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'metaData', Sort.asc);
+      return query.addSortBy(r'meta', Sort.asc);
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByMetaDataDesc() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByMetaDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'metaData', Sort.desc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByPriority() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'priority', Sort.asc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByPriorityDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'priority', Sort.desc);
+      return query.addSortBy(r'meta', Sort.desc);
     });
   }
 
@@ -2861,101 +1840,44 @@ extension P2PDataCacheQuerySortThenBy
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenBySubtitle() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'subtitle', Sort.asc);
+      return query.addSortBy(r'updatedAt', Sort.asc);
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenBySubtitleDesc() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'subtitle', Sort.desc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByTitle() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'title', Sort.asc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByTitleDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'title', Sort.desc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByType() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'type', Sort.asc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByTypeDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'type', Sort.desc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy>
-      thenByUpdatedTimestamp() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'updatedTimestamp', Sort.asc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy>
-      thenByUpdatedTimestampDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'updatedTimestamp', Sort.desc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByUserId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'userId', Sort.asc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByUserIdDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'userId', Sort.desc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByValue() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'value', Sort.asc);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QAfterSortBy> thenByValueDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'value', Sort.desc);
+      return query.addSortBy(r'updatedAt', Sort.desc);
     });
   }
 }
 
 extension P2PDataCacheQueryWhereDistinct
     on QueryBuilder<P2PDataCache, P2PDataCache, QDistinct> {
-  QueryBuilder<P2PDataCache, P2PDataCache, QDistinct> distinctByBatchId(
+  QueryBuilder<P2PDataCache, P2PDataCache, QDistinct> distinctByCacheType(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'batchId', caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'cacheType', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QDistinct>
-      distinctByCreatedTimestamp() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QDistinct> distinctByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'createdTimestamp');
+      return query.addDistinctBy(r'createdAt');
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QDistinct>
-      distinctByExpiredTimestamp() {
+  QueryBuilder<P2PDataCache, P2PDataCache, QDistinct> distinctByData(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'expiredTimestamp');
+      return query.addDistinctBy(r'data', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<P2PDataCache, P2PDataCache, QDistinct> distinctByExpiresAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'expiresAt');
     });
   }
 
@@ -2972,22 +1894,10 @@ extension P2PDataCacheQueryWhereDistinct
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QDistinct> distinctByIsProcessed() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'isProcessed');
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QDistinct> distinctByMetaData(
+  QueryBuilder<P2PDataCache, P2PDataCache, QDistinct> distinctByMeta(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'metaData', caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QDistinct> distinctByPriority() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'priority');
+      return query.addDistinctBy(r'meta', caseSensitive: caseSensitive);
     });
   }
 
@@ -2998,44 +1908,9 @@ extension P2PDataCacheQueryWhereDistinct
     });
   }
 
-  QueryBuilder<P2PDataCache, P2PDataCache, QDistinct> distinctBySubtitle(
-      {bool caseSensitive = true}) {
+  QueryBuilder<P2PDataCache, P2PDataCache, QDistinct> distinctByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'subtitle', caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QDistinct> distinctByTitle(
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'title', caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QDistinct> distinctByType() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'type');
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QDistinct>
-      distinctByUpdatedTimestamp() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'updatedTimestamp');
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QDistinct> distinctByUserId(
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'userId', caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCache, QDistinct> distinctByValue(
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'value', caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'updatedAt');
     });
   }
 }
@@ -3048,23 +1923,27 @@ extension P2PDataCacheQueryProperty
     });
   }
 
-  QueryBuilder<P2PDataCache, String?, QQueryOperations> batchIdProperty() {
+  QueryBuilder<P2PDataCache, String, QQueryOperations> cacheTypeProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'batchId');
+      return query.addPropertyName(r'cacheType');
     });
   }
 
-  QueryBuilder<P2PDataCache, DateTime, QQueryOperations>
-      createdTimestampProperty() {
+  QueryBuilder<P2PDataCache, DateTime, QQueryOperations> createdAtProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'createdTimestamp');
+      return query.addPropertyName(r'createdAt');
     });
   }
 
-  QueryBuilder<P2PDataCache, DateTime?, QQueryOperations>
-      expiredTimestampProperty() {
+  QueryBuilder<P2PDataCache, String, QQueryOperations> dataProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'expiredTimestamp');
+      return query.addPropertyName(r'data');
+    });
+  }
+
+  QueryBuilder<P2PDataCache, DateTime?, QQueryOperations> expiresAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'expiresAt');
     });
   }
 
@@ -3080,21 +1959,9 @@ extension P2PDataCacheQueryProperty
     });
   }
 
-  QueryBuilder<P2PDataCache, bool, QQueryOperations> isProcessedProperty() {
+  QueryBuilder<P2PDataCache, String, QQueryOperations> metaProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'isProcessed');
-    });
-  }
-
-  QueryBuilder<P2PDataCache, String, QQueryOperations> metaDataProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'metaData');
-    });
-  }
-
-  QueryBuilder<P2PDataCache, int, QQueryOperations> priorityProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'priority');
+      return query.addPropertyName(r'meta');
     });
   }
 
@@ -3104,41 +1971,9 @@ extension P2PDataCacheQueryProperty
     });
   }
 
-  QueryBuilder<P2PDataCache, String, QQueryOperations> subtitleProperty() {
+  QueryBuilder<P2PDataCache, DateTime, QQueryOperations> updatedAtProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'subtitle');
-    });
-  }
-
-  QueryBuilder<P2PDataCache, String, QQueryOperations> titleProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'title');
-    });
-  }
-
-  QueryBuilder<P2PDataCache, P2PDataCacheType, QQueryOperations>
-      typeProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'type');
-    });
-  }
-
-  QueryBuilder<P2PDataCache, DateTime, QQueryOperations>
-      updatedTimestampProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'updatedTimestamp');
-    });
-  }
-
-  QueryBuilder<P2PDataCache, String?, QQueryOperations> userIdProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'userId');
-    });
-  }
-
-  QueryBuilder<P2PDataCache, String, QQueryOperations> valueProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'value');
+      return query.addPropertyName(r'updatedAt');
     });
   }
 }

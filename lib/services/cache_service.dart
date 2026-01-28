@@ -1,5 +1,5 @@
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/services/isar_service.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/services/isar_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'p2p_services/p2p_service_manager.dart';
 import 'package:file_picker/file_picker.dart';
@@ -7,11 +7,11 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/widgets/generic/generic_dialog.dart';
-import 'package:p2lantransfer/utils/widget_layout_render_helper.dart';
-import 'package:p2lantransfer/utils/size_utils.dart';
-import 'package:p2lantransfer/widgets/hold_button.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/widgets/generic/generic_dialog.dart';
+import 'package:p2lan/utils/widget_layout_render_helper.dart';
+import 'package:p2lan/utils/size_utils.dart';
+import 'package:p2lan/widgets/hold_button.dart';
 
 class CacheInfo {
   final String name;
@@ -132,7 +132,7 @@ class CacheService {
         itemCount: p2pItemCount,
         sizeBytes: p2pTotalSize,
         keys: [
-          'p2p_transfer_settings',
+          // legacy key removed
           'p2p_users',
           'file_transfer_requests',
           'pairing_requests'

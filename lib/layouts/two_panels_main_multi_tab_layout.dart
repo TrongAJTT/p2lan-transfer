@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/widgets/generic/draggable_fab.dart';
+import 'package:p2lan/widgets/generic/draggable_fab.dart';
 
 /// Decorator for customizing the switch tab buttons between main and secondary tabs
 class SwitchTabButtonDecorator {

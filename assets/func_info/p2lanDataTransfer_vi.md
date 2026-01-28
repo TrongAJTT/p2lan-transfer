@@ -1,4 +1,4 @@
-# P2Lan Data Transfer
+# Về P2Lan Transfer
 Chuyển dữ liệu nhanh chóng, an toàn qua mạng LAN giữa các thiết bị trong cùng mạng WiFi, hỗ trợ gửi/nhận file, thư mục, chat với nhau và nhiều tuỳ chọn bảo mật, tối ưu hoá hiệu suất.
 
 ## [lan, blue] Tính năng nổi bật
@@ -68,20 +68,6 @@ Chuyển dữ liệu nhanh chóng, an toàn qua mạng LAN giữa các thiết b
 ## [keyboard, cyan] Phím tắt
 Truy cập nhanh các chức năng thường dùng với phím tắt để nâng cao hiệu suất làm việc.
 
-[#:cyan] Màn hình chính
-- [icon:keyboard] Ctrl+1: Mở màn hình Chat
-- [icon:keyboard] Ctrl+2: Mở Local Files (chỉ Android)
-- [icon:keyboard] Ctrl+3: Hiển thị Yêu cầu ghép đôi (khi có)
-- [icon:keyboard] Ctrl+4: Mở Cài đặt truyền dữ liệu
-- [icon:keyboard] Ctrl+5: Hiển thị Tài liệu hướng dẫn
-- [icon:keyboard] Ctrl+6: Hiển thị thông tin Về ứng dụng
-- [icon:keyboard] Ctrl+O: Bật/Tắt mạng
-- [icon:keyboard] Ctrl+R: Tìm thiết bị thủ công (khi mạng đang hoạt động)
-- [icon:keyboard] Ctrl+Del: Xóa tất cả truyền dữ liệu (khi có transfers)
-[#:blue] Màn hình cài đặt, trò chuyện và vài hộp thoại
-- [icon:keyboard] Esc: Thoát và quay về màn hình trước
-- [icon:keyboard] Ctrl+Enter: Gửi tin nhắn
-
 ## [build, purple] Mẹo sử dụng & tối ưu hoá
 - Đặt tên thiết bị dễ nhớ để nhận diện nhanh khi ghép đôi.
 - Sử dụng mã hoá ChaCha20-Poly1305 cho thiết bị di động hoặc AES-GCM cho máy tính mạnh.
@@ -114,3 +100,25 @@ Truy cập nhanh các chức năng thường dùng với phím tắt để nâng
 - Mã hoá sẽ làm giảm tốc độ truyền nhưng tăng tính bảo mật.
 - Không nên truyền file quá lớn trên thiết bị cấu hình yếu hoặc mạng không ổn định.
 - Chat history sẽ được lưu cục bộ và tự động xoá theo cài đặt thời gian.
+
+[#:cyan] Màn hình chính
+- [icon:keyboard] Ctrl+1: Mở màn hình Chat
+- [icon:keyboard] Ctrl+2: Mở Local Files (chỉ Android)
+- [icon:keyboard] Ctrl+3: Hiển thị Yêu cầu ghép đôi (khi có)
+- [icon:keyboard] Ctrl+4: Mở Cài đặt truyền dữ liệu
+- [icon:keyboard] Ctrl+5: Hiển thị Tài liệu hướng dẫn
+- [icon:keyboard] Ctrl+6: Hiển thị thông tin Về ứng dụng
+- [icon:keyboard] Ctrl+O: Bật/Tắt mạng
+- [icon:keyboard] Ctrl+R: Tìm thiết bị thủ công (khi mạng đang hoạt động)
+- [icon:keyboard] Ctrl+Del: Xóa tất cả truyền dữ liệu (khi có transfers)
+[#:yellow] Màn hình Trò chuyện
+- [icon:keyboard] Ctrl+Shift+R: Tải lại các cuộc trò chuyện
+- [icon:keyboard] Ctrl+R: Tải lại cuộc trò chuyện đang tham gia
+- [icon:keyboard] Ctrl+O: Tùy chỉnh cuộc trò chuyện đang tham gia
+- [icon:keyboard] Ctrl+I: Tiến hành soạn tin nhắn văn bản
+- [icon:keyboard] Ctrl+,: Chọn 1 tệp phương tiện trong trò chuyện
+- [icon:keyboard] Crtl+.: Chọn 1 tệp tin trong trò chuyện
+- [icon:keyboard] Ctrl+Enter: Gửi tin nhắn
+[#:blue] Màn hình Cài đặt, Trò chuyện và vài hộp thoại
+- [icon:keyboard] Esc: Thoát và quay về màn hình trước
+- [icon:keyboard] Ctrl+1...Ctrl+9: Chọn cuộc trò chuyện/ phần cài đặt tương ứng

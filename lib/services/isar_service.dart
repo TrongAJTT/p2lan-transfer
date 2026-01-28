@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:p2lantransfer/models/p2p_chat.dart';
-import 'package:p2lantransfer/models/settings_models.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
-import 'package:p2lantransfer/models/p2p_cache_models.dart';
-import 'package:p2lantransfer/models/app_installation.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/services/p2p_services/p2p_chat_service.dart';
+import 'package:p2lan/models/p2p_chat.dart';
+import 'package:p2lan/models/settings_models.dart';
+import 'package:p2lan/models/p2p_models.dart';
+import 'package:p2lan/models/p2p_cache_models.dart';
+import 'package:p2lan/models/app_installation.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/services/p2p_services/p2p_chat_service.dart';
 
 /// Isar database service for P2Lan Transfer
 /// Internal beta v0.5.0 - Clean architecture without legacy migrations
@@ -31,7 +31,7 @@ class IsarService {
       AppInstallationSchema,
       ExtensibleSettingsSchema,
       P2PUserSchema,
-      P2PDataCacheSchema, // NEW: Unified P2P data cache schema
+      P2PDataCacheSchema, // P2P generic data cache schema
       P2PChatSchema,
       P2PCMessageSchema,
       FileTransferRequestSchema,

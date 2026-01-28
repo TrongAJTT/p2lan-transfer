@@ -1,7 +1,7 @@
 import 'dart:io';
 // import 'package:hive_flutter/hive_flutter.dart'; // Commented out during Hive to Isar migration
 import 'package:path_provider/path_provider.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
+import 'package:p2lan/services/app_logger.dart';
 
 Future<void> main() async {
   try {

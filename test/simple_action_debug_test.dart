@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
 
 void main() {
   group('Unified Mobile Layout Debug Tests', () {

@@ -2,9 +2,9 @@ import 'dart:typed_data';
 import 'dart:math';
 import 'package:pointycastle/export.dart' as pointy;
 import 'package:cryptography/cryptography.dart' as crypto;
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/models/p2p_models.dart';
+import 'package:p2lan/services/app_logger.dart';
 
 /// Comprehensive crypto service supporting multiple encryption algorithms
 /// for P2P data transfer with enhanced performance on low-end Android devices

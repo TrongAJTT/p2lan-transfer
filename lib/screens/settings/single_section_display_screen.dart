@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/widgets/generic/section_item.dart';
+import 'package:p2lan/widgets/generic/section_item.dart';
 
 /// Single section display screen for mobile
 /// Shows only one settings section at a time

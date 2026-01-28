@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/utils/function_type_utils.dart';
-import 'package:p2lantransfer/widgets/generic/generic_settings_helper.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
-import 'package:p2lantransfer/screens/about_layout.dart';
-import 'package:p2lantransfer/screens/p2lan_transfer/p2lan_transfer_settings_layout.dart';
-import 'package:p2lantransfer/services/p2p_services/p2p_settings_adapter.dart';
-import 'package:p2lantransfer/utils/snackbar_utils.dart';
+import 'package:p2lan/utils/function_type_utils.dart';
+import 'package:p2lan/widgets/generic/generic_settings_helper.dart';
+import 'package:p2lan/models/p2p_models.dart';
+import 'package:p2lan/screens/about_layout.dart';
+import 'package:p2lan/screens/p2lan_transfer/p2lan_transfer_settings_layout.dart';
+import 'package:p2lan/services/p2p_services/p2p_settings_adapter.dart';
+import 'package:p2lan/utils/snackbar_utils.dart';
 
 /// Generic settings utilities for different function types.
 ///

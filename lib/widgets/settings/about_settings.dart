@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/screens/about_layout.dart';
+import 'package:p2lan/screens/about_layout.dart';
 
 /// About Settings Module
 /// Simple wrapper for the AboutLayout

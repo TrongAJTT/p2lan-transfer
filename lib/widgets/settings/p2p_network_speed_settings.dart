@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/models/settings_models.dart';
-import 'package:p2lantransfer/services/settings_models_service.dart';
-import 'package:p2lantransfer/widgets/generic/option_slider.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/models/settings_models.dart';
+import 'package:p2lan/services/settings_models_service.dart';
+import 'package:p2lan/services/p2p_services/p2p_service_manager.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/widgets/generic/option_slider.dart';
 
 class P2PNetworkSpeedSettings extends StatefulWidget {
   const P2PNetworkSpeedSettings({super.key});
@@ -13,7 +15,7 @@ class P2PNetworkSpeedSettings extends StatefulWidget {
 }
 
 class _P2PNetworkSpeedSettingsState extends State<P2PNetworkSpeedSettings> {
-  P2PTransferSettingsData? _settings;
+  P2PNetworkSettingsData? _settings;
   bool _loading = true;
 
   @override
@@ -24,7 +26,7 @@ class _P2PNetworkSpeedSettingsState extends State<P2PNetworkSpeedSettings> {
 
   Future<void> _loadSettings() async {
     try {
-      final settings = await ExtensibleSettingsService.getP2PTransferSettings();
+      final settings = await ExtensibleSettingsService.getNetworkSettings();
       if (mounted) {
         setState(() {
           _settings = settings;
@@ -34,7 +36,7 @@ class _P2PNetworkSpeedSettingsState extends State<P2PNetworkSpeedSettings> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _settings = P2PTransferSettingsData();
+          _settings = const P2PNetworkSettingsData();
           _loading = false;
         });
       }
@@ -43,13 +45,23 @@ class _P2PNetworkSpeedSettingsState extends State<P2PNetworkSpeedSettings> {
 
   Future<void> _saveSettings() async {
     if (_settings != null) {
-      await ExtensibleSettingsService.updateP2PTransferSettings(_settings!);
+      await ExtensibleSettingsService.updateNetworkSettings(_settings!);
+
+      // Refresh transfer service settings để áp dụng ngay lập tức
+      try {
+        final transferService = P2PServiceManager.instance.transferService;
+        await transferService.reloadTransferSettings();
+        logInfo(
+            'Refreshed P2P transfer service settings after network settings change');
+      } catch (e) {
+        logError('Failed to refresh transfer service settings: $e');
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
 
     if (_loading) {
       return const Center(child: CircularProgressIndicator());

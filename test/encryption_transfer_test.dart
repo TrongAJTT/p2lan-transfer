@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:p2lantransfer/services/encryption_service.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
+import 'package:p2lan/services/encryption_service.dart';
+import 'package:p2lan/models/p2p_models.dart';
 import 'dart:typed_data';
 import 'dart:convert';
 

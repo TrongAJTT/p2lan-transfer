@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/widgets/generic/generic_settings_dialog.dart';
-import 'package:p2lantransfer/widgets/generic/generic_settings_screen.dart';
+import 'package:p2lan/widgets/generic/generic_settings_dialog.dart';
+import 'package:p2lan/widgets/generic/generic_settings_screen.dart';
 
 /// Generic settings configuration
 class GenericSettingsConfig<T> {

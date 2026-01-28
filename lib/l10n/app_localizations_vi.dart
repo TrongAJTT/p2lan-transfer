@@ -55,48 +55,22 @@ class AppLocalizationsVi extends AppLocalizations {
       'Danh sách các thư viện, công cụ và nguồn tài nguyên đã sử dụng trong ứng dụng này.';
 
   @override
-  String get donorsAck => 'Ghi công người ủng hộ';
-
-  @override
-  String get donorsAckDesc =>
-      'Danh sách đánh giá của những người ủng hộ công khai. Cảm ơn các bạn rất nhiều!';
-
-  @override
   String get supportDesc =>
       'P2Lan Transfer giúp đỡ bạn truyền dữ liệu giữa các thiết bị trong cùng mạng dễ dàng hơn. Nếu bạn thấy ứng dụng hữu ích, hãy cân nhắc hỗ trợ mình để giúp mình duy trì và phát triển ứng dụng này. Cảm ơn bạn rất nhiều!';
 
   @override
-  String get supportOnGitHub => 'Hỗ trợ trên GitHub';
+  String get githubSponsorsDesc =>
+      'Trang hỗ trợ chính thức của dự án trên GitHub';
+
+  @override
+  String get buyMeACoffeeDesc =>
+      'Trong trường hợp bạn không có tài khoản Github Sponsors';
 
   @override
   String get donate => 'Ủng hộ';
 
   @override
   String get donateDesc => 'Hỗ trợ mình nếu bạn thấy ứng dụng hữu ích.';
-
-  @override
-  String get oneTimeDonation => 'Ủng hộ một lần';
-
-  @override
-  String get momoDonateDesc => 'Ủng hộ mình qua Momo';
-
-  @override
-  String get donorBenefits => 'Quyền lợi của người ủng hộ';
-
-  @override
-  String get donorBenefit1 =>
-      'Được ghi danh trong phần cảm ơn và chia sẻ ý kiến của bạn (nếu bạn muốn).';
-
-  @override
-  String get donorBenefit2 => 'Được ưu tiên xem xét phản hồi.';
-
-  @override
-  String get donorBenefit3 =>
-      'Truy cập vào các phiên bản beta (gỡ lỗi), tuy nhiên các bản cập nhật sẽ không đợc hứa hẹn thường xuyên.';
-
-  @override
-  String get donorBenefit4 =>
-      'Truy cập vào kho lưu trữ dev (chỉ dành cho người ủng hộ trên GitHub).';
 
   @override
   String get checkForNewVersion => 'Kiểm tra phiên bản mới';
@@ -284,6 +258,102 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get searchHint => 'Tìm kiếm...';
+
+  @override
+  String get remoteControl => 'Điều khiển từ xa';
+
+  @override
+  String get beingRemoteControlled => 'Đang bị điều khiển từ xa';
+
+  @override
+  String get remoteControlling => 'Đang điều khiển từ xa';
+
+  @override
+  String get screenSharing => 'Chia sẻ màn hình';
+
+  @override
+  String get sharingScreen => 'Đang chia sẻ màn hình';
+
+  @override
+  String get viewingScreen => 'Đang xem màn hình';
+
+  @override
+  String isControllingThisDevice(Object userName) {
+    return '$userName đang điều khiển thiết bị này';
+  }
+
+  @override
+  String controllingUser(Object userName) {
+    return 'Đang điều khiển $userName';
+  }
+
+  @override
+  String get endSession => 'Kết thúc phiên';
+
+  @override
+  String get duration => 'Thời gian';
+
+  @override
+  String get started => 'Bắt đầu';
+
+  @override
+  String get disconnectRemoteControl => 'Ngắt kết nối điều khiển từ xa';
+
+  @override
+  String disconnectRemoteControlConfirm(Object userName) {
+    return 'Bạn có chắc chắn muốn ngắt kết nối với $userName?';
+  }
+
+  @override
+  String get disconnect => 'Ngắt kết nối';
+
+  @override
+  String connectingTo(Object userName) {
+    return 'Đang kết nối với $userName...';
+  }
+
+  @override
+  String connectedTo(Object userName) {
+    return 'Đã kết nối với $userName';
+  }
+
+  @override
+  String get controlsInfo => 'Thông tin điều khiển';
+
+  @override
+  String get touchpadArea => 'Khu vực touchpad';
+
+  @override
+  String get moveFingerToControlMouse =>
+      'Di chuyển ngón tay để điều khiển chuột';
+
+  @override
+  String get leftClick => 'Chuột trái';
+
+  @override
+  String get middleClick => 'Chuột giữa';
+
+  @override
+  String get rightClick => 'Chuột phải';
+
+  @override
+  String get scrollUp => 'Cuộn lên';
+
+  @override
+  String get scrollDown => 'Cuộn xuống';
+
+  @override
+  String get remoteControlHelp => 'Trợ giúp điều khiển từ xa';
+
+  @override
+  String get howToControlRemoteComputer => 'Cách điều khiển máy tính từ xa:';
+
+  @override
+  String get noteWindowsOnly =>
+      'Lưu ý: Tính năng này chỉ hoạt động khi điều khiển máy tính Windows.';
+
+  @override
+  String get gotIt => 'Đã hiểu';
 
   @override
   String get history => 'Lịch sử';
@@ -998,7 +1068,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get noFilesSelected => 'Chưa chọn file nào';
 
   @override
-  String get tapRightClickForOptions => 'Nhấn hoặc chuột phải để xem tùy chọn';
+  String get tapRightClickForOptions =>
+      'Nhấn giữ hoặc chuột phải để xem tùy chọn';
 
   @override
   String get unlimited => 'Không giới hạn';
@@ -1160,6 +1231,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get checkingNetwork => 'Đang kiểm tra mạng...';
 
   @override
+  String get pausedNoInternet => 'Đã tạm dừng (Không có internet)';
+
+  @override
   String get connectedViaMobileData => 'Kết nối qua dữ liệu di động (an toàn)';
 
   @override
@@ -1186,10 +1260,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get customDisplayName => 'Tên hiển thị tùy chỉnh';
 
   @override
+  String get yourProfile => 'Hồ sơ của bạn';
+
+  @override
   String get deviceName => 'Tên thiết bị';
 
   @override
-  String get deviceNameHint => 'Nhập tên thiết bị tùy chỉnh...';
+  String get deviceNameDesc =>
+      'Tên hiển thị của thiết bị của bạn với người dùng khác';
+
+  @override
+  String get deviceNameEditDesc =>
+      'Tùy chỉnh tên hiển thị của thiết bị của bạn với người dùng khác';
 
   @override
   String get general => 'Chung';
@@ -1212,6 +1294,9 @@ class AppLocalizationsVi extends AppLocalizations {
       'Cài đặt giao thức, tinh chỉnh hiệu suất & tối ưu hóa';
 
   @override
+  String get estimatedSpeed => 'Tốc độ ước tính';
+
+  @override
   String get advanced => 'Nâng cao';
 
   @override
@@ -1231,6 +1316,13 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get newDevices => 'Thiết Bị Mới';
+
+  @override
+  String get blockedDevices => 'Thiết Bị Đã Chặn';
+
+  @override
+  String get blockedDevicesSubtitle =>
+      'Các thiết bị này đã bị chặn và không thể liên lạc với bạn';
 
   @override
   String get addTrust => 'Thêm tin tưởng';
@@ -1277,6 +1369,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String defaultDisplayName(String name) {
     return 'Mặc định: $name';
   }
+
+  @override
+  String get displayNameHasReset => 'Tên hiển thị đã được đặt lại';
 
   @override
   String get notifications => 'Thông báo';
@@ -1404,7 +1499,22 @@ class AppLocalizationsVi extends AppLocalizations {
   String get share => 'Chia sẻ';
 
   @override
-  String get confirmDelete => 'Bạn có chắc muốn xóa file';
+  String get confirmDelete => 'Xác nhận xóa';
+
+  @override
+  String confirmDeleteFileNumber(int number) {
+    return 'Bạn có chắc muốn xóa $number file(s)';
+  }
+
+  @override
+  String confirmDeleteFolderNumber(int number) {
+    return 'Bạn có chắc muốn xóa $number thư mục(s)';
+  }
+
+  @override
+  String confirmDeleteFoldersAndFilesNumber(int numberFolder, int numberFile) {
+    return 'Bạn có chắc muốn xóa $numberFolder thư mục(s) và $numberFile file(s)';
+  }
 
   @override
   String get removeSelected => 'Xóa nội dung đã chọn';
@@ -1417,6 +1527,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get file => 'Tệp';
+
+  @override
+  String get folder => 'Thư mục';
 
   @override
   String get fileInfo => 'Thông tin tệp';
@@ -1445,13 +1558,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get modified => 'Sửa đổi';
-
-  @override
-  String get p2lanOptionRememberBatchExpandState => 'Nhớ trạng thái lô tác vụ';
-
-  @override
-  String get p2lanOptionRememberBatchExpandStateDesc =>
-      'Nhớ trạng thái mở rộng của mỗi lô tác vụ khi ứng dụng đóng và mở lại';
 
   @override
   String get securityAndEncryption => 'Bảo mật và Mã hóa';
@@ -1628,75 +1734,20 @@ class AppLocalizationsVi extends AppLocalizations {
       'Bạn có chắc muốn xóa lô tác vụ này và tất cả các tập tin đã gửi? Hành động này sẽ xóa tất cả các tác vụ trong lô và không thể hoàn tác.';
 
   @override
-  String get dataCompression => 'Nén dữ liệu';
-
-  @override
-  String get enableCompression => 'Bật nén dữ liệu';
-
-  @override
-  String get enableCompressionDesc =>
-      'Nén dữ liệu để giảm kích thước truyền tải và tăng tốc độ, nhưng có thể làm tăng mức sử dụng CPU.';
-
-  @override
-  String get compressionAlgorithm => 'Thuật toán nén';
-
-  @override
-  String get compressionAlgorithmAuto => 'Tự động (lựa chọn thông minh)';
-
-  @override
-  String get compressionAlgorithmGZIP => 'GZIP (Nén tốt nhất)';
-
-  @override
-  String get compressionAlgorithmDEFLATE => 'DEFLATE (Nhanh nhất)';
-
-  @override
-  String get compressionAlgorithmNone => 'Không (Tắt)';
-
-  @override
-  String get estimatedSpeed => 'Tốc độ ước tính';
-
-  @override
-  String get compressionThreshold => 'Ngưỡng nén';
-
-  @override
-  String get compressionThresholdDesc =>
-      'Chỉ nén dữ liệu nếu kích thước vượt quá ngưỡng này. Giúp tiết kiệm CPU cho các tập tin nhỏ.';
-
-  @override
-  String get adaptiveCompression => 'Nén thích ứng';
-
-  @override
-  String get adaptiveCompressionDesc =>
-      'Tự động điều chỉnh mức độ nén dựa trên kích thước và loại dữ liệu để tối ưu hóa hiệu suất.';
-
-  @override
   String get performanceInfo => 'Thông tin hiệu suất';
 
   @override
   String get performanceInfoEncrypt => 'Mã hóa';
 
   @override
-  String get performanceInfoCompress => 'Nén';
-
-  @override
-  String get performanceInfoExpectedImprovement => 'Cải thiện dự kiến';
-
-  @override
   String get performanceInfoSecuLevel => 'Mức độ bảo mật';
-
-  @override
-  String get compressionBenefits => 'Lợi ích khi nén';
-
-  @override
-  String get compressionBenefitsInfo =>
-      '• Tệp văn bản: 3-5x tốc độ truyền nhanh hơn\n• Mã nguồn: 2-4x tốc độ truyền nhanh hơn\n• Dữ liệu JSON/XML: 4-6x tốc độ truyền nhanh hơn\n• Tệp phương tiện: Không có chi phí (tự động phát hiện)';
 
   @override
   String get performanceWarning => 'Cảnh báo hiệu suất';
 
   @override
   String get performanceWarningInfo =>
-      'Mã hóa và nén có thể gây ra sự cố trên một số thiết bị Android, đặc biệt là các mẫu cũ hơn hoặc cấp thấp hơn. Nếu bạn gặp sự cố, hãy tắt các tính năng này để có truyền tải ổn định.';
+      'Mã hóa có thể gây ra sự cố trên một số thiết bị Android, đặc biệt là các mẫu cũ hơn hoặc cấp thấp hơn. Nếu bạn gặp sự cố, hãy tắt tính năng này để có truyền tải ổn định.';
 
   @override
   String get resetToSafeDefaults => 'Đặt lại về mặc định an toàn';
@@ -1960,19 +2011,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Ứng dụng này sử dụng nhiều thư viện mã nguồn mở giúp mọi thứ trở nên khả thi. Chúng tôi biết ơn tất cả các tác giả vì sự nỗ lực và cống hiến của họ.';
 
   @override
-  String get thanksDonors => 'Cảm ơn các nhà tài trợ!';
-
-  @override
-  String get thanksDonorsDesc =>
-      'Đặc biệt cảm ơn những người đã ủng hộ sự phát triển của ứng dụng này. Sự đóng góp của bạn giúp chúng tôi tiếp tục cải thiện và duy trì dự án.';
-
-  @override
-  String get thanksForUrSupport => 'Cảm ơn sự hỗ trợ của bạn!';
-
-  @override
-  String get supporterS => 'Người ủng hộ';
-
-  @override
   String get pressBackAgainToExit => 'Nhấn quay lại lần nữa để thoát ứng dụng';
 
   @override
@@ -2228,4 +2266,178 @@ class AppLocalizationsVi extends AppLocalizations {
   String productCount(int count) {
     return '$count sản phẩm';
   }
+
+  @override
+  String processingNumberOfTotal(int current, int total) {
+    return 'Đang xử lý $current trên $total tệp';
+  }
+
+  @override
+  String get waitingForFileSelection =>
+      'Chờ người dùng chọn tệp và xử lý tài nguyên tệp';
+
+  @override
+  String get expand => 'Mở rộng';
+
+  @override
+  String get collapse => 'Thu gọn';
+
+  @override
+  String get block => 'Chặn';
+
+  @override
+  String get blockTitle => 'Chặn người dùng này';
+
+  @override
+  String get blockDesc =>
+      'Bạn có chắc chắn muốn chặn người dùng này không?\nNgười dùng này sẽ không thể liên lạc với bạn cho đến khi bạn gỡ chặn.';
+
+  @override
+  String get unblock => 'Bỏ chặn';
+
+  @override
+  String get unblockTitle => 'Bỏ chặn người dùng này';
+
+  @override
+  String get unblockDesc =>
+      'Bạn có chắc chắn muốn bỏ chặn người dùng này không?\nNgười dùng này sẽ có thể liên lạc với bạn.';
+
+  @override
+  String get connectToDevice => 'Kết nối với thiết bị';
+
+  @override
+  String get enterDeviceIpAddress =>
+      'Nhập địa chỉ IP của thiết bị bạn muốn kết nối:';
+
+  @override
+  String get connectToDeviceHint =>
+      'Đảm bảo thiết bị đang cùng mạng và đã bật chế độ P2P networking.';
+
+  @override
+  String get connecting => 'Đang kết nối...';
+
+  @override
+  String get customStatusCards => 'Tùy chỉnh thẻ trạng thái';
+
+  @override
+  String get customStatusCardsDesc => 'Chọn các thẻ trạng thái để hiển thị';
+
+  @override
+  String get endRemoteToCustomizeStatus =>
+      'Kết thúc phiên điều khiển để có thể tùy chỉnh trạng thái';
+
+  @override
+  String get noStatusCardsEnabled => 'Không có thẻ trạng thái nào được bật';
+
+  @override
+  String get useTheCustomizeButtonToEnableStatusCards =>
+      'Sử dụng nút tùy chỉnh để bật các thẻ trạng thái';
+
+  @override
+  String get thisDeviceDesc => 'Thông tin thiết bị và cài đặt';
+
+  @override
+  String get connectionStatusDesc => 'Thông tin kết nối mạng và debug';
+
+  @override
+  String get statisticsDesc => 'Thống kê chuyển và thiết bị';
+
+  @override
+  String get remoteControlRequest => 'Yêu cầu điều khiển từ xa';
+
+  @override
+  String remoteControlRequestMessage(String userName) {
+    return '$userName muốn điều khiển máy tính của bạn từ xa.';
+  }
+
+  @override
+  String get reason => 'Lý do';
+
+  @override
+  String get securityWarning => 'Cảnh báo bảo mật';
+
+  @override
+  String get securityWarningMessage =>
+      'Cấp quyền điều khiển từ xa cho phép người dùng khác:';
+
+  @override
+  String get controlMouseCursor => 'Điều khiển con trỏ chuột của bạn';
+
+  @override
+  String get clickAnywhere => 'Nhấp vào bất kỳ đâu trên màn hình của bạn';
+
+  @override
+  String get scrollScreen => 'Cuộn trên màn hình của bạn';
+
+  @override
+  String get trustWarning =>
+      'Chỉ chấp nhận yêu cầu từ những người dùng bạn tin tưởng.';
+
+  @override
+  String get confirmRemoteControlAccess => 'Xác nhận quyền điều khiển từ xa';
+
+  @override
+  String confirmRemoteControlMessage(String userName) {
+    return 'Giữ để xác nhận rằng bạn muốn cho phép $userName điều khiển máy tính của bạn.';
+  }
+
+  @override
+  String get holdToAllowControl => 'GIỮ ĐỂ CHO PHÉP ĐIỀU KHIỂN';
+
+  @override
+  String get allowing => 'Đang cho phép...';
+
+  @override
+  String controlInstruction(String userName) {
+    return 'Điều này sẽ cho $userName quyền điều khiển chuột và màn hình của bạn.';
+  }
+
+  @override
+  String get requestRemoteControl => 'Yêu cầu điều khiển từ xa';
+
+  @override
+  String sendRemoteControlRequest(String userName) {
+    return 'Gửi yêu cầu điều khiển từ xa đến $userName?';
+  }
+
+  @override
+  String get reasonOptional => 'Lý do (tùy chọn)';
+
+  @override
+  String get reasonHint => 'Tại sao bạn cần quyền điều khiển từ xa?';
+
+  @override
+  String get remoteControlAccess => 'Quyền điều khiển từ xa';
+
+  @override
+  String get remoteControlAccessMessage => 'Nếu được chấp nhận, bạn sẽ có thể:';
+
+  @override
+  String get controlRemoteMouse => 'Điều khiển con trỏ chuột từ xa';
+
+  @override
+  String get clickRemoteScreen => 'Nhấp vào bất kỳ đâu trên màn hình từ xa';
+
+  @override
+  String get scrollRemoteScreen => 'Cuộn trên màn hình từ xa';
+
+  @override
+  String get requestExpiresIn60 => 'Yêu cầu sẽ hết hạn trong 60 giây.';
+
+  @override
+  String get sendText => 'Gửi văn bản';
+
+  @override
+  String get sendTextHint => 'Nhập văn bản cần gửi...';
+
+  @override
+  String get textSentSuccessfully => 'Văn bản đã được gửi';
+
+  @override
+  String textSendError(Object error) {
+    return 'Lỗi gửi văn bản: $error';
+  }
+
+  @override
+  String get send => 'Gửi';
 }

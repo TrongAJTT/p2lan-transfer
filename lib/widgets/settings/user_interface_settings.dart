@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/models/settings_models.dart';
-import 'package:p2lantransfer/services/settings_models_service.dart';
-import 'package:p2lantransfer/main.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/models/settings_models.dart';
+import 'package:p2lan/services/settings_models_service.dart';
+import 'package:p2lan/main.dart';
+import 'package:p2lan/utils/shortcut_tooltip_utils.dart';
 
 /// User Interface Settings Module
 /// Handles theme, language, and layout settings
@@ -44,6 +45,10 @@ class _UserInterfaceSettingsState extends State<UserInterfaceSettings> {
           _settings = settings;
           _loading = false;
         });
+
+        // Apply shortcut tooltip setting immediately when settings are loaded
+        ShortcutTooltipUtils.I
+            .setShowShortcutsInTooltips(settings.showShortcutsInTooltips);
       }
     } catch (e) {
       if (mounted) {
@@ -51,6 +56,10 @@ class _UserInterfaceSettingsState extends State<UserInterfaceSettings> {
           _settings = UserInterfaceSettingsData();
           _loading = false;
         });
+
+        // Apply default shortcut tooltip setting
+        ShortcutTooltipUtils.I
+            .setShowShortcutsInTooltips(_settings!.showShortcutsInTooltips);
       }
     }
   }
@@ -123,6 +132,9 @@ class _UserInterfaceSettingsState extends State<UserInterfaceSettings> {
 
       // Trigger UI refresh for tooltip changes
       settingsController.refreshUI();
+
+      // Update global singleton utility
+      ShortcutTooltipUtils.I.setShowShortcutsInTooltips(value);
 
       // Notify parent
       widget.onShowShortcutsChanged?.call(value);

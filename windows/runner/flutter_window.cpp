@@ -87,7 +87,7 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
 }
 
 void FlutterWindow::SetupMethodChannel() {
-  const std::string channel_name = "com.p2lantransfer.app/network_security";
+  const std::string channel_name = "dev.trongajtt.p2lan/network_security";
   
   auto channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
       flutter_controller_->engine()->messenger(), channel_name,

@@ -5,18 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
-import 'package:p2lantransfer/services/file_storage_service.dart';
-import 'package:p2lantransfer/services/network_security_service.dart';
-import 'package:p2lantransfer/services/p2p_services/p2p_notification_service.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/utils/snackbar_utils.dart';
-import 'package:p2lantransfer/widgets/generic/option_slider.dart';
-import 'package:p2lantransfer/widgets/generic/option_list_picker.dart';
-import 'package:p2lantransfer/widgets/generic/option_item.dart';
-import 'package:p2lantransfer/widgets/generic/permission_info_dialog.dart';
-import 'package:p2lantransfer/screens/p2lan_transfer/encryption_settings_section.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
+import 'package:p2lan/models/p2p_models.dart';
+import 'package:p2lan/services/file_storage_service.dart';
+import 'package:p2lan/services/network_security_service.dart';
+import 'package:p2lan/services/p2p_services/p2p_notification_service.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/utils/snackbar_utils.dart';
+import 'package:p2lan/widgets/generic/option_slider.dart';
+import 'package:p2lan/widgets/generic/option_list_picker.dart';
+import 'package:p2lan/widgets/generic/option_item.dart';
+import 'package:p2lan/widgets/generic/permission_info_dialog.dart';
+import 'package:p2lan/screens/p2lan_transfer/encryption_settings_section.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
 
 class P2LanTransferSettingsLayout extends StatefulWidget {
   final P2PDataTransferSettings? currentSettings;
@@ -132,7 +132,6 @@ class _P2LanTransferSettingsLayoutState
       uiRefreshRateSeconds: 0, // Default to immediate updates
       enableNotifications: false, // Default to disable notifications
       createSenderFolders: false, // Default to date folders
-      rememberBatchExpandState: false, // Default to false to save resources
       encryptionType: EncryptionType.none, // Default to no encryption
     );
   }
@@ -199,7 +198,7 @@ class _P2LanTransferSettingsLayoutState
   }
 
   void _resetToDefaults() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -228,7 +227,7 @@ class _P2LanTransferSettingsLayoutState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return Column(
       children: [
@@ -310,7 +309,7 @@ class _P2LanTransferSettingsLayoutState
   }
 
   Widget _buildGenericTab() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       padding: EdgeInsets.all(widget.isCompact ? 12 : 20),
       child: Column(
@@ -346,22 +345,6 @@ class _P2LanTransferSettingsLayoutState
           ],
 
           const SizedBox(height: 16),
-
-          // Remember Batch Expand State
-          Card(
-            child: SwitchListTile.adaptive(
-              title: Text(l10n.p2lanOptionRememberBatchExpandState),
-              subtitle: Text(l10n.p2lanOptionRememberBatchExpandStateDesc),
-              value: _currentSettings.rememberBatchExpandState,
-              onChanged: (value) {
-                setState(() {
-                  _currentSettings.rememberBatchExpandState = value;
-                });
-                _markChanged();
-              },
-              secondary: const Icon(Icons.expand_more),
-            ),
-          ),
 
           const SizedBox(height: 24),
 
@@ -491,7 +474,7 @@ class _P2LanTransferSettingsLayoutState
   }
 
   Widget _buildStorageTab() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       padding: EdgeInsets.all(widget.isCompact ? 12 : 20),
       child: Column(
@@ -669,7 +652,7 @@ class _P2LanTransferSettingsLayoutState
   }
 
   Widget _buildNetworkTab() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       padding: EdgeInsets.all(widget.isCompact ? 12 : 20),
       child: Column(
@@ -845,7 +828,7 @@ class _P2LanTransferSettingsLayoutState
   }
 
   String _formatBytes(int bytes, [int decimals = 2]) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     if (bytes <= 0) return '0 B';
     if (bytes < 0) return l10n.unlimited;
     const suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
@@ -881,7 +864,7 @@ class _P2LanTransferSettingsLayoutState
 
   void _selectDownloadPath() async {
     String? path;
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     try {
       if (Platform.isAndroid) {
@@ -930,7 +913,7 @@ class _P2LanTransferSettingsLayoutState
   }
 
   Future<void> _handleNotificationToggle(bool enable) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     // Prevent changing the value optimistically in the UI before permission is known
     // The `setState` calls within this function will handle the final state.
     if (enable) {

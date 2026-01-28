@@ -4,11 +4,12 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/services/isar_service.dart';
-import 'package:p2lantransfer/services/p2p_services/p2p_network_service.dart';
-import 'package:p2lantransfer/utils/isar_utils.dart';
+import 'package:p2lan/models/p2p_models.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/services/isar_service.dart';
+import 'package:p2lan/services/p2p_services/p2p_network_service.dart';
+import 'package:p2lan/utils/isar_utils.dart';
+import 'package:p2lan/utils/platform_detection_utils.dart';
 import 'package:uuid/uuid.dart';
 
 /// P2P Discovery Service - Handles device discovery, pairing, broadcast, and trust management
@@ -28,6 +29,9 @@ class P2PDiscoveryService extends ChangeNotifier {
 
   // Callbacks
   Function(PairingRequest)? _onNewPairingRequest;
+  Function(Socket, Map<String, dynamic>)? _onRemoteControlMessage;
+  Function(Socket, Map<String, dynamic>)? _onScreenSharingMessage;
+  Function(String)? _onUserDisconnected; // userId
 
   // Timers
   Timer? _broadcastTimer;
@@ -87,6 +91,10 @@ class P2PDiscoveryService extends ChangeNotifier {
         logInfo(
             'P2PDiscoveryService: Stopping automatic discovery after 5 seconds (battery optimization)');
         _isDiscovering = false;
+
+        // Notify network service that discovery is complete
+        _networkService.onDiscoveryComplete();
+
         notifyListeners();
       }
     });
@@ -112,13 +120,24 @@ class P2PDiscoveryService extends ChangeNotifier {
 
   /// Manual discovery scan
   Future<void> manualDiscovery() async {
-    if (!_networkService.isEnabled || _networkService.currentUser == null)
+    if (!_networkService.isEnabled || _networkService.currentUser == null) {
       return;
+    }
 
     lastDiscoveryTime = DateTime.now();
     logInfo('P2PDiscoveryService: Starting manual discovery scan...');
 
+    // Set status to discovering for manual discovery
+    _networkService.setConnectionStatus(ConnectionStatus.discovering);
+
     await _sendDiscoveryScanRequest();
+
+    // Schedule status change back to connected after a short delay
+    Timer(const Duration(seconds: 3), () {
+      _networkService.setConnectionStatus(ConnectionStatus.connected);
+      logInfo(
+          'P2PDiscoveryService: Manual discovery completed, status changed to connected');
+    });
 
     logInfo('P2PDiscoveryService: Manual discovery scan completed');
     notifyListeners();
@@ -340,6 +359,51 @@ class P2PDiscoveryService extends ChangeNotifier {
     _onNewPairingRequest = callback;
   }
 
+  /// Set callback for remote control messages
+  void setRemoteControlMessageCallback(
+      Function(Socket, Map<String, dynamic>)? callback) {
+    _onRemoteControlMessage = callback;
+  }
+
+  /// Set callback for screen sharing messages
+  void setScreenSharingMessageCallback(
+      Function(Socket, Map<String, dynamic>)? callback) {
+    _onScreenSharingMessage = callback;
+  }
+
+  /// Set callback for user disconnected
+  void setUserDisconnectedCallback(Function(String)? callback) {
+    _onUserDisconnected = callback;
+  }
+
+  /// Create or update a blocked user coming from the pairing dialog,
+  /// mark as temp-stored if newly created, update in-memory map and persist.
+  Future<void> blockUserFromPairing({
+    required String userId,
+    required String displayName,
+    required String profileId,
+    required String ipAddress,
+    required int port,
+  }) async {
+    final isar = IsarService.isar;
+    final existing = await isar.p2PUsers.get(fastHash(userId));
+    final user = existing ??
+        P2PUser(
+          id: userId,
+          displayName: displayName,
+          profileId: profileId,
+          ipAddress: ipAddress,
+          port: port,
+          lastSeen: DateTime.now(),
+          isStored: false,
+          isTempStored: true,
+        );
+    user.isBlocked = true;
+    _discoveredUsers[userId] = user;
+    await isar.writeTxn(() async => isar.p2PUsers.put(user));
+    notifyListeners();
+  }
+
   /// Get user by ID
   P2PUser? getUserById(String userId) {
     return _discoveredUsers[userId];
@@ -385,6 +449,13 @@ class P2PDiscoveryService extends ChangeNotifier {
 
     // Remove stale users
     for (final userId in usersToRemove) {
+      final user = _discoveredUsers[userId];
+      if (user != null && (user.isBlocked || user.isTempStored)) {
+        // Keep blocked or temp-stored users; only mark offline and persist
+        user.isOnline = false;
+        await _saveUser(user);
+        continue;
+      }
       _discoveredUsers.remove(userId);
       await _removeUser(userId);
       hasChanges = true;
@@ -418,7 +489,16 @@ class P2PDiscoveryService extends ChangeNotifier {
 
   /// Handle TCP messages forwarded from transfer service
   void handleTcpMessage(Socket socket, P2PMessage message) {
-    logInfo('P2PDiscoveryService: Processing TCP message: ${message.type}');
+    // @DebugLog
+    // logDebug('P2PDiscoveryService: Processing TCP message: ${message.type}');
+
+    // Drop any signals from blocked users
+    final blockedUser = _discoveredUsers[message.fromUserId];
+    if (blockedUser?.isBlocked == true) {
+      logWarning(
+          'P2PDiscoveryService: Ignoring ${message.type} from blocked user ${blockedUser!.displayName}');
+      return;
+    }
 
     switch (message.type) {
       case P2PMessageTypes.pairingRequest:
@@ -438,6 +518,22 @@ class P2PDiscoveryService extends ChangeNotifier {
         break;
       case P2PMessageTypes.disconnect:
         _handleDisconnectMessage(message);
+        break;
+      // Remote control messages - delegate to remote control service
+      case P2PMessageTypes.remoteControlRequest:
+      case P2PMessageTypes.remoteControlResponse:
+      case P2PMessageTypes.remoteControlEvent:
+      case P2PMessageTypes.remoteControlDisconnect:
+        _delegateToRemoteControlService(socket, message.toJson());
+        break;
+      // Screen sharing messages - delegate to screen sharing service
+      case P2PMessageTypes.screenSharingRequest:
+      case P2PMessageTypes.screenSharingResponse:
+      case P2PMessageTypes.screenSharingData:
+      case P2PMessageTypes.screenSharingDisconnect:
+        logDebug(
+            'P2PDiscoveryService: Delegating ${message.type} with data: ${message.data}');
+        _delegateToScreenSharingService(socket, message.toJson());
         break;
       default:
         logWarning(
@@ -490,6 +586,7 @@ class P2PDiscoveryService extends ChangeNotifier {
         ipAddress: _networkService.currentUser!.ipAddress,
         port: _networkService.currentUser!.port,
         timestamp: DateTime.now().millisecondsSinceEpoch,
+        platform: PlatformDetectionUtils.getCurrentPlatform(),
       );
 
       final requestData = {
@@ -521,6 +618,14 @@ class P2PDiscoveryService extends ChangeNotifier {
 
       logInfo(
           'P2PDiscoveryService: Processing scan request from ${request.fromUserName}');
+
+      // Ignore blocked users at scan stage
+      final existingBlocked = _discoveredUsers[request.fromUserId];
+      if (existingBlocked?.isBlocked == true) {
+        logWarning(
+            'P2PDiscoveryService: Ignoring discovery scan from blocked user ${existingBlocked!.displayName}');
+        return;
+      }
 
       // Check if device exists in storage
       final existingUserInStorage = await _loadStoredUser(request.fromUserId);
@@ -595,6 +700,20 @@ class P2PDiscoveryService extends ChangeNotifier {
 
         case DiscoveryResponseCode.deviceNew:
           // Device is new - create new profile
+          // If it exists in storage and is blocked, keep blocked and update online status
+          if (existingUserInStorage != null &&
+              existingUserInStorage.isBlocked) {
+            existingUserInStorage.ipAddress = request.ipAddress;
+            existingUserInStorage.port = request.port;
+            existingUserInStorage.isOnline = true;
+            existingUserInStorage.lastSeen = DateTime.now();
+            _discoveredUsers[existingUserInStorage.id] = existingUserInStorage;
+            await _saveUser(existingUserInStorage);
+            logInfo(
+                'P2PDiscoveryService: Rediscovered blocked device; kept blocked and marked online');
+            break;
+          }
+
           final newUser = P2PUser(
             id: request.fromUserId,
             displayName: request.fromUserName.isNotEmpty
@@ -606,6 +725,7 @@ class P2PDiscoveryService extends ChangeNotifier {
             isOnline: true,
             lastSeen: DateTime.now(),
             isStored: false,
+            platform: request.platform,
           );
 
           _discoveredUsers[newUser.id] = newUser;
@@ -643,7 +763,8 @@ class P2PDiscoveryService extends ChangeNotifier {
 
   Future<void> _processDiscoveryResponse(DiscoveryResponse response) async {
     final receivedUser = response.userProfile;
-    final isInStorage = await _loadStoredUser(receivedUser.id) != null;
+    final storedUser = await _loadStoredUser(receivedUser.id);
+    final isInStorage = storedUser != null;
 
     logInfo(
         'P2PDiscoveryService: Processing response from ${receivedUser.displayName}: '
@@ -651,7 +772,15 @@ class P2PDiscoveryService extends ChangeNotifier {
 
     switch (response.responseCode) {
       case DiscoveryResponseCode.deviceNew:
-        if (isInStorage) {
+        if (isInStorage && storedUser.isBlocked) {
+          // Keep the blocked record, just refresh connectivity fields
+          storedUser.ipAddress = receivedUser.ipAddress;
+          storedUser.port = receivedUser.port;
+          storedUser.isOnline = true;
+          storedUser.lastSeen = DateTime.now();
+          _discoveredUsers[storedUser.id] = storedUser;
+          await _saveUser(storedUser);
+        } else if (isInStorage) {
           // Remove old profile, create new one
           await _removeUser(receivedUser.id);
           _discoveredUsers.remove(receivedUser.id);
@@ -686,6 +815,19 @@ class P2PDiscoveryService extends ChangeNotifier {
     user.isOnline = true;
     user.lastSeen = DateTime.now();
     user.isStored = false;
+    // If a blocked record already exists in storage, keep it and update online
+    final stored = await _loadStoredUser(user.id);
+    if (stored != null && stored.isBlocked) {
+      stored.ipAddress = user.ipAddress;
+      stored.port = user.port;
+      stored.isOnline = true;
+      stored.lastSeen = DateTime.now();
+      _discoveredUsers[stored.id] = stored;
+      await _saveUser(stored);
+      logInfo(
+          'P2PDiscoveryService: Created view from stored blocked profile: ${stored.displayName}');
+      return;
+    }
 
     _discoveredUsers[user.id] = user;
     logInfo(
@@ -707,6 +849,7 @@ class P2PDiscoveryService extends ChangeNotifier {
       user.port = receivedUser.port;
       user.isOnline = true;
       user.lastSeen = DateTime.now();
+      user.platform = receivedUser.platform;
 
       if (receivedUser.displayName.isNotEmpty &&
           !receivedUser.displayName.startsWith('Device-')) {
@@ -965,6 +1108,9 @@ class P2PDiscoveryService extends ChangeNotifier {
       await _saveUser(user);
       notifyListeners();
       logInfo('P2PDiscoveryService: ${user.displayName} has disconnected');
+
+      // Notify callback about user disconnect
+      _onUserDisconnected?.call(fromUserId);
     }
   }
 
@@ -973,6 +1119,19 @@ class P2PDiscoveryService extends ChangeNotifier {
     _pendingRequests.clear();
     notifyListeners();
     logInfo('P2PDiscoveryService: In-memory pairing requests cleared');
+  }
+
+  /// Delegate remote control messages to remote control service
+  void _delegateToRemoteControlService(
+      Socket socket, Map<String, dynamic> messageData) {
+    _onRemoteControlMessage?.call(socket, messageData);
+  }
+
+  void _delegateToScreenSharingService(
+      Socket socket, Map<String, dynamic> messageData) {
+    logDebug(
+        'P2PDiscoveryService: Delegating screen sharing message: $messageData');
+    _onScreenSharingMessage?.call(socket, messageData);
   }
 
   @override

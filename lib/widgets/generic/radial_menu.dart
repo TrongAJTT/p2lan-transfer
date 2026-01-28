@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/widgets/generic/virtual_joystick_detector.dart';
+import 'package:p2lan/widgets/generic/virtual_joystick_detector.dart';
 
 /// Generic data model for a radial menu item.
 class RadialMenuItem<T> {

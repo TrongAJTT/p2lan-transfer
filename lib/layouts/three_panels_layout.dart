@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/widgets/generic/icon_button_list.dart';
+import 'package:p2lan/widgets/generic/icon_button_list.dart';
 
 /// Information for each panel in the three panels layout
 class PanelInfo {
@@ -319,8 +319,11 @@ class _ThreePanelsLayoutState extends State<ThreePanelsLayout>
             .whereType<IconButton>()
             .map((button) => IconButtonListItem.fromIconButton(button))
             .toList(growable: false);
+        // final visibleCount = width < widget.maxWidthDisplayFullActions
+        //     ? (width - widget.otherItemsWidth) ~/ widget.widthPerAction
+        //     : items.length;
         final visibleCount = width < widget.maxWidthDisplayFullActions
-            ? (width - widget.otherItemsWidth) ~/ widget.widthPerAction
+            ? items.length - 4
             : items.length;
         appBar.actions!.clear();
         appBar.actions!

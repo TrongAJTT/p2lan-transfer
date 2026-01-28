@@ -1,12 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/utils/url_utils.dart';
+import 'package:p2lan/utils/generic_dialog_utils.dart';
+import 'package:p2lan/utils/url_utils.dart';
 import 'package:path/path.dart' as path;
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/utils/icon_utils.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/widgets/generic/option_grid_picker.dart' as grid;
-import 'package:p2lantransfer/widgets/generic/option_item.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/utils/icon_utils.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/widgets/generic/option_grid_picker.dart' as grid;
+import 'package:p2lan/widgets/generic/option_item.dart';
 import 'package:file_picker/file_picker.dart';
 
 enum FileType { all, image, video, audio, document, archive, other }
@@ -20,6 +21,8 @@ class LocalFileManagerWidget extends StatefulWidget {
   final bool viewSubfolders;
   final bool viewOnly;
   final String title;
+  final bool selectionMode;
+  final Function(List<String>)? onFilesSelected;
 
   const LocalFileManagerWidget({
     super.key,
@@ -27,6 +30,8 @@ class LocalFileManagerWidget extends StatefulWidget {
     this.viewSubfolders = true,
     this.viewOnly = false,
     this.title = 'File Manager',
+    this.selectionMode = false,
+    this.onFilesSelected,
   });
 
   @override
@@ -34,6 +39,7 @@ class LocalFileManagerWidget extends StatefulWidget {
 }
 
 class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
+  // Entries can be either File or Directory based on the current path listing
   List<FileSystemEntity> _allFiles = [];
   List<FileSystemEntity> _filteredFiles = [];
   String _searchQuery = '';
@@ -42,8 +48,13 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
   SortOrder _sortOrder = SortOrder.ascending;
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
-  final Set<String> _selectedFiles = {};
+  final Set<String> _selectedFiles = {}; // can contain files or directories
   bool _isSelectionMode = false;
+  // Track current browsing path (root = widget.basePath)
+  late String _currentPath;
+
+  // Multi-level selection cache - stores selections per directory path
+  final Map<String, Set<String>> _selectionCache = {};
 
   // Performance optimization caches
   final Map<String, FileStat> _fileStatCache = {};
@@ -52,6 +63,9 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
   @override
   void initState() {
     super.initState();
+    _currentPath = widget.basePath;
+    // Không vào selection mode ngay, chỉ khi nhấn giữ
+    _isSelectionMode = false;
     _loadFiles();
   }
 
@@ -66,6 +80,7 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
     // 🔥 CLEANUP: Clear caches to free memory and prevent memory leaks
     _fileStatCache.clear();
     _fileTypeCache.clear();
+    _selectionCache.clear();
     // 🔥 CLEANUP: Clear file lists to free memory
     _allFiles.clear();
     _filteredFiles.clear();
@@ -79,7 +94,7 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
     });
 
     try {
-      final directory = Directory(widget.basePath);
+      final directory = Directory(_currentPath);
       if (!await directory.exists()) {
         await directory.create(recursive: true);
       }
@@ -88,16 +103,8 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
       _fileStatCache.clear();
       _fileTypeCache.clear();
 
-      List<FileSystemEntity> files = [];
-
-      if (widget.viewSubfolders) {
-        files = await directory.list(recursive: true).toList();
-      } else {
-        files = await directory.list().toList();
-      }
-
-      // Filter out directories if we only want files for operations
-      files = files.whereType<File>().toList();
+      // Always list only immediate children (files + directories)
+      final files = await directory.list(recursive: false).toList();
 
       // Pre-populate file type cache for better performance
       await _populateFileTypeCache(files);
@@ -106,6 +113,9 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
         _allFiles = files;
         _applyFiltersAndSort();
         _isLoading = false;
+
+        // Restore selections for current path if available
+        _restoreSelectionsForCurrentPath();
       });
     } catch (e) {
       logError('Failed to load files: $e');
@@ -129,31 +139,36 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
   }
 
   void _applyFiltersAndSort() {
-    _filteredFiles = _allFiles.where((file) {
-      // Search filter
-      if (_searchQuery.isNotEmpty &&
-          !path
-              .basename(file.path)
-              .toLowerCase()
-              .contains(_searchQuery.toLowerCase())) {
-        return false;
-      }
+    // Separate directories and files
+    final allDirs = _allFiles.whereType<Directory>().toList();
+    final allFilesOnly = _allFiles.whereType<File>().toList();
 
-      // File type filter
-      if (_selectedFileType != FileType.all) {
-        final fileType = _getFileType(file.path);
-        if (fileType != _selectedFileType) {
-          return false;
-        }
-      }
+    // Filter by search for both dirs and files
+    bool matchesSearch(FileSystemEntity e) => _searchQuery.isEmpty
+        ? true
+        : path
+            .basename(e.path)
+            .toLowerCase()
+            .contains(_searchQuery.toLowerCase());
 
-      return true;
+    final filteredDirs = allDirs.where(matchesSearch).toList();
+
+    // File type filter only applies to files
+    final filteredFiles = allFilesOnly.where((file) {
+      if (!matchesSearch(file)) return false;
+      if (_selectedFileType == FileType.all) return true;
+      return _getFileType(file.path) == _selectedFileType;
     }).toList();
 
-    // Sort files - async sort for better performance with large lists
-    _filteredFiles.sort((a, b) {
-      int comparison = 0;
+    // Sort directories by name always
+    filteredDirs.sort((a, b) => path
+        .basename(a.path)
+        .toLowerCase()
+        .compareTo(path.basename(b.path).toLowerCase()));
 
+    // Sort files by selected criteria
+    filteredFiles.sort((a, b) {
+      int comparison = 0;
       switch (_sortCriteria) {
         case SortCriteria.name:
           comparison = path
@@ -162,28 +177,26 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
               .compareTo(path.basename(b.path).toLowerCase());
           break;
         case SortCriteria.size:
-          // Use cached stats if available, otherwise fallback to sync
           if (_fileStatCache.containsKey(a.path) &&
               _fileStatCache.containsKey(b.path)) {
             final sizeA = _fileStatCache[a.path]!.size;
             final sizeB = _fileStatCache[b.path]!.size;
             comparison = sizeA.compareTo(sizeB);
           } else {
-            final sizeA = (a as File).lengthSync();
-            final sizeB = (b as File).lengthSync();
+            final sizeA = a.lengthSync();
+            final sizeB = b.lengthSync();
             comparison = sizeA.compareTo(sizeB);
           }
           break;
         case SortCriteria.date:
-          // Use cached stats if available, otherwise fallback to sync
           if (_fileStatCache.containsKey(a.path) &&
               _fileStatCache.containsKey(b.path)) {
             final dateA = _fileStatCache[a.path]!.modified;
             final dateB = _fileStatCache[b.path]!.modified;
             comparison = dateA.compareTo(dateB);
           } else {
-            final dateA = (a as File).lastModifiedSync();
-            final dateB = (b as File).lastModifiedSync();
+            final dateA = a.lastModifiedSync();
+            final dateB = b.lastModifiedSync();
             comparison = dateA.compareTo(dateB);
           }
           break;
@@ -193,9 +206,78 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
           comparison = typeA.index.compareTo(typeB.index);
           break;
       }
-
       return _sortOrder == SortOrder.ascending ? comparison : -comparison;
     });
+
+    // Directories first, then files
+    _filteredFiles = [...filteredDirs, ...filteredFiles];
+  }
+
+  bool get _isAtRoot =>
+      path.normalize(_currentPath) == path.normalize(widget.basePath);
+
+  Widget _buildBreadcrumbBar(AppLocalizations l10n) {
+    final List<String> segments = [];
+    final String base = path.normalize(widget.basePath);
+    String current = path.normalize(_currentPath);
+    while (current.startsWith(base)) {
+      segments.insert(0, current);
+      if (current == base) break;
+      current = path.normalize(Directory(current).parent.path);
+    }
+
+    return Row(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+          tooltip: l10n.back,
+          onPressed: _isAtRoot
+              ? null
+              : () {
+                  final parent = Directory(_currentPath).parent.path;
+                  if (path
+                      .normalize(parent)
+                      .startsWith(path.normalize(widget.basePath))) {
+                    _navigateToDirectory(parent);
+                  } else {
+                    _navigateToDirectory(widget.basePath);
+                  }
+                },
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (int i = 0; i < segments.length; i++) ...[
+                  GestureDetector(
+                    onTap: i == segments.length - 1
+                        ? null
+                        : () => _navigateToDirectory(segments[i]),
+                    child: Text(
+                      path.basename(segments[i]).isEmpty
+                          ? segments[i]
+                          : path.basename(segments[i]),
+                      style: TextStyle(
+                        fontWeight: i == segments.length - 1
+                            ? FontWeight.w600
+                            : FontWeight.w400,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (i != segments.length - 1)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 6),
+                      child: Icon(Icons.chevron_right, size: 16),
+                    ),
+                ]
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   FileType _getFileType(String filePath) {
@@ -385,7 +467,7 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
   }
 
   Future<void> _deleteFile(String filePath) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     try {
       final file = File(filePath);
       await file.delete();
@@ -399,7 +481,7 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
   Future<void> _renameFile(String oldPath) async {
     final fileName = path.basename(oldPath);
     final controller = TextEditingController(text: fileName);
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     final newName = await showDialog<String>(
       context: context,
@@ -457,7 +539,7 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
 
   Future<void> _showAdvancedCopyMoveDialog(String sourcePath) async {
     try {
-      final l10n = AppLocalizations.of(context)!;
+      final l10n = AppLocalizations.of(context);
       // Step 1: Let user pick an initial directory
       String? destinationDir = await FilePicker.platform.getDirectoryPath(
         dialogTitle: l10n.selectDestinationFolder,
@@ -647,7 +729,7 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
   }
 
   void _showFileActions(String filePath) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
       builder: (context) => Wrap(
@@ -725,7 +807,7 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
   }
 
   void _showDeleteConfirmation(String filePath) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -750,42 +832,67 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: _isSelectionMode
             ? Text('${_selectedFiles.length} ${l10n.selected}')
             : Text(widget.title),
+        leading: _isSelectionMode
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  if (widget.selectionMode) {
+                    // Trong selection browser mode, thoát app luôn
+                    Navigator.of(context).pop();
+                  } else {
+                    // Trong chế độ xem thường, thoát selection mode
+                    setState(() {
+                      _isSelectionMode = false;
+                      _selectedFiles.clear();
+                    });
+                  }
+                },
+              )
+            : null,
+        // Back button on app bar now exits screen; breadcrumb below handles folder nav
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
+          preferredSize: const Size.fromHeight(110),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: l10n.searchHint,
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() {
-                            _searchQuery = '';
-                            _applyFiltersAndSort();
-                          });
-                        },
-                      )
-                    : null,
-                border: const OutlineInputBorder(),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                  _applyFiltersAndSort();
-                });
-              },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildBreadcrumbBar(l10n),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: l10n.searchHint,
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _searchQuery = '';
+                                _applyFiltersAndSort();
+                              });
+                            },
+                          )
+                        : null,
+                    border: const OutlineInputBorder(),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                      _applyFiltersAndSort();
+                    });
+                  },
+                ),
+              ],
             ),
           ),
         ),
@@ -800,12 +907,14 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
                   ? l10n.deselectAll
                   : l10n.selectAll,
             ),
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed:
-                  _selectedFiles.isNotEmpty ? _deleteSelectedFiles : null,
-              tooltip: l10n.removeSelected,
-            ),
+            // Ẩn nút delete trong chế độ chọn file để gửi
+            if (!widget.selectionMode)
+              IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed:
+                    _selectedFiles.isNotEmpty ? _deleteSelectedFiles : null,
+                tooltip: l10n.removeSelected,
+              ),
           ] else ...[
             // Filter and sort menu
             IconButton(
@@ -822,24 +931,26 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
         ],
       ),
       body: _buildBody(),
-      floatingActionButton: _filteredFiles.isNotEmpty && !widget.viewOnly
-          ? FloatingActionButton(
-              onPressed: () {
-                setState(() {
-                  _isSelectionMode = !_isSelectionMode;
-                  if (!_isSelectionMode) {
-                    _selectedFiles.clear();
-                  }
-                });
-              },
-              child: Icon(_isSelectionMode ? Icons.close : Icons.checklist),
+      floatingActionButton: _isSelectionMode && _selectedFiles.isNotEmpty
+          ? FloatingActionButton.extended(
+              onPressed: widget.selectionMode
+                  ? _confirmSelection
+                  : () {
+                      // Trong chế độ xem thường, hiện delete button
+                      _deleteSelectedFiles();
+                    },
+              icon: Icon(widget.selectionMode ? Icons.check : Icons.delete),
+              label: Text(widget.selectionMode
+                  ? 'Confirm (${_getAllSelectedFiles().length})'
+                  : 'Delete (${_selectedFiles.length})'),
+              backgroundColor: widget.selectionMode ? null : Colors.red,
             )
           : null,
     );
   }
 
   Widget _buildBody() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -871,8 +982,43 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
       child: ListView.builder(
         itemCount: _filteredFiles.length,
         itemBuilder: (context, index) {
-          final file = _filteredFiles[index] as File;
-          final fileName = path.basename(file.path);
+          final entity = _filteredFiles[index];
+          final name = path.basename(entity.path);
+
+          if (entity is Directory) {
+            final dirPath = entity.path;
+            final isSelected = _selectedFiles.contains(dirPath);
+            // Render directory row
+            return ListTile(
+              leading: _isSelectionMode
+                  ? Checkbox(
+                      value: isSelected,
+                      onChanged: (_) => _toggleSelection(dirPath),
+                    )
+                  : const Icon(Icons.folder, color: Colors.amber),
+              title: Text(name, overflow: TextOverflow.ellipsis),
+              trailing:
+                  _isSelectionMode ? null : const Icon(Icons.chevron_right),
+              onTap: () {
+                if (_isSelectionMode) {
+                  _toggleSelection(dirPath);
+                } else {
+                  // Nhấn thả = vào folder
+                  _navigateToDirectory(dirPath);
+                }
+              },
+              onLongPress: () {
+                // Nhấn giữ = chọn folder và vào selection mode (cho cả chế độ thường và selection)
+                setState(() {
+                  if (!_isSelectionMode) _isSelectionMode = true;
+                });
+                _toggleSelection(dirPath);
+              },
+            );
+          }
+
+          // File row
+          final file = entity as File;
           final isSelected = _selectedFiles.contains(file.path);
 
           return ListTile(
@@ -882,7 +1028,7 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
                     onChanged: (_) => _toggleSelection(file.path),
                   )
                 : _getFileIcon(file.path),
-            title: Text(fileName, overflow: TextOverflow.ellipsis),
+            title: Text(name, overflow: TextOverflow.ellipsis),
             subtitle: FutureBuilder<FileStat>(
               future: _getCachedFileStat(file.path),
               builder: (context, snapshot) {
@@ -899,22 +1045,36 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
                 return const SizedBox(height: 32, child: Text('...'));
               },
             ),
-            trailing: widget.viewOnly
-                ? null
-                : IconButton(
-                    icon: const Icon(Icons.more_vert),
-                    onPressed: () => _showFileActions(file.path),
-                  ),
+            trailing:
+                (widget.viewOnly || (_isSelectionMode && widget.selectionMode))
+                    ? null
+                    : IconButton(
+                        icon: const Icon(Icons.more_vert),
+                        onPressed: () => _showFileActions(file.path),
+                      ),
             selected: isSelected,
             onTap: () {
               if (_isSelectionMode) {
                 _toggleSelection(file.path);
+              } else if (widget.selectionMode) {
+                // Trong chế độ selection browser: nhấn thả = chọn file
+                setState(() {
+                  if (!_isSelectionMode) _isSelectionMode = true;
+                });
+                _toggleSelection(file.path);
               } else {
+                // Chế độ xem thường: mở file
                 UriUtils.openFile(filePath: file.path, context: context);
               }
             },
-            onLongPress:
-                widget.viewOnly ? null : () => _showFileActions(file.path),
+            onLongPress: () {
+              if (widget.viewOnly) return;
+              // Nhấn giữ = vào selection mode và chọn file (cho cả chế độ thường và selection)
+              setState(() {
+                if (!_isSelectionMode) _isSelectionMode = true;
+              });
+              _toggleSelection(file.path);
+            },
           );
         },
       ),
@@ -923,35 +1083,45 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
 
   void _deleteSelectedFiles() async {
     if (_selectedFiles.isEmpty) return;
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
-    final confirmed = await showDialog<bool>(
+    int folderCount = 0;
+    int fileCount = 0;
+    for (final p in _selectedFiles) {
+      if (Directory(p).existsSync()) {
+        folderCount++;
+      } else if (File(p).existsSync()) {
+        fileCount++;
+      }
+    }
+
+    final message = folderCount > 0 && fileCount > 0
+        ? l10n.confirmDeleteFoldersAndFilesNumber(folderCount, fileCount)
+        : (folderCount > 0
+            ? l10n.confirmDeleteFolderNumber(folderCount)
+            : l10n.confirmDeleteFileNumber(fileCount));
+
+    final confirmed = await GenericDialogUtils.showSimpleGenericClearDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.confirmDelete),
-        content: Text(
-            '${l10n.confirmDelete} ${_selectedFiles.length} ${l10n.selected}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+      title: l10n.confirmDelete,
+      description: message,
+      onConfirm: () {},
     );
 
     if (confirmed == true) {
-      int deletedCount = 0;
-      for (final filePath in _selectedFiles) {
+      int deletedFolders = 0;
+      int deletedFiles = 0;
+      for (final p in _selectedFiles) {
         try {
-          await File(filePath).delete();
-          deletedCount++;
+          if (Directory(p).existsSync()) {
+            final ok = await UriUtils.deleteDirectoryRecursive(p);
+            if (ok) deletedFolders++;
+          } else if (File(p).existsSync()) {
+            await File(p).delete();
+            deletedFiles++;
+          }
         } catch (e) {
-          logError('${l10n.errorDeletingFile} $filePath: $e');
+          logError('Error deleting $p: $e');
         }
       }
 
@@ -960,7 +1130,13 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
         _isSelectionMode = false;
       });
 
-      _showSnackBar('${l10n.delete} $deletedCount ${l10n.file}');
+      final resultText = deletedFolders > 0 && deletedFiles > 0
+          ? l10n.confirmDeleteFoldersAndFilesNumber(
+              deletedFolders, deletedFiles)
+          : (deletedFolders > 0
+              ? l10n.confirmDeleteFolderNumber(deletedFolders)
+              : l10n.confirmDeleteFileNumber(deletedFiles));
+      _showSnackBar(resultText);
       _loadFiles();
     }
   }
@@ -978,7 +1154,7 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
         FileType tempFileType = _selectedFileType;
         SortCriteria tempSortCriteria = _sortCriteria;
         SortOrder tempSortOrder = _sortOrder;
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
 
         return StatefulBuilder(
           builder: (context, setDialogState) {
@@ -1174,5 +1350,100 @@ class _LocalFileManagerWidgetState extends State<LocalFileManagerWidget> {
         iconColor: Colors.purple,
       ),
     ];
+  }
+
+  /// Navigate to a directory with selection caching
+  void _navigateToDirectory(String newPath) {
+    // Save current selections before navigating
+    _saveSelectionsForCurrentPath();
+
+    // Navigate to new directory
+    setState(() {
+      _currentPath = newPath;
+    });
+
+    // Load files and restore selections for new path
+    _loadFiles();
+  }
+
+  /// Save current selections to cache before navigating
+  void _saveSelectionsForCurrentPath() {
+    if (_selectedFiles.isNotEmpty) {
+      _selectionCache[_currentPath] = Set<String>.from(_selectedFiles);
+    } else if (_selectionCache.containsKey(_currentPath)) {
+      _selectionCache.remove(_currentPath);
+    }
+  }
+
+  /// Restore selections from cache for current path
+  void _restoreSelectionsForCurrentPath() {
+    _selectedFiles.clear();
+    if (_selectionCache.containsKey(_currentPath)) {
+      _selectedFiles.addAll(_selectionCache[_currentPath]!);
+    }
+  }
+
+  /// Get all selected files across all directories
+  List<String> _getAllSelectedFiles() {
+    final allSelected = <String>[];
+
+    // Add current selections
+    for (final filePath in _selectedFiles) {
+      final entity = _allFiles.firstWhere(
+        (e) => e.path == filePath,
+        orElse: () => File(filePath), // fallback
+      );
+
+      if (entity is Directory) {
+        // If directory selected, add all files in it recursively
+        _addAllFilesInDirectory(entity.path, allSelected);
+      } else {
+        allSelected.add(filePath);
+      }
+    }
+
+    // Add selections from cache
+    for (final pathSelections in _selectionCache.values) {
+      for (final filePath in pathSelections) {
+        if (!allSelected.contains(filePath)) {
+          final entity = FileSystemEntity.typeSync(filePath);
+          if (entity == FileSystemEntityType.directory) {
+            _addAllFilesInDirectory(filePath, allSelected);
+          } else {
+            allSelected.add(filePath);
+          }
+        }
+      }
+    }
+
+    return allSelected;
+  }
+
+  /// Recursively add all files in a directory
+  void _addAllFilesInDirectory(String dirPath, List<String> fileList) {
+    try {
+      final dir = Directory(dirPath);
+      if (dir.existsSync()) {
+        final entities = dir.listSync(recursive: true);
+        for (final entity in entities) {
+          if (entity is File) {
+            fileList.add(entity.path);
+          }
+        }
+      }
+    } catch (e) {
+      logError('Error adding files from directory $dirPath: $e');
+    }
+  }
+
+  /// Confirm selection and return selected files
+  void _confirmSelection() {
+    final allSelectedFiles = _getAllSelectedFiles();
+    if (widget.onFilesSelected != null) {
+      widget.onFilesSelected!(allSelectedFiles);
+    } else {
+      // Use Navigator.pop to return results
+      Navigator.of(context).pop<List<String>>(allSelectedFiles);
+    }
   }
 }

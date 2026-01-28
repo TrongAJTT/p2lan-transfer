@@ -28,19 +28,13 @@ const ExtensibleSettingsSchema = CollectionSchema(
       name: r'modelCode',
       type: IsarType.string,
     ),
-    r'modelType': PropertySchema(
-      id: 2,
-      name: r'modelType',
-      type: IsarType.byte,
-      enumMap: _ExtensibleSettingsmodelTypeEnumValueMap,
-    ),
     r'settingsJson': PropertySchema(
-      id: 3,
+      id: 2,
       name: r'settingsJson',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 4,
+      id: 3,
       name: r'updatedAt',
       type: IsarType.dateTime,
     )
@@ -92,9 +86,8 @@ void _extensibleSettingsSerialize(
 ) {
   writer.writeDateTime(offsets[0], object.createdAt);
   writer.writeString(offsets[1], object.modelCode);
-  writer.writeByte(offsets[2], object.modelType.index);
-  writer.writeString(offsets[3], object.settingsJson);
-  writer.writeDateTime(offsets[4], object.updatedAt);
+  writer.writeString(offsets[2], object.settingsJson);
+  writer.writeDateTime(offsets[3], object.updatedAt);
 }
 
 ExtensibleSettings _extensibleSettingsDeserialize(
@@ -105,14 +98,11 @@ ExtensibleSettings _extensibleSettingsDeserialize(
 ) {
   final object = ExtensibleSettings(
     modelCode: reader.readString(offsets[1]),
-    modelType: _ExtensibleSettingsmodelTypeValueEnumMap[
-            reader.readByteOrNull(offsets[2])] ??
-        SettingsModelType.global,
-    settingsJson: reader.readString(offsets[3]),
+    settingsJson: reader.readString(offsets[2]),
   );
   object.createdAt = reader.readDateTime(offsets[0]);
   object.id = id;
-  object.updatedAt = reader.readDateTime(offsets[4]);
+  object.updatedAt = reader.readDateTime(offsets[3]);
   return object;
 }
 
@@ -128,38 +118,13 @@ P _extensibleSettingsDeserializeProp<P>(
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
-      return (_ExtensibleSettingsmodelTypeValueEnumMap[
-              reader.readByteOrNull(offset)] ??
-          SettingsModelType.global) as P;
-    case 3:
       return (reader.readString(offset)) as P;
-    case 4:
+    case 3:
       return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
-
-const _ExtensibleSettingsmodelTypeEnumValueMap = {
-  'global': 0,
-  'userInterface': 1,
-  'converterTools': 2,
-  'randomTools': 3,
-  'calculatorTools': 4,
-  'textTemplate': 5,
-  'p2pTransfer': 6,
-  'userProfile': 7,
-};
-const _ExtensibleSettingsmodelTypeValueEnumMap = {
-  0: SettingsModelType.global,
-  1: SettingsModelType.userInterface,
-  2: SettingsModelType.converterTools,
-  3: SettingsModelType.randomTools,
-  4: SettingsModelType.calculatorTools,
-  5: SettingsModelType.textTemplate,
-  6: SettingsModelType.p2pTransfer,
-  7: SettingsModelType.userProfile,
-};
 
 Id _extensibleSettingsGetId(ExtensibleSettings object) {
   return object.id;
@@ -608,62 +573,6 @@ extension ExtensibleSettingsQueryFilter
   }
 
   QueryBuilder<ExtensibleSettings, ExtensibleSettings, QAfterFilterCondition>
-      modelTypeEqualTo(SettingsModelType value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'modelType',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<ExtensibleSettings, ExtensibleSettings, QAfterFilterCondition>
-      modelTypeGreaterThan(
-    SettingsModelType value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'modelType',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<ExtensibleSettings, ExtensibleSettings, QAfterFilterCondition>
-      modelTypeLessThan(
-    SettingsModelType value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'modelType',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<ExtensibleSettings, ExtensibleSettings, QAfterFilterCondition>
-      modelTypeBetween(
-    SettingsModelType lower,
-    SettingsModelType upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'modelType',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<ExtensibleSettings, ExtensibleSettings, QAfterFilterCondition>
       settingsJsonEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -893,20 +802,6 @@ extension ExtensibleSettingsQuerySortBy
   }
 
   QueryBuilder<ExtensibleSettings, ExtensibleSettings, QAfterSortBy>
-      sortByModelType() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'modelType', Sort.asc);
-    });
-  }
-
-  QueryBuilder<ExtensibleSettings, ExtensibleSettings, QAfterSortBy>
-      sortByModelTypeDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'modelType', Sort.desc);
-    });
-  }
-
-  QueryBuilder<ExtensibleSettings, ExtensibleSettings, QAfterSortBy>
       sortBySettingsJson() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'settingsJson', Sort.asc);
@@ -980,20 +875,6 @@ extension ExtensibleSettingsQuerySortThenBy
   }
 
   QueryBuilder<ExtensibleSettings, ExtensibleSettings, QAfterSortBy>
-      thenByModelType() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'modelType', Sort.asc);
-    });
-  }
-
-  QueryBuilder<ExtensibleSettings, ExtensibleSettings, QAfterSortBy>
-      thenByModelTypeDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'modelType', Sort.desc);
-    });
-  }
-
-  QueryBuilder<ExtensibleSettings, ExtensibleSettings, QAfterSortBy>
       thenBySettingsJson() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'settingsJson', Sort.asc);
@@ -1039,13 +920,6 @@ extension ExtensibleSettingsQueryWhereDistinct
   }
 
   QueryBuilder<ExtensibleSettings, ExtensibleSettings, QDistinct>
-      distinctByModelType() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'modelType');
-    });
-  }
-
-  QueryBuilder<ExtensibleSettings, ExtensibleSettings, QDistinct>
       distinctBySettingsJson({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'settingsJson', caseSensitive: caseSensitive);
@@ -1079,13 +953,6 @@ extension ExtensibleSettingsQueryProperty
       modelCodeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'modelCode');
-    });
-  }
-
-  QueryBuilder<ExtensibleSettings, SettingsModelType, QQueryOperations>
-      modelTypeProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'modelType');
     });
   }
 

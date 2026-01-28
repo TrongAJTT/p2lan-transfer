@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:p2lantransfer/variables.dart';
+import 'package:p2lan/variables.dart';
 
 class OptionItem {
   final String label;

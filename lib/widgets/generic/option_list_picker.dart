@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/widgets/generic/option_item.dart';
+import 'package:p2lan/widgets/generic/option_item.dart';
 
 /// A generic option picker widget that supports both single and multiple selection
 /// with configurable nullable behavior.

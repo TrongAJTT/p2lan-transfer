@@ -7,28 +7,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:isar/isar.dart';
-import 'package:p2lantransfer/controllers/p2p_controller.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/layouts/two_panels_layout.dart';
-import 'package:p2lantransfer/models/p2p_chat.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
-import 'package:p2lantransfer/screens/p2lan_transfer/p2p_chat_settings_layout.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/services/p2p_services/p2p_settings_adapter.dart';
-import 'package:p2lantransfer/utils/async_utils.dart';
-import 'package:p2lantransfer/utils/clipboard_utils.dart';
-import 'package:p2lantransfer/utils/generic_dialog_utils.dart';
-import 'package:p2lantransfer/utils/localization_utils.dart';
-import 'package:p2lantransfer/utils/media_utils.dart';
-import 'package:p2lantransfer/utils/size_utils.dart';
-import 'package:p2lantransfer/utils/snackbar_utils.dart';
-import 'package:p2lantransfer/utils/url_utils.dart' hide FileType;
-import 'package:p2lantransfer/utils/variables_utils.dart';
-import 'package:p2lantransfer/variables.dart';
-import 'package:p2lantransfer/widgets/generic/generic_context_menu.dart';
-import 'package:p2lantransfer/widgets/generic/generic_dialog.dart';
-import 'package:p2lantransfer/widgets/generic/generic_settings_helper.dart';
-import 'package:p2lantransfer/widgets/generic/icon_button_list.dart';
+import 'package:p2lan/view_models/p2p_view_model.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/layouts/two_panels_layout.dart';
+import 'package:p2lan/models/p2p_chat.dart';
+import 'package:p2lan/models/p2p_models.dart';
+import 'package:p2lan/screens/p2lan_transfer/p2p_chat_settings_layout.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/services/p2p_services/p2p_settings_adapter.dart';
+import 'package:p2lan/utils/async_utils.dart';
+import 'package:p2lan/utils/clipboard_utils.dart';
+import 'package:p2lan/utils/generic_dialog_utils.dart';
+import 'package:p2lan/utils/localization_utils.dart';
+import 'package:p2lan/utils/media_utils.dart';
+import 'package:p2lan/utils/shortcut_tooltip_utils.dart';
+import 'package:p2lan/utils/size_utils.dart';
+import 'package:p2lan/utils/snackbar_utils.dart';
+import 'package:p2lan/utils/url_utils.dart' hide FileType;
+import 'package:p2lan/screens/p2lan_transfer/p2lan_local_files_screen.dart';
+import 'package:p2lan/utils/variables_utils.dart';
+import 'package:p2lan/variables.dart';
+import 'package:p2lan/widgets/generic/generic_context_menu.dart';
+import 'package:p2lan/widgets/generic/generic_dialog.dart';
+import 'package:p2lan/widgets/generic/generic_settings_helper.dart';
+import 'package:p2lan/widgets/generic/icon_button_list.dart';
 import 'package:pasteboard/pasteboard.dart';
 import 'package:clipboard/clipboard.dart';
 import 'package:uuid/uuid.dart';
@@ -36,8 +38,10 @@ import 'package:uuid/uuid.dart';
 /// Section: Chat List Screen
 
 class P2LanChatListScreen extends StatefulWidget {
-  final P2PController controller;
-  const P2LanChatListScreen({super.key, required this.controller});
+  final P2PViewModel viewModel;
+  final String? initialUserBId;
+  const P2LanChatListScreen(
+      {super.key, required this.viewModel, this.initialUserBId});
 
   @override
   State<P2LanChatListScreen> createState() => _P2LanChatListScreenState();
@@ -47,28 +51,31 @@ class _P2LanChatListScreenState extends State<P2LanChatListScreen> {
   late AppLocalizations _loc;
   P2PChat _chat = P2PChat.empty();
   bool isDesktop = false;
+  String? _pendingOpenUserBId;
+  List<P2PChat> _latestChats = [];
 
   @override
   void initState() {
     super.initState();
-    // Add listener to P2PController for status updates
-    widget.controller.addListener(_onControllerChanged);
+    // Add listener to P2PViewModel for status updates
+    widget.viewModel.addListener(_onControllerChanged);
+    _pendingOpenUserBId = widget.initialUserBId;
   }
 
   @override
   void dispose() {
-    // Remove listener from P2PController
-    widget.controller.removeListener(_onControllerChanged);
+    // Remove listener from P2PViewModel
+    widget.viewModel.removeListener(_onControllerChanged);
     super.dispose();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loc = AppLocalizations.of(context)!;
+    _loc = AppLocalizations.of(context);
   }
 
-  /// Handle P2PController state changes to update UI
+  /// Handle P2PViewModel state changes to update UI
   void _onControllerChanged() {
     if (mounted) {
       setState(() {
@@ -79,40 +86,62 @@ class _P2LanChatListScreenState extends State<P2LanChatListScreen> {
 
   // Nút tao tác bên lề
   Widget _buildActionButtons(BuildContext context, P2PChat chat) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final visibleCount = MediaQuery.of(context).size.width > 600 ? 3 : 0;
-    return IconButtonList(
-      buttons: [
-        // TODO: Support sync chat with other users in the future
-        // IconButtonListItem(
-        //   icon: Icons.person,
-        //   label: 'Sync this chat with other users',
-        //   onPressed: () {
-        //
-        //   },
-        // ),
-        IconButtonListItem(
-          icon: Icons.clear,
-          label: loc.deleteChat,
-          onPressed: () {
-            GenericDialogUtils.showSimpleHoldClearDialog(
-                context: context,
-                title: loc.deleteChatWith(chat.displayName),
-                content: loc.deleteChatDesc,
-                duration: const Duration(seconds: 1),
-                onConfirm: () async {
-                  await widget.controller.p2pChatService
-                      .deleteChatAndNotify(chat);
-                  if (mounted) {
-                    setState(() {
-                      _chat = P2PChat.empty();
+    return FutureBuilder<bool>(
+      future: widget.viewModel.p2pChatService.isPinned(chat.userBId),
+      builder: (context, snapshot) {
+        final isPinned = snapshot.data == true;
+        final pinIcon = isPinned ? Icons.push_pin : Icons.push_pin_outlined;
+        final pinLabel = isPinned ? 'Unpin' : 'Pin';
+        return IconButtonList(
+          buttons: [
+            IconButtonListItem(
+              icon: pinIcon,
+              label: pinLabel,
+              onPressed: () async {
+                final current = await widget.viewModel.p2pChatService
+                    .isPinned(chat.userBId);
+                if (current) {
+                  await widget.viewModel.p2pChatService.unpinChat(chat.userBId);
+                } else {
+                  await widget.viewModel.p2pChatService.pinChat(chat.userBId);
+                }
+                if (mounted) setState(() {});
+              },
+            ),
+            // TODO: Support sync chat with other users in the future
+            // IconButtonListItem(
+            //   icon: Icons.person,
+            //   label: 'Sync this chat with other users',
+            //   onPressed: () {
+            //
+            //   },
+            // ),
+            IconButtonListItem(
+              icon: Icons.clear,
+              label: loc.deleteChat,
+              onPressed: () {
+                GenericDialogUtils.showSimpleHoldClearDialog(
+                    context: context,
+                    title: loc.deleteChatWith(chat.displayName),
+                    content: loc.deleteChatDesc,
+                    duration: const Duration(seconds: 1),
+                    onConfirm: () async {
+                      await widget.viewModel.p2pChatService
+                          .deleteChatAndNotify(chat);
+                      if (mounted) {
+                        setState(() {
+                          _chat = P2PChat.empty();
+                        });
+                      }
                     });
-                  }
-                });
-          },
-        ),
-      ],
-      visibleCount: visibleCount,
+              },
+            ),
+          ],
+          visibleCount: visibleCount,
+        );
+      },
     );
   }
 
@@ -126,7 +155,7 @@ class _P2LanChatListScreenState extends State<P2LanChatListScreen> {
         MaterialPageRoute(
           builder: (context) => P2LanChatDetailScreen(
             chat: chat,
-            controller: widget.controller,
+            viewModel: widget.viewModel,
           ),
         ),
       );
@@ -135,7 +164,7 @@ class _P2LanChatListScreenState extends State<P2LanChatListScreen> {
 
   Widget _buildChatList() {
     return FutureBuilder<List<P2PChat>>(
-      future: widget.controller.p2pChatService.loadAllChats(),
+      future: widget.viewModel.p2pChatService.loadAllChats(),
       builder: (context, snapshot) {
         Widget chatListContent;
 
@@ -157,6 +186,31 @@ class _P2LanChatListScreenState extends State<P2LanChatListScreen> {
           );
         } else {
           final chats = snapshot.data!;
+          _latestChats = chats;
+
+          // Auto-open chat by initial userBId once after data loads
+          if (_pendingOpenUserBId != null) {
+            final targetChat = chats.firstWhere(
+                (c) => c.userBId == _pendingOpenUserBId,
+                orElse: () => P2PChat.empty());
+            if (!targetChat.isEmpty()) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _enterChat(targetChat);
+                _pendingOpenUserBId = null;
+              });
+            } else {
+              // Fallback: try service lookup (in case chats list not yet updated)
+              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                final fallback = await widget.viewModel.p2pChatService
+                    .findChatByUsers(_pendingOpenUserBId!);
+                if (fallback != null && mounted) {
+                  _enterChat(fallback);
+                }
+                _pendingOpenUserBId = null;
+              });
+            }
+          }
+
           chatListContent = Padding(
             padding: const EdgeInsets.all(8.0),
             child: ListView.separated(
@@ -168,7 +222,7 @@ class _P2LanChatListScreenState extends State<P2LanChatListScreen> {
                 final lastMessage = chat.messages.isNotEmpty
                     ? chat.messages.last
                     : P2PCMessage.createEmpty();
-                final isOnline = widget.controller.isUserOnline(chat.userBId);
+                final isOnline = widget.viewModel.isUserOnline(chat.userBId);
 
                 return ListTile(
                   leading: Stack(
@@ -314,8 +368,8 @@ class _P2LanChatListScreenState extends State<P2LanChatListScreen> {
 
   // Get list of online users that can be added to chat
   Future<List<P2PUser>> _getOnlineUsers() async {
-    final allUsers = widget.controller.discoveredUsers;
-    final existingChats = await widget.controller.p2pChatService.loadAllChats();
+    final allUsers = widget.viewModel.discoveredUsers;
+    final existingChats = await widget.viewModel.p2pChatService.loadAllChats();
     final existingUserIds = existingChats.map((chat) => chat.userBId).toSet();
 
     // Filter users that are online, paired, and not already in chat
@@ -329,8 +383,8 @@ class _P2LanChatListScreenState extends State<P2LanChatListScreen> {
   // Add user to chat
   Future<void> _addUserToChat(P2PUser user) async {
     try {
-      final chatService = widget.controller.p2pChatService;
-      final currentUserId = widget.controller.currentUser?.id;
+      final chatService = widget.viewModel.p2pChatService;
+      final currentUserId = widget.viewModel.currentUser?.id;
 
       if (currentUserId == null) {
         if (mounted) {
@@ -399,7 +453,7 @@ class _P2LanChatListScreenState extends State<P2LanChatListScreen> {
           )
         : P2LanChatDetailScreen(
             chat: _chat,
-            controller: widget.controller,
+            viewModel: widget.viewModel,
           );
   }
 
@@ -412,9 +466,11 @@ class _P2LanChatListScreenState extends State<P2LanChatListScreen> {
           actions: [
             IconButton(
               icon: const Icon(Icons.refresh),
+              tooltip:
+                  ShortcutTooltipUtils.I.build(_loc.reload, 'Ctrl+Shift+R'),
               onPressed: () {
                 // Handle refresh action
-                widget.controller.p2pChatService.loadAllChats();
+                widget.viewModel.p2pChatService.loadAllChats();
                 setState(() {});
               },
             ),
@@ -453,11 +509,47 @@ class _P2LanChatListScreenState extends State<P2LanChatListScreen> {
       },
       child: KeyboardListener(
         focusNode: FocusNode(),
-        autofocus: true,
+        autofocus: isDesktop,
         onKeyEvent: (event) {
-          if (event is KeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.escape) {
-            _handleEscape();
+          if (!isDesktop) return; // Only handle global shortcuts on desktop
+          if (event is KeyDownEvent) {
+            if (event.logicalKey == LogicalKeyboardKey.escape) {
+              _handleEscape();
+              return;
+            }
+            // Ctrl+Shift+R: reload chat list
+            if (HardwareKeyboard.instance.isControlPressed &&
+                HardwareKeyboard.instance.isShiftPressed &&
+                event.logicalKey == LogicalKeyboardKey.keyR) {
+              widget.viewModel.p2pChatService.loadAllChats();
+              setState(() {});
+              return;
+            }
+            if (HardwareKeyboard.instance.isControlPressed) {
+              int? index;
+              if (event.logicalKey == LogicalKeyboardKey.digit1) {
+                index = 0;
+              } else if (event.logicalKey == LogicalKeyboardKey.digit2) {
+                index = 1;
+              } else if (event.logicalKey == LogicalKeyboardKey.digit3) {
+                index = 2;
+              } else if (event.logicalKey == LogicalKeyboardKey.digit4) {
+                index = 3;
+              } else if (event.logicalKey == LogicalKeyboardKey.digit5) {
+                index = 4;
+              } else if (event.logicalKey == LogicalKeyboardKey.digit6) {
+                index = 5;
+              } else if (event.logicalKey == LogicalKeyboardKey.digit7) {
+                index = 6;
+              } else if (event.logicalKey == LogicalKeyboardKey.digit8) {
+                index = 7;
+              } else if (event.logicalKey == LogicalKeyboardKey.digit9) {
+                index = 8;
+              }
+              if (index != null && index < _latestChats.length) {
+                _enterChat(_latestChats[index]);
+              }
+            }
           }
         },
         child: Listener(
@@ -479,17 +571,21 @@ class _P2LanChatListScreenState extends State<P2LanChatListScreen> {
                 if (Platform.isAndroid) ...[
                   IconButton(
                     icon: const Icon(Icons.refresh),
-                    tooltip: _loc.reload,
                     onPressed: () {
                       // Handle refresh action
-                      widget.controller.p2pChatService.loadAllChats();
+                      widget.viewModel.p2pChatService.loadAllChats();
                       setState(() {});
                     },
                   ),
                   IconButton(
                     icon: const Icon(Icons.folder),
-                    onPressed: () =>
-                        widget.controller.navigateToLocalFilesViewer(context),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const P2LanLocalFilesScreen(),
+                        ),
+                      );
+                    },
                     tooltip: _loc.localFiles,
                   ),
                   if (kDebugMode)
@@ -497,7 +593,7 @@ class _P2LanChatListScreenState extends State<P2LanChatListScreen> {
                     IconButton(
                       icon: const Icon(Icons.notification_add),
                       onPressed: () async {
-                        await widget.controller.p2pChatService
+                        await widget.viewModel.p2pChatService
                             .testNotification();
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -528,9 +624,9 @@ class _P2LanChatListScreenState extends State<P2LanChatListScreen> {
 
 class P2LanChatDetailScreen extends StatefulWidget {
   final P2PChat chat;
-  final P2PController controller;
+  final P2PViewModel viewModel;
   const P2LanChatDetailScreen(
-      {super.key, required this.chat, required this.controller});
+      {super.key, required this.chat, required this.viewModel});
 
   @override
   State<P2LanChatDetailScreen> createState() => _P2LanChatDetailScreenState();
@@ -542,6 +638,7 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
   final _scrollController = ScrollController();
   final _textController = TextEditingController();
   final _textFocusNode = FocusNode();
+  final FocusNode _shortcutFocusNode = FocusNode();
   late AppLocalizations _loc;
 
   // File picker state
@@ -570,13 +667,14 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
     _scrollController.dispose();
     _textController.dispose();
     _textFocusNode.dispose();
+    _shortcutFocusNode.dispose();
     _removeClipboardListener();
 
-    // Remove listener from P2PController
-    widget.controller.removeListener(_onControllerChanged);
+    // Remove listener from P2PViewModel
+    widget.viewModel.removeListener(_onControllerChanged);
 
     // Clear current visible chat for notification management
-    widget.controller.p2pChatService.setCurrentVisibleChat(null);
+    widget.viewModel.p2pChatService.setCurrentVisibleChat(null);
   }
 
   @override
@@ -599,21 +697,21 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
     // Add listener to scroll controller to load more messages on scroll
     _scrollController.addListener(_handleLoadMoreScroll);
 
-    // Add listener to P2PController for status updates
-    widget.controller.addListener(_onControllerChanged);
+    // Add listener to P2PViewModel for status updates
+    widget.viewModel.addListener(_onControllerChanged);
 
     // Set current visible chat for notification management
-    widget.controller.p2pChatService
+    widget.viewModel.p2pChatService
         .setCurrentVisibleChat(widget.chat.id.toString());
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loc = AppLocalizations.of(context)!;
+    _loc = AppLocalizations.of(context);
   }
 
-  /// Handle P2PController state changes to update UI
+  /// Handle P2PViewModel state changes to update UI
   void _onControllerChanged() {
     if (mounted) {
       setState(() {
@@ -623,14 +721,14 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
   }
 
   void _initLoadMessages() {
-    final chatService = widget.controller.p2pChatService;
+    final chatService = widget.viewModel.p2pChatService;
     final chatId = widget.chat.id.toString();
     final chat = chatService.chatIdExists(chatId)
         ? chatService.getChatById(chatId) ?? widget.chat
         : widget.chat;
     setState(() {
       _currentPage = 0;
-      _visibleMessages = widget.controller.p2pChatService
+      _visibleMessages = widget.viewModel.p2pChatService
           .getMessagesPage(chat, page: _currentPage, pageSize: _pageSize);
     });
     // Only scroll to bottom if there are messages and controller is attached
@@ -708,16 +806,14 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
   }
 
   Future<List<P2PCMessage>?> _loadMoreMessages() async {
-    final chatService = widget.controller.p2pChatService;
+    final chatService = widget.viewModel.p2pChatService;
     final chatId = widget.chat.id.toString();
     final chat = chatService.chatIdExists(chatId)
         ? chatService.getChatById(chatId) ?? widget.chat
         : widget.chat;
     final nextPage = _currentPage + 1;
-    final moreMessages = await Future.value(
-      widget.controller.p2pChatService
-          .getMessagesPage(chat, page: nextPage, pageSize: _pageSize),
-    );
+    final moreMessages = widget.viewModel.p2pChatService
+        .getMessagesPage(chat, page: nextPage, pageSize: _pageSize);
     if (moreMessages.isEmpty) return null;
     return moreMessages;
   }
@@ -757,10 +853,10 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
     }
     // Clear selected media if settings deleteAfterShare is true
     if (widget.chat.deleteAfterShare) {
-      final message = await widget.controller.p2pChatService
+      final message = await widget.viewModel.p2pChatService
           .getMessageBaseOnSyncId(chat: widget.chat, syncId: setSyncId);
       if (message != null) {
-        await widget.controller.p2pChatService.removeMessageAndNotify(
+        await widget.viewModel.p2pChatService.removeMessageAndNotify(
             chat: widget.chat, message: message, deleteFileIfExist: true);
       } else {
         logError(
@@ -774,7 +870,7 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
   @override
   onClipboardChanged(ClipboardChangeEvent event) async {
     if (_flagPopClipboard.value &&
-        widget.controller.isUserOnline(widget.chat.userBId)) {
+        widget.viewModel.isUserOnline(widget.chat.userBId)) {
       final content = event.newContent;
       if (content.isText || content.isImage) {
         _handlePopClipboardAndSendMessage(content);
@@ -847,7 +943,7 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
     }
     // If deleteAfterCopy is true, remove the message after copying
     if (widget.chat.deleteAfterCopy && copyResult) {
-      await widget.controller.p2pChatService.removeMessageAndNotify(
+      await widget.viewModel.p2pChatService.removeMessageAndNotify(
           chat: widget.chat, message: msg, deleteFileIfExist: false);
     }
     // Set the flag to true after copying
@@ -859,7 +955,7 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
   }
 
   Future<void> _handleClipboardPushed(P2PCMessage msg) async {
-    if (widget.controller
+    if (widget.viewModel
             .isUserOnline(widget.chat.userBId) && // Other user must be online
         widget.chat
             .autoCopyIncomingMessages && // Chat must have auto copy enabled
@@ -919,7 +1015,7 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
 
     // If sendImmediately is true and user is online, send the message right away
     if (sendImmediately) {
-      final isOnline = widget.controller.isUserOnline(widget.chat.userBId);
+      final isOnline = widget.viewModel.isUserOnline(widget.chat.userBId);
       if (isOnline) {
         await _sendChatMessage();
       }
@@ -978,14 +1074,13 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
   Future<void> _sendChatMessage({String setSyncId = 'random'}) async {
     final text = _textController.text;
     final chat = widget.chat;
-    final controller = widget.controller;
+    final controller = widget.viewModel;
     final myId = chat.userAId;
     final peerId = chat.userBId;
 
-    // Select all files and media to send
-    final allFiles = [..._selectedFiles, ..._selectedMedia];
-    if (allFiles.isNotEmpty) {
-      for (final file in allFiles) {
+    // Send media (images/videos) selected via Attach Media as media messages
+    if (_selectedMedia.isNotEmpty) {
+      for (final file in _selectedMedia) {
         P2PCMessage msg;
         if (_isImageFile(file)) {
           msg = P2PCMessage.createMediaImageMessage(
@@ -1002,6 +1097,7 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
             syncId: setSyncId,
           );
         } else {
+          // Fallback to file message if not image/video
           msg = P2PCMessage.createFileMessage(
             senderId: myId,
             filePath: file.path ?? '',
@@ -1020,17 +1116,51 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
         final sendResult = await controller.p2pService.networkService
             .sendMessageToUser(peerUser, messageData.toJson());
         if (sendResult) {
-          logDebug('Sent file/media to peer and reset result');
-          final chatService = widget.controller.p2pChatService;
+          logDebug('Sent media to peer and reset result');
+          final chatService = widget.viewModel.p2pChatService;
           await chatService.addMessageAndNotify(
               msg, chat, P2PCMessageStatus.onDevice);
-          // Set the file path for the message
           await controller.p2pService.sendMultipleFiles(
               filePaths: [file.path ?? ''],
               targetUser: peerUser,
               transferOnly: false);
         }
       }
+    }
+
+    // Send files selected via Attach Files strictly as file messages
+    if (_selectedFiles.isNotEmpty) {
+      for (final file in _selectedFiles) {
+        final msg = P2PCMessage.createFileMessage(
+          senderId: myId,
+          filePath: file.path ?? '',
+          chat: chat,
+          fileName: file.name,
+          syncId: setSyncId,
+        );
+        final peerUser = controller.getUserById(peerId);
+        if (peerUser == null) continue;
+        final messageData = P2PMessage(
+            type: P2PMessageTypes.sendChatMessage,
+            fromUserId: myId,
+            toUserId: chat.userBId,
+            data: msg.toJson());
+        final sendResult = await controller.p2pService.networkService
+            .sendMessageToUser(peerUser, messageData.toJson());
+        if (sendResult) {
+          logDebug('Sent file to peer and reset result');
+          final chatService = widget.viewModel.p2pChatService;
+          await chatService.addMessageAndNotify(
+              msg, chat, P2PCMessageStatus.onDevice);
+          await controller.p2pService.sendMultipleFiles(
+              filePaths: [file.path ?? ''],
+              targetUser: peerUser,
+              transferOnly: false);
+        }
+      }
+    }
+
+    if (_selectedFiles.isNotEmpty || _selectedMedia.isNotEmpty) {
       setState(() {
         _selectedFiles.clear();
         _selectedMedia.clear();
@@ -1062,7 +1192,7 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
           .sendMessageToUser(peerUser, messageData.toJson());
       if (sendResult) {
         logDebug('Sent message to peer and reset result');
-        final chatService = widget.controller.p2pChatService;
+        final chatService = widget.viewModel.p2pChatService;
         await chatService.addMessageAndNotify(
             msg, chat, P2PCMessageStatus.onDevice);
         if (mounted) setState(() {});
@@ -1099,7 +1229,7 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
 
   Future<void> _requestFile(String syncId) async {
     // Send a request to the peer to resend the file
-    final peerUser = widget.controller.getUserById(widget.chat.userBId)!;
+    final peerUser = widget.viewModel.getUserById(widget.chat.userBId)!;
 
     final messageData = P2PMessage(
         type: P2PMessageTypes.chatRequestFileBackward,
@@ -1108,7 +1238,7 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
         data: {
           'syncId': syncId,
         });
-    final sendResult = await widget.controller.p2pService.networkService
+    final sendResult = await widget.viewModel.p2pService.networkService
         .sendMessageToUser(peerUser, messageData.toJson());
     if (sendResult) {
       logDebug('Sent file request backward to peer and get result');
@@ -1142,13 +1272,13 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
           // If the file exists, copy its content to clipboard
           Pasteboard.writeImage(await file.readAsBytes());
         } else {
-          widget.controller.p2pChatService
+          widget.viewModel.p2pChatService
               .updateMessageStatus(msg, widget.chat, P2PCMessageStatus.lost);
           // If the file does not exist, show an error
           SnackbarUtils.showTyped(context, _loc.fileLost, SnackBarType.error);
         }
       } else {
-        widget.controller.p2pChatService
+        widget.viewModel.p2pChatService
             .updateMessageStatus(msg, widget.chat, P2PCMessageStatus.lost);
         SnackbarUtils.showTyped(context, _loc.noPathToCopy, SnackBarType.error);
       }
@@ -1190,7 +1320,7 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
               title: _loc.deleteMessage,
               description: _loc.deleteMessageDesc,
               onConfirm: () async {
-                await widget.controller.p2pChatService.removeMessageAndNotify(
+                await widget.viewModel.p2pChatService.removeMessageAndNotify(
                     chat: widget.chat, message: msg, deleteFileIfExist: false);
                 // Refresh the message list after deletion
                 if (mounted) {
@@ -1211,7 +1341,7 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
                 title: _loc.deleteMessageAndFile,
                 description: _loc.deleteMessageAndFileDesc,
                 onConfirm: () async {
-                  await widget.controller.p2pChatService.removeMessageAndNotify(
+                  await widget.viewModel.p2pChatService.removeMessageAndNotify(
                       chat: widget.chat, message: msg, deleteFileIfExist: true);
                   // Refresh the message list after deletion
                   if (mounted) {
@@ -1436,7 +1566,7 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
           msg.filePath == null ? false : File(msg.filePath!).existsSync();
       if (!fileExists) {
         status = P2PCMessageStatus.lost;
-        widget.controller.p2pChatService
+        widget.viewModel.p2pChatService
             .updateMessageStatus(msg, widget.chat, status);
       }
     }
@@ -1678,7 +1808,7 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
           msg.filePath == null ? false : File(msg.filePath!).existsSync();
       if (!fileExists) {
         status = P2PCMessageStatus.lost;
-        widget.controller.p2pChatService
+        widget.viewModel.p2pChatService
             .updateMessageStatus(msg, widget.chat, status);
       }
     }
@@ -1730,7 +1860,7 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
                   actions: [
                     TextButton(
                       onPressed: () {
-                        widget.controller.p2pChatService.updateMessageStatus(
+                        widget.viewModel.p2pChatService.updateMessageStatus(
                             msg, widget.chat, P2PCMessageStatus.lost);
                         Navigator.of(ctx).pop();
                       },
@@ -1862,17 +1992,10 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
   IconButton _buildFilePickerButton(bool isEnable, AppLocalizations loc) {
     return IconButton(
       icon: const Icon(Icons.attach_file),
-      tooltip: _loc.attachFile,
+      tooltip: ShortcutTooltipUtils.I.build(_loc.attachFile, 'Ctrl+,'),
       onPressed: isEnable
           ? () async {
-              final result =
-                  await FilePicker.platform.pickFiles(allowMultiple: true);
-              if (result != null && result.files.isNotEmpty) {
-                setState(() {
-                  _selectedFiles.addAll(
-                      result.files.where((f) => !_selectedFiles.contains(f)));
-                });
-              }
+              await _pickFiles();
             }
           : null,
     );
@@ -1881,27 +2004,41 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
   IconButton _buildMediaPickerButton(bool isEnable, AppLocalizations loc) {
     return IconButton(
       icon: const Icon(Icons.photo),
-      tooltip: _loc.attachMedia,
+      tooltip: ShortcutTooltipUtils.I.build(_loc.attachMedia, 'Ctrl+.'),
       onPressed: isEnable
           ? () async {
-              final result = await FilePicker.platform.pickFiles(
-                allowMultiple: true,
-                type: FileType.custom,
-                allowedExtensions: [
-                  ..._imageExtensions,
-                  // TODO: Support video files in the future
-                  // ..._videoExtensions
-                ],
-              );
-              if (result != null && result.files.isNotEmpty) {
-                setState(() {
-                  _selectedMedia.addAll(
-                      result.files.where((f) => !_selectedMedia.contains(f)));
-                });
-              }
+              await _pickMedia();
             }
           : null,
     );
+  }
+
+  Future<void> _pickFiles() async {
+    final result = await FilePicker.platform.pickFiles(allowMultiple: true);
+    if (result != null && result.files.isNotEmpty) {
+      setState(() {
+        _selectedFiles
+            .addAll(result.files.where((f) => !_selectedFiles.contains(f)));
+      });
+    }
+  }
+
+  Future<void> _pickMedia() async {
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      type: FileType.custom,
+      allowedExtensions: [
+        ..._imageExtensions,
+        // TODO: Support video files in the future
+        // ..._videoExtensions
+      ],
+    );
+    if (result != null && result.files.isNotEmpty) {
+      setState(() {
+        _selectedMedia
+            .addAll(result.files.where((f) => !_selectedMedia.contains(f)));
+      });
+    }
   }
 
   Widget _buildPreviewBar(AppLocalizations loc) {
@@ -2047,7 +2184,7 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
       }
     }
     // Cập nhật đoạn chat
-    widget.controller.p2pChatService
+    widget.viewModel.p2pChatService
         .updateChatSettings(widget.chat, updatedChat);
     // Refresh current chat
     if (mounted) {
@@ -2092,7 +2229,7 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           setState(() {
-            _visibleMessages = widget.controller.p2pChatService
+            _visibleMessages = widget.viewModel.p2pChatService
                 .getMessagesPage(chat, page: _currentPage, pageSize: _pageSize);
           });
         }
@@ -2102,9 +2239,9 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    final chatService = widget.controller.p2pChatService;
+    final chatService = widget.viewModel.p2pChatService;
     final chatId = widget.chat.id.toString();
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
 
     return AnimatedBuilder(
       animation: chatService,
@@ -2116,7 +2253,7 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
         _checkAndUpdateVisibleMessages(chat);
 
         final allMessages = chat.messages.toList();
-        final isOnline = widget.controller.isUserOnline(chat.userBId);
+        final isOnline = widget.viewModel.isUserOnline(chat.userBId);
         final myId = chat.userAId;
         // Get all messages for the chat
         // final allMessages = chat.messages.toList();
@@ -2133,7 +2270,8 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
         }
         final isDesktop = MediaQuery.of(context).size.width > 800;
 
-        return Scaffold(
+        final isDesktopShortcuts = !isMobileLayoutContext(context);
+        final scaffold = Scaffold(
           appBar: AppBar(
             // Hide back button on desktop
             automaticallyImplyLeading: !isDesktop,
@@ -2163,7 +2301,7 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
             actions: [
               IconButton(
                 icon: const Icon(Icons.refresh),
-                tooltip: _loc.reload,
+                tooltip: ShortcutTooltipUtils.I.build(_loc.reload, 'Ctrl+R'),
                 onPressed: () {
                   _initLoadMessages();
                   if (mounted) setState(() {});
@@ -2171,7 +2309,8 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
               ),
               IconButton(
                 icon: const Icon(Icons.settings_applications),
-                tooltip: _loc.chatCustomization,
+                tooltip: ShortcutTooltipUtils.I
+                    .build(_loc.chatCustomization, 'Ctrl+O'),
                 onPressed: _navigateToChatSettings,
               ),
             ],
@@ -2298,7 +2437,8 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
                                   child: KeyboardListener(
                                     focusNode: FocusNode(),
                                     onKeyEvent: (event) async {
-                                      // Check for Ctrl+Enter combination
+                                      // Check for Ctrl+Enter combination (desktop only)
+                                      if (!isDesktop) return;
                                       if (isOnline &&
                                           event is KeyDownEvent &&
                                           HardwareKeyboard
@@ -2357,7 +2497,8 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
                                     _selectedMedia.isNotEmpty)
                                   IconButton(
                                     icon: const Icon(Icons.send),
-                                    tooltip: _loc.sendMessage,
+                                    tooltip: ShortcutTooltipUtils.I
+                                        .build(_loc.sendMessage, 'Ctrl+Enter'),
                                     onPressed:
                                         isOnline ? _sendChatMessage : null,
                                   ),
@@ -2440,6 +2581,57 @@ class _P2LanChatDetailScreenState extends State<P2LanChatDetailScreen>
             ),
           ),
         );
+        if (isDesktopShortcuts) {
+          return KeyboardListener(
+            focusNode: _shortcutFocusNode,
+            autofocus: true,
+            onKeyEvent: (event) async {
+              if (event is! KeyDownEvent) return;
+              // Back/Escape: exit chat
+              if (event.logicalKey == LogicalKeyboardKey.escape) {
+                if (Navigator.canPop(context)) Navigator.pop(context);
+                return;
+              }
+              if (HardwareKeyboard.instance.isControlPressed) {
+                // Ctrl+I: focus input
+                if (event.logicalKey == LogicalKeyboardKey.keyI) {
+                  _textFocusNode.requestFocus();
+                  return;
+                }
+                // Ctrl+, choose files
+                if (event.logicalKey == LogicalKeyboardKey.comma) {
+                  await _pickFiles();
+                  return;
+                }
+                // Ctrl+. choose media
+                if (event.logicalKey == LogicalKeyboardKey.period) {
+                  await _pickMedia();
+                  return;
+                }
+                // Ctrl+R: reload messages
+                if (event.logicalKey == LogicalKeyboardKey.keyR) {
+                  _initLoadMessages();
+                  if (mounted) setState(() {});
+                  return;
+                }
+                // Ctrl+O: open chat customization
+                if (event.logicalKey == LogicalKeyboardKey.keyO) {
+                  _navigateToChatSettings();
+                  return;
+                }
+              }
+            },
+            child: Listener(
+              onPointerDown: (evt) {
+                if (evt.buttons == 8) {
+                  if (Navigator.canPop(context)) Navigator.pop(context);
+                }
+              },
+              child: scaffold,
+            ),
+          );
+        }
+        return scaffold;
       },
     );
   }

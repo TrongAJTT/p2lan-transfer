@@ -2,9 +2,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/widgets/generic/permission_info_dialog.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/widgets/generic/permission_info_dialog.dart';
+import 'package:p2lan/widgets/generic/generic_dialog.dart';
 
 /// Utility class to handle permission requests with proper UI flow
 class PermissionUtils {
@@ -131,7 +132,7 @@ class PermissionUtils {
 
   /// Request location permission with explanation dialog
   static Future<bool> requestLocationPermission(BuildContext context) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     // Check if already granted
     final isGranted = await _isLocationPermissionGranted();
@@ -181,7 +182,7 @@ class PermissionUtils {
   /// Request nearby WiFi devices permission with explanation dialog (Android 12+)
   static Future<bool> requestNearbyDevicesPermission(
       BuildContext context) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     // Check if already granted
     final isGranted = await _isNearbyDevicesPermissionGranted();
@@ -268,5 +269,60 @@ class PermissionUtils {
     // TODO: Implement when needed for voice features
     throw UnimplementedError(
         'Microphone permission request not implemented yet');
+  }
+
+  /// Check if notification permission is granted
+  static Future<bool> _isNotificationPermissionGranted() async {
+    if (!Platform.isAndroid) return true;
+
+    final status = await Permission.notification.status;
+    return status.isGranted;
+  }
+
+  /// Request notification permission with explanation dialog
+  static Future<bool> requestNotificationPermission(
+      BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+
+    // Check if already granted
+    final isGranted = await _isNotificationPermissionGranted();
+    if (isGranted) return true;
+
+    // Show explanation dialog first
+    bool? userConfirmed;
+    if (context.mounted) {
+      userConfirmed = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return GenericDialog(
+            header: GenericDialogHeader(
+              title: l10n.notificationRequestPermission,
+            ),
+            body: Text(l10n.notificationRequestPermissionDesc),
+            footer: GenericDialogFooter.twoSimpleButtons(
+              context: context,
+              leftText: l10n.cancel,
+              rightText: l10n.grantPermission,
+              onLeft: () => Navigator.of(context).pop(false),
+              onRight: () => Navigator.of(context).pop(true),
+              minToggleDisplayWidth: 400,
+            ),
+          );
+        },
+      );
+    }
+    logInfo('>>>>>>> userConfirmed: $userConfirmed');
+
+    if (userConfirmed != true) return false;
+
+    // Request the actual permission
+    try {
+      final result = await Permission.notification.request();
+      return result.isGranted;
+    } catch (e) {
+      logError('>>>>>>>> Error requesting notification permission: $e');
+      return false;
+    }
   }
 }

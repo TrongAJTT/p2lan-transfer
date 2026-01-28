@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/widgets/generic/radial_menu.dart';
+import 'package:p2lan/widgets/generic/radial_menu.dart';
 
 enum FileCategory {
   downloads('Downloads', Icons.download, Colors.blue),

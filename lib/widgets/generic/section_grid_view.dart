@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/widgets/generic/section_item.dart';
+import 'package:p2lan/widgets/generic/section_item.dart';
 
 class SectionGridDecorator {
   final EdgeInsets? padding;

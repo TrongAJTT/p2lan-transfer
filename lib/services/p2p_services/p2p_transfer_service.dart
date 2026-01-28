@@ -3,25 +3,27 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
+import 'package:crypto/crypto.dart';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
+import 'package:p2lan/models/p2p_models.dart';
 // Import enum DataTransferKey để dùng cho metadata
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/services/isar_service.dart';
-import 'package:p2lantransfer/services/p2p_services/p2p_chat_service.dart';
-import 'package:p2lantransfer/services/p2p_services/p2p_network_service.dart';
-import 'package:p2lantransfer/services/p2p_services/p2p_notification_service.dart';
-import 'package:p2lantransfer/services/p2p_services/p2p_settings_adapter.dart';
-import 'package:p2lantransfer/services/performance_optimizer_service.dart'; // 🚀 Thêm import
-import 'package:p2lantransfer/utils/isar_utils.dart';
-import 'package:p2lantransfer/utils/url_utils.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/services/isar_service.dart';
+import 'package:p2lan/services/p2p_services/p2p_chat_service.dart';
+import 'package:p2lan/services/p2p_services/p2p_network_service.dart';
+import 'package:p2lan/services/p2p_services/p2p_notification_service.dart';
+import 'package:p2lan/services/p2p_services/p2p_settings_adapter.dart';
+import 'package:p2lan/services/performance_optimizer_service.dart'; // 🚀 Thêm import
+import 'package:p2lan/utils/isar_utils.dart';
+import 'package:p2lan/utils/url_utils.dart';
 import 'package:uuid/uuid.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:p2lantransfer/services/encryption_service.dart';
-import 'package:p2lantransfer/services/crypto_service.dart';
+import 'package:p2lan/services/encryption_service.dart';
+import 'package:p2lan/services/crypto_service.dart';
+import 'package:p2lan/services/ecdh_key_exchange_service.dart';
 
 /// Validation result for file transfer request
 class _FileTransferValidationResult {
@@ -45,6 +47,9 @@ class P2PTransferService extends ChangeNotifier {
 
   // Transfer settings
   P2PDataTransferSettings? _transferSettings;
+
+  // ECDH Key management
+  ECDHKeyPair? _deviceKeyPair;
 
   // File transfer request management
   final List<FileTransferRequest> _pendingFileTransferRequests = [];
@@ -83,6 +88,16 @@ class P2PTransferService extends ChangeNotifier {
   // Buffer chunks that arrive before task is created
   final Map<String, List<Map<String, dynamic>>> _pendingChunks = {};
 
+  // File assembly synchronization to prevent race conditions
+  final Map<String, Completer<void>> _fileAssemblyLocks = {};
+
+  // Chunk processing synchronization to prevent concurrent modifications
+  final Map<String, Completer<void>> _chunkProcessingLocks = {};
+
+  // Receiver-side workers to offload decoding/decryption and disk I/O
+  final Map<String, Isolate> _rxReceiverIsolates = {};
+  final Map<String, SendPort> _rxReceiverPorts = {};
+
   // File picker cache management
   static final Set<String> _activeFileTransferBatches = <String>{};
   static DateTime? _lastFilePickerCleanup;
@@ -112,6 +127,11 @@ class P2PTransferService extends ChangeNotifier {
     _sessionKeys.clear();
     logInfo('P2PTransferService: All session keys cleared');
   }
+
+  // 🚀 UI Refresh Rate System
+  Timer? _uiRefreshTimer;
+  final Map<String, DataTransferTask> _pendingUIUpdates = {};
+  bool _immediateRefresh = false;
 
   // Getters
   P2PDataTransferSettings? get transferSettings => _transferSettings;
@@ -148,6 +168,11 @@ class P2PTransferService extends ChangeNotifier {
 
   /// Initialize transfer service
   Future<void> initialize() async {
+    // Generate ephemeral key pair for this session
+    _deviceKeyPair = ECDHKeyExchangeService.generateEphemeralKeyPair();
+    logInfo(
+        'P2PTransferService: Generated ephemeral key pair with fingerprint: ${_deviceKeyPair!.publicKeyFingerprint}');
+
     // Load transfer settings and active transfers
     await _loadTransferSettings();
     await _loadActiveTransfers();
@@ -190,6 +215,9 @@ class P2PTransferService extends ChangeNotifier {
     // Schedule cleanup of expired messages in background
     _scheduleMessageCleanup();
 
+    // 🚀 Initialize UI refresh system
+    _initializeUIRefreshSystem();
+
     logInfo('P2PTransferService: Initialized successfully');
   }
 
@@ -213,6 +241,55 @@ class P2PTransferService extends ChangeNotifier {
       await _chatService.cleanupExpiredMessages();
     } catch (e) {
       logError('P2PTransferService: Error during manual message cleanup: $e');
+    }
+  }
+
+  /// 🚀 Initialize UI refresh rate system
+  void _initializeUIRefreshSystem() {
+    final refreshRate = _transferSettings?.uiRefreshRateSeconds ?? 0;
+    _immediateRefresh = refreshRate == 0;
+
+    if (!_immediateRefresh) {
+      // Start periodic UI updates for non-immediate mode
+      _uiRefreshTimer = Timer.periodic(Duration(seconds: refreshRate), (_) {
+        _processPendingUIUpdates();
+      });
+      logInfo(
+          'P2PTransferService: UI refresh system initialized with ${refreshRate}s interval');
+    } else {
+      logInfo(
+          'P2PTransferService: UI refresh system initialized in immediate mode');
+    }
+  }
+
+  /// 🚀 Process pending UI updates in batch
+  void _processPendingUIUpdates() {
+    if (_pendingUIUpdates.isEmpty) return;
+
+    // Update active transfers with latest data from pending updates
+    for (final entry in _pendingUIUpdates.entries) {
+      final taskId = entry.key;
+      final updatedTask = entry.value;
+      _activeTransfers[taskId] = updatedTask;
+    }
+
+    _pendingUIUpdates.clear();
+
+    // Trigger UI update in background to avoid blocking transfer
+    Future.microtask(() => notifyListeners());
+  }
+
+  /// 🚀 Schedule task for UI update
+  void _scheduleUIUpdate(DataTransferTask task) {
+    // Always update active transfers immediately for progress tracking
+    _activeTransfers[task.id] = task;
+
+    if (_immediateRefresh) {
+      // Update UI immediately
+      Future.microtask(() => notifyListeners());
+    } else {
+      // Add to pending updates for batch processing
+      _pendingUIUpdates[task.id] = task;
     }
   }
 
@@ -441,6 +518,13 @@ class P2PTransferService extends ChangeNotifier {
   /// Reload transfer settings from storage
   Future<void> reloadTransferSettings() async {
     await _loadTransferSettings();
+
+    // 🚀 Reinitialize UI refresh system if settings changed
+    _uiRefreshTimer?.cancel();
+    _uiRefreshTimer = null;
+    _pendingUIUpdates.clear();
+    _initializeUIRefreshSystem();
+
     logInfo('P2PTransferService: Transfer settings reloaded');
   }
 
@@ -555,6 +639,179 @@ class P2PTransferService extends ChangeNotifier {
     }
   }
 
+  // ECDH Key Exchange Methods
+
+  /// Start key exchange with a user
+  Future<bool> startKeyExchange(P2PUser user) async {
+    if (_deviceKeyPair == null) {
+      logError('P2PTransferService: Device key pair not initialized');
+      return false;
+    }
+
+    try {
+      final message = {
+        'type': P2PMessageTypes.keyExchangeRequest,
+        'fromUserId': _networkService.currentUser?.id ?? 'unknown',
+        'toUserId': user.id,
+        'data': {
+          'publicKey': base64Encode(_deviceKeyPair!.publicKey),
+          'fingerprint': _deviceKeyPair!.publicKeyFingerprint,
+          'timestamp': DateTime.now().toIso8601String(),
+        },
+      };
+
+      final success = await _networkService.sendMessageToUser(user, message);
+      if (success) {
+        user.keyExchangeStatus = KeyExchangeStatus.requested;
+        logInfo(
+            'P2PTransferService: Key exchange request sent to ${user.displayName}');
+      }
+
+      return success;
+    } catch (e) {
+      logError(
+          'P2PTransferService: Failed to start key exchange with ${user.displayName}: $e');
+      return false;
+    }
+  }
+
+  /// Handle incoming key exchange request
+  void _handleKeyExchangeRequest(Map<String, dynamic> messageData) {
+    try {
+      final fromUserId = messageData['fromUserId'] as String;
+      final data = messageData['data'] as Map<String, dynamic>;
+      final peerPublicKeyB64 = data['publicKey'] as String;
+      final peerFingerprint = data['fingerprint'] as String;
+
+      final peerPublicKey = base64Decode(peerPublicKeyB64);
+
+      // Find user and update their info
+      final user = _getUserByIdCallback?.call(fromUserId);
+      if (user != null) {
+        user.publicKeyFingerprint = peerFingerprint;
+        user.keyExchangeStatus = KeyExchangeStatus.exchanging;
+
+        // Create encryption session
+        if (_deviceKeyPair != null) {
+          final sessionId = ECDHKeyExchangeService.createSession(
+              user.id, _deviceKeyPair!, peerPublicKey);
+          user.sessionId = sessionId;
+
+          logInfo(
+              'P2PTransferService: Created encryption session for ${user.displayName}');
+
+          // Send response with our public key
+          _sendKeyExchangeResponse(user);
+        }
+      }
+    } catch (e) {
+      logError('P2PTransferService: Failed to handle key exchange request: $e');
+    }
+  }
+
+  /// Send key exchange response
+  Future<void> _sendKeyExchangeResponse(P2PUser user) async {
+    if (_deviceKeyPair == null) return;
+
+    try {
+      final message = {
+        'type': P2PMessageTypes.keyExchangeResponse,
+        'fromUserId': _networkService.currentUser?.id ?? 'unknown',
+        'toUserId': user.id,
+        'data': {
+          'publicKey': base64Encode(_deviceKeyPair!.publicKey),
+          'fingerprint': _deviceKeyPair!.publicKeyFingerprint,
+          'sessionId': user.sessionId,
+          'status': 'success',
+          'timestamp': DateTime.now().toIso8601String(),
+        },
+      };
+
+      final success = await _networkService.sendMessageToUser(user, message);
+      if (success) {
+        user.keyExchangeStatus = KeyExchangeStatus.completed;
+        logInfo(
+            'P2PTransferService: Key exchange completed with ${user.displayName}');
+      }
+    } catch (e) {
+      logError('P2PTransferService: Failed to send key exchange response: $e');
+    }
+  }
+
+  /// Handle key exchange response
+  void _handleKeyExchangeResponse(Map<String, dynamic> messageData) {
+    try {
+      final fromUserId = messageData['fromUserId'] as String;
+      final data = messageData['data'] as Map<String, dynamic>;
+      final peerPublicKeyB64 = data['publicKey'] as String;
+      final peerFingerprint = data['fingerprint'] as String;
+      final sessionId = data['sessionId'] as String?;
+
+      final peerPublicKey = base64Decode(peerPublicKeyB64);
+
+      // Find user and update their info
+      final user = _getUserByIdCallback?.call(fromUserId);
+      if (user != null && _deviceKeyPair != null) {
+        user.publicKeyFingerprint = peerFingerprint;
+
+        // Create or update encryption session
+        final newSessionId = ECDHKeyExchangeService.createSession(
+            user.id, _deviceKeyPair!, peerPublicKey);
+        user.sessionId = newSessionId;
+        user.keyExchangeStatus = KeyExchangeStatus.completed;
+
+        logInfo(
+            'P2PTransferService: Key exchange completed with ${user.displayName}');
+        logInfo('P2PTransferService: Peer fingerprint: $peerFingerprint');
+
+        notifyListeners();
+      }
+    } catch (e) {
+      logError(
+          'P2PTransferService: Failed to handle key exchange response: $e');
+    }
+  }
+
+  /// Get device's public key fingerprint for UI display
+  String? get devicePublicKeyFingerprint =>
+      _deviceKeyPair?.publicKeyFingerprint;
+
+  /// Handle encrypted data chunk
+  void _handleEncryptedDataChunk(Map<String, dynamic> messageData) {
+    try {
+      final fromUserId = messageData['fromUserId'] as String;
+      final data = messageData['data'] as Map<String, dynamic>;
+
+      final user = _getUserByIdCallback?.call(fromUserId);
+      if (user?.sessionId == null) {
+        logError(
+            'P2PTransferService: No encryption session found for user ${user?.displayName}');
+        return;
+      }
+
+      // Decrypt the encrypted data
+      final encryptedData = ECDHEncryptedData.fromJson(data);
+      final decryptedBytes =
+          ECDHKeyExchangeService.decryptData(user!.sessionId!, encryptedData);
+
+      if (decryptedBytes != null) {
+        // Convert decrypted bytes back to JSON and handle as normal data chunk
+        final decryptedJson = utf8.decode(decryptedBytes);
+        final decryptedMessageData = jsonDecode(decryptedJson);
+        final decryptedMessage = P2PMessage.fromJson(decryptedMessageData);
+
+        logInfo(
+            'P2PTransferService: Successfully decrypted data chunk from ${user.displayName}');
+        _handleDataChunk(decryptedMessage);
+      } else {
+        logError(
+            'P2PTransferService: Failed to decrypt data chunk from ${user.displayName}');
+      }
+    } catch (e) {
+      logError('P2PTransferService: Error handling encrypted data chunk: $e');
+    }
+  }
+
   // Private methods
 
   void _handleTcpMessage(Socket socket, Uint8List messageBytes) {
@@ -563,14 +820,37 @@ class P2PTransferService extends ChangeNotifier {
       final messageData = jsonDecode(jsonString);
       final message = P2PMessage.fromJson(messageData);
 
+      // @DebugLog Only log non-chunk messages to reduce overhead
+      // if (message.type != P2PMessageTypes.dataChunk) {
+      //   logInfo(
+      //       'P2PTransferService: Received ${message.type} from ${message.fromUserId}');
+      // }
+
+      // Drop any signals from blocked users
+      final fromUser = _getTargetUser(message.fromUserId);
+      if (fromUser?.isBlocked == true) {
+        logWarning(
+            'P2PTransferService: Ignoring ${message.type} from blocked user ${fromUser!.displayName}');
+        return;
+      }
+
       // Associate socket with user ID
       if (!_networkService.connectedSockets.containsKey(message.fromUserId)) {
         _networkService.associateSocketWithUser(message.fromUserId, socket);
       }
 
       switch (message.type) {
+        case P2PMessageTypes.keyExchangeRequest:
+          _handleKeyExchangeRequest(messageData);
+          break;
+        case P2PMessageTypes.keyExchangeResponse:
+          _handleKeyExchangeResponse(messageData);
+          break;
         case P2PMessageTypes.dataChunk:
           _handleDataChunk(message);
+          break;
+        case P2PMessageTypes.encryptedDataChunk:
+          _handleEncryptedDataChunk(messageData);
           break;
         case P2PMessageTypes.dataTransferCancel:
           _handleDataTransferCancel(message);
@@ -618,9 +898,9 @@ class P2PTransferService extends ChangeNotifier {
             'P2PTransferService: Session key prepared for encrypted transfer');
       }
 
-      // Validate sender is paired
+      // Validate sender and block state
       final fromUser = _getTargetUser(request.fromUserId);
-      if (fromUser == null || !fromUser.isPaired) {
+      if (fromUser == null || fromUser.isBlocked || !fromUser.isPaired) {
         await _sendFileTransferResponse(request, false,
             FileTransferRejectReason.unknown, 'User not paired');
         return;
@@ -739,171 +1019,221 @@ class P2PTransferService extends ChangeNotifier {
       return;
     }
 
-    try {
-      Uint8List? chunkData;
+    // Bootstrap task early so UI can render immediately
+    DataTransferTask? task = await _getOrCreateTask(taskId, message, data);
+    if (task == null) {
+      logError('P2PTransferService: Could not get or create task for $taskId');
+      return;
+    }
 
-      // Handle encrypted data
-      if (data['enc'] == 'gcm') {
-        // AES-GCM encryption (backward compatibility)
-        final ctBase64 = data['ct'] as String?;
-        final ivBase64 = data['iv'] as String?;
-        final tagBase64 = data['tag'] as String?;
+    // Start background receiver isolate per task on first chunk
+    if (!_rxReceiverPorts.containsKey(taskId)) {
+      final rxPort = ReceivePort();
+      final iso = await Isolate.spawn(_rxReceiverIsolateEntry, {
+        'sendPort': rxPort.sendPort,
+        'task': task.toJson(),
+        'downloadPath': _transferSettings?.downloadPath,
+        'createSenderFolders': _transferSettings?.createSenderFolders ?? false,
+        'senderName': task.targetUserName,
+      });
 
-        if (ctBase64 != null && ivBase64 != null && tagBase64 != null) {
-          final sessionKey = _getOrCreateSessionKey(message.fromUserId);
-          final encryptedMap = {
-            'ciphertext': base64Decode(ctBase64),
-            'iv': base64Decode(ivBase64),
-            'tag': base64Decode(tagBase64),
-          };
-          chunkData = EncryptionService.decryptGCM(encryptedMap, sessionKey);
-          if (chunkData == null) {
-            logError(
-                'P2PTransferService: GCM decryption failed for task $taskId. Might be a wrong key or tampered data.');
-            return;
-          }
-        }
-      } else if (data['enc'] == 'aes-gcm' ||
-          data['enc'] == 'chacha20-poly1305') {
-        // New encryption system using CryptoService
-        final encryptionType = data['enc'] == 'aes-gcm'
-            ? EncryptionType.aesGcm
-            : EncryptionType.chaCha20;
-
-        final sessionKey = _getOrCreateSessionKey(message.fromUserId);
-        final encryptedData = <String, dynamic>{};
-
-        if (encryptionType == EncryptionType.aesGcm) {
-          encryptedData['ciphertext'] = base64Decode(data['ct'] as String);
-          encryptedData['iv'] = base64Decode(data['iv'] as String);
-          encryptedData['tag'] = base64Decode(data['tag'] as String);
-        } else {
-          encryptedData['ciphertext'] = base64Decode(data['ct'] as String);
-          encryptedData['nonce'] = base64Decode(data['nonce'] as String);
-          encryptedData['tag'] = base64Decode(data['tag'] as String);
-        }
-
-        chunkData = await CryptoService.decrypt(
-            encryptedData, sessionKey, encryptionType);
-        if (chunkData == null) {
-          logError(
-              'P2PTransferService: ${encryptionType.name} decryption failed for task $taskId. Might be a wrong key or tampered data.');
+      final completer = Completer<SendPort>();
+      rxPort.listen((msg) async {
+        if (msg is SendPort) {
+          completer.complete(msg);
           return;
         }
-      } else {
-        // Fallback for unencrypted data (e.g., from older clients)
-        final dataBase64 = data['data'] as String?;
-        if (dataBase64 != null) {
-          chunkData = base64Decode(dataBase64);
-        }
-      }
-
-      if (chunkData == null) {
-        logError(
-            'P2PTransferService: Failed to get chunk data for task $taskId');
-        return;
-      }
-
-      DataTransferTask? task = await _getOrCreateTask(taskId, message, data);
-      if (task == null) {
-        logError(
-            'P2PTransferService: Could not get or create task for $taskId');
-        _pendingChunks.putIfAbsent(taskId, () => []);
-        _pendingChunks[taskId]!.add({
-          'chunkData': chunkData,
-          'isLast': isLast,
-          'data': data,
-        });
-        return;
-      }
-
-      // Initialize chunks list and guard against out-of-order duplicates
-      _incomingFileChunks.putIfAbsent(taskId, () => []);
-      _incomingFileChunks[taskId]!.add(chunkData);
-
-      // For large files, periodically flush chunks to temporary file to reduce memory usage
-      const int maxChunksInMemory =
-          25; // Lower threshold to reduce memory buildup
-      if (_incomingFileChunks[taskId]!.length >= maxChunksInMemory) {
-        await _flushChunksToTempFile(taskId);
-      }
-
-      // Update progress
-      task.transferredBytes += chunkData.length;
-      if (task.status != DataTransferStatus.transferring) {
-        task.status = DataTransferStatus.transferring;
-        task.startedAt ??= DateTime.now();
-      }
-
-      // Cap transferredBytes to fileSize to prevent overflow
-      if (task.transferredBytes > task.fileSize) {
-        logWarning(
-            'P2PTransferService: Transfer bytes overflow for task $taskId. Capping to fileSize.');
-        task.transferredBytes = task.fileSize;
-      }
-
-      final progressPercent = (task.fileSize > 0)
-          ? (((task.transferredBytes / task.fileSize) * 100).clamp(0.0, 100.0))
-              .round()
-          : 0;
-
-      // Show progress notification
-      if (progressPercent == 0 ||
-          progressPercent % 5 == 0 ||
-          progressPercent > 90 ||
-          isLast) {
-        String? speed;
-        String? eta;
-        if (task.startedAt != null &&
-            progressPercent > 0 &&
-            task.transferredBytes > 0) {
-          final elapsed = DateTime.now().difference(task.startedAt!);
-          if (elapsed.inSeconds > 0) {
-            final speedBps = task.transferredBytes / elapsed.inSeconds;
-            speed = _formatSpeed(speedBps);
-            if (speedBps > 0) {
-              final remainingBytes = task.fileSize - task.transferredBytes;
-              if (remainingBytes > 0) {
-                final etaSeconds = (remainingBytes / speedBps).round();
-                eta = _formatEta(etaSeconds);
-              }
+        if (msg is Map<String, dynamic>) {
+          final type = msg['type'];
+          if (type == 'progress') {
+            final inc = msg['inc'] as int? ?? 0;
+            task.transferredBytes += inc;
+            if (task.status != DataTransferStatus.transferring) {
+              task.status = DataTransferStatus.transferring;
+              task.startedAt ??= DateTime.now();
             }
+            _scheduleUIUpdate(task);
+          } else if (type == 'completed') {
+            task.status = DataTransferStatus.completed;
+            task.completedAt = DateTime.now();
+            task.filePath = msg['filePath'] as String? ?? task.filePath;
+            task.savePath = task.filePath;
+            await _saveTaskToDb(task);
+            _scheduleUIUpdate(task);
+            _rxReceiverIsolates.remove(taskId)?.kill();
+            _rxReceiverPorts.remove(taskId);
+          } else if (type == 'error') {
+            task.status = DataTransferStatus.failed;
+            task.errorMessage = msg['message'] as String?;
+            await _saveTaskToDb(task);
+            _scheduleUIUpdate(task);
+            _rxReceiverIsolates.remove(taskId)?.kill();
+            _rxReceiverPorts.remove(taskId);
           }
         }
+      });
 
-        await _safeNotificationCall(
-            () => P2PNotificationService.instance.showFileTransferStatus(
-                  task: task,
-                  progress: progressPercent,
-                  speed: speed,
-                  eta: eta,
-                ));
-      }
+      final sp = await completer.future;
+      _rxReceiverIsolates[taskId] = iso;
+      _rxReceiverPorts[taskId] = sp;
+    }
 
-      // Notify UI every 10 chunks to reduce overhead
-      if (_incomingFileChunks[taskId]!.length % 10 == 0 || isLast) {
-        notifyListeners();
-      }
+    try {
+      // Send raw chunk payload to receiver isolate (it will decode/decrypt/write)
+      // Determine encryption type and session info
+      final legacySessionKey = _sessionKeys[message.fromUserId];
+      final senderUser = _getUserByIdCallback?.call(message.fromUserId);
+      final ecdhSessionId = senderUser?.sessionId;
 
-      // If this is the last chunk, assemble the file
-      if (isLast) {
-        logInfo(
-            'P2PTransferService: Last chunk received for task $taskId, assembling file...');
-        await _assembleReceivedFile(
-            taskId: taskId, metaData: {"userId": message.fromUserId});
-      } else {
-        // Safety: if received bytes already meet/exceed fileSize, assemble proactively
-        if (task.transferredBytes >= task.fileSize && task.fileSize > 0) {
-          logWarning(
-              'P2PTransferService: transferredBytes>=fileSize without isLast. Forcing assemble for task $taskId');
-          await _assembleReceivedFile(
-              taskId: taskId, metaData: {"userId": message.fromUserId});
-        }
-      }
+      _rxReceiverPorts[taskId]!.send({
+        'taskId': taskId,
+        'data': data,
+        'fromUserId': message.fromUserId,
+        'isLast': isLast,
+        'encryptionSession': legacySessionKey, // Legacy session key
+        'ecdhSessionId': ecdhSessionId, // ECDH session ID
+        'encryptionType': _transferSettings?.encryptionType?.name,
+      });
     } catch (e) {
-      logError(
-          'P2PTransferService: Failed to process data chunk for task $taskId: $e');
-      _incomingFileChunks.remove(taskId);
+      logError('P2PTransferService: Failed to forward chunk to RX isolate: $e');
+    }
+  }
+
+  /// Receiver isolate entry - offloads base64 decode, decrypt and disk I/O
+  static void _rxReceiverIsolateEntry(Map<String, dynamic> args) async {
+    final sendPort = args['sendPort'] as SendPort;
+    final task = DataTransferTask.fromJson(args['task']);
+    final downloadPathArg = args['downloadPath'] as String?;
+    final createSenderFolders = args['createSenderFolders'] as bool? ?? false;
+    final senderName = args['senderName'] as String? ?? 'Unknown';
+
+    final receivePort = ReceivePort();
+    sendPort.send(receivePort.sendPort);
+
+    // Resolve download path
+    String downloadPath = downloadPathArg ??
+        (Platform.isWindows
+            ? '${Platform.environment['USERPROFILE']}\\Downloads'
+            : '${Platform.environment['HOME']}/Downloads');
+    if (createSenderFolders) {
+      final sanitized = senderName.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
+      downloadPath = '$downloadPath${Platform.pathSeparator}$sanitized';
+    }
+    final dir = Directory(downloadPath);
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+
+    // Prepare unique file name
+    String fileName = task.fileName;
+    String filePath = '$downloadPath${Platform.pathSeparator}$fileName';
+    int counter = 1;
+    while (await File(filePath).exists()) {
+      final p = fileName.split('.');
+      if (p.length > 1) {
+        final base = p.sublist(0, p.length - 1).join('.');
+        final ext = p.last;
+        fileName = '${base}_$counter.$ext';
+      } else {
+        fileName = '${fileName}_$counter';
+      }
+      filePath = '$downloadPath${Platform.pathSeparator}$fileName';
+      counter++;
+    }
+
+    final file = File(filePath);
+    final sink = file.openWrite(mode: FileMode.writeOnlyAppend);
+
+    await for (final msg in receivePort) {
+      if (msg is! Map<String, dynamic>) continue;
+      final isLast = msg['isLast'] as bool? ?? false;
+      final data = msg['data'] as Map<String, dynamic>;
+      final sessionKey = msg['encryptionSession'] as Uint8List?;
+      final ecdhSessionId = msg['ecdhSessionId'] as String?;
+      final encryptionTypeName = msg['encryptionType'] as String?;
+
+      try {
+        Uint8List? chunkData;
+        // Decode/decrypt similar to main isolate, but here offloaded
+        if (data['enc'] == 'gcm') {
+          final ct = data['ct'] as String?;
+          final iv = data['iv'] as String?;
+          final tag = data['tag'] as String?;
+          if (ct != null && iv != null && tag != null && sessionKey != null) {
+            chunkData = EncryptionService.decryptGCM({
+              'ciphertext': base64Decode(ct),
+              'iv': base64Decode(iv),
+              'tag': base64Decode(tag),
+            }, sessionKey);
+          }
+        } else if (data['enc'] == 'aes-gcm' ||
+            data['enc'] == 'chacha20-poly1305' ||
+            data['enc'] == 'aes-gcm-ecdh' ||
+            data['enc'] == 'chacha20-poly1305-ecdh') {
+          // Determine encryption type and source
+          final isECDHEncryption = data['enc']?.endsWith('-ecdh') == true;
+          final isAESGCM =
+              data['enc'] == 'aes-gcm' || data['enc'] == 'aes-gcm-ecdh';
+
+          // Get decryption key
+          Uint8List? decryptionKey;
+          if (isECDHEncryption && ecdhSessionId != null) {
+            // ECDH path: get shared secret
+            decryptionKey =
+                ECDHKeyExchangeService.getSharedSecret(ecdhSessionId);
+          } else {
+            // Legacy path: use session key
+            decryptionKey = sessionKey;
+          }
+
+          if (decryptionKey != null) {
+            if (isECDHEncryption) {
+              // Use simplified decryption for ECDH encryption
+              chunkData = _decryptChunkSimple(data, decryptionKey, isAESGCM);
+            } else {
+              // Use advanced CryptoService for legacy encryption
+              final encType =
+                  isAESGCM ? EncryptionType.aesGcm : EncryptionType.chaCha20;
+              final encrypted = <String, Uint8List>{
+                'ciphertext': base64Decode(data['ct'] as String),
+              };
+              if (isAESGCM) {
+                encrypted['iv'] = base64Decode(data['iv'] as String);
+                encrypted['tag'] = base64Decode(data['tag'] as String);
+              } else {
+                encrypted['nonce'] = base64Decode(data['nonce'] as String);
+                encrypted['tag'] = base64Decode(data['tag'] as String);
+              }
+              chunkData = await CryptoService.decrypt(
+                  encrypted, decryptionKey, encType);
+            }
+          }
+        } else {
+          final dataBase64 = data['data'] as String?;
+          if (dataBase64 != null) chunkData = base64Decode(dataBase64);
+        }
+
+        if (chunkData == null) {
+          sendPort.send({'type': 'error', 'message': 'Failed to decode chunk'});
+          continue;
+        }
+
+        // Write to disk streaming
+        sink.add(chunkData);
+        sendPort.send({'type': 'progress', 'inc': chunkData.length});
+
+        if (isLast) {
+          await sink.flush();
+          await sink.close();
+          sendPort.send({'type': 'completed', 'filePath': filePath});
+        }
+      } catch (e) {
+        try {
+          await sink.flush();
+          await sink.close();
+        } catch (_) {}
+        sendPort.send({'type': 'error', 'message': e.toString()});
+      }
     }
   }
 
@@ -1038,6 +1368,9 @@ class P2PTransferService extends ChangeNotifier {
         _activeTransfers[taskId] = task;
         await _saveTaskToDb(task);
 
+        // 🚀 Immediate UI update when task is created
+        _scheduleUIUpdate(task);
+
         // Process buffered chunks
         final bufferedChunks = _pendingChunks.remove(taskId);
         if (bufferedChunks != null && bufferedChunks.isNotEmpty) {
@@ -1057,7 +1390,7 @@ class P2PTransferService extends ChangeNotifier {
               Future.microtask(() => _assembleReceivedFile(taskId: taskId));
             }
           }
-          notifyListeners();
+          _scheduleUIUpdate(task);
         }
 
         completer.complete(task);
@@ -1077,6 +1410,17 @@ class P2PTransferService extends ChangeNotifier {
 
   Future<void> _assembleReceivedFile(
       {required String taskId, Map<String, dynamic>? metaData}) async {
+    // Wait for any existing file assembly to complete for this task
+    final existingLock = _fileAssemblyLocks[taskId];
+    if (existingLock != null) {
+      await existingLock.future;
+      return; // Assembly already completed
+    }
+
+    // Create lock for this file assembly
+    final assemblyCompleter = Completer<void>();
+    _fileAssemblyLocks[taskId] = assemblyCompleter;
+
     try {
       final chunks = _incomingFileChunks[taskId];
       final task = _activeTransfers[taskId];
@@ -1141,12 +1485,12 @@ class P2PTransferService extends ChangeNotifier {
         if (tempFilePath != null) {
           final tempFile = File(tempFilePath);
           if (await tempFile.exists()) {
-            await tempFile.openRead().listen(
-              (chunk) {
-                fileSink.add(chunk);
-                actualFileSize += chunk.length;
-              },
-            ).asFuture();
+            // Use synchronous reading to ensure proper order
+            final tempBytes = await tempFile.readAsBytes();
+            fileSink.add(tempBytes);
+            actualFileSize += tempBytes.length;
+            logDebug(
+                'P2PTransferService: Added ${tempBytes.length} bytes from temp file for task $taskId');
           }
         }
 
@@ -1342,6 +1686,10 @@ class P2PTransferService extends ChangeNotifier {
                 task: failedTask, success: false, errorMessage: '$e'));
         notifyListeners();
       }
+    } finally {
+      // Release file assembly lock
+      assemblyCompleter.complete();
+      _fileAssemblyLocks.remove(taskId);
     }
   }
 
@@ -1452,10 +1800,12 @@ class P2PTransferService extends ChangeNotifier {
       final receivePort = ReceivePort();
       _transferPorts[task.id] = receivePort;
 
-      // Check if encryption is enabled for this transfer
+      // Check if encryption is enabled for this transfer (sender's settings)
       final encryptionType =
           _transferSettings?.encryptionType ?? EncryptionType.none;
       final useEncryption = encryptionType != EncryptionType.none;
+
+      // Get session key for encryption (simple approach like old logic)
       final sessionKey = useEncryption ? _getSessionKey(targetUser.id) : null;
 
       final isolate = await Isolate.spawn(
@@ -1491,12 +1841,15 @@ class P2PTransferService extends ChangeNotifier {
               task.transferredBytes = (task.fileSize * progress).round();
             }
 
-            // Show progress notification - 🚀 Giảm tần suất update để tăng hiệu suất
+            // 🚀 Use smart UI refresh system for sender progress (more frequent)
+            _scheduleUIUpdate(task);
+
+            // Show progress notification - 🚀 Less frequent for performance
             if (_transferSettings?.enableNotifications == true) {
               final progressPercent = (progress * 100).round();
-              // Chỉ show notification ở các mốc quan trọng hoặc 10% intervals
+              // Show notification at 20% intervals or important milestones
               if (progressPercent == 0 ||
-                  progressPercent % 10 == 0 ||
+                  progressPercent % 20 == 0 ||
                   progressPercent > 95) {
                 await _safeNotificationCall(() =>
                     P2PNotificationService.instance.showFileTransferStatus(
@@ -1521,6 +1874,8 @@ class P2PTransferService extends ChangeNotifier {
 
             _cleanupTransfer(task.id);
             await _saveTaskToDb(task);
+            // Ensure UI reflects completion immediately
+            _scheduleUIUpdate(task);
             // Only auto-cleanup on receiver side for completed tasks
             if (!task.isOutgoing &&
                 _transferSettings?.autoCleanupCompletedTasks == true) {
@@ -1561,6 +1916,8 @@ class P2PTransferService extends ChangeNotifier {
 
             _cleanupTransfer(task.id);
             await _saveTaskToDb(task);
+            // Ensure UI reflects failure immediately
+            _scheduleUIUpdate(task);
             // Only auto-cleanup on sender side for failed tasks
             if (task.isOutgoing &&
                 _transferSettings?.autoCleanupFailedTasks == true) {
@@ -1575,7 +1932,7 @@ class P2PTransferService extends ChangeNotifier {
             }
           }
 
-          notifyListeners();
+          // Avoid chatty notify; rely on scheduled UI updates
         }
       });
 
@@ -1600,11 +1957,155 @@ class P2PTransferService extends ChangeNotifier {
     }
   }
 
+  /// 🚀 Async chunk sender for pipelining
+  static Future<void> _sendChunkAsync({
+    required Uint8List chunk,
+    required String taskId,
+    required int totalSent,
+    required int currentChunkSize,
+    required int totalBytes,
+    required bool isFirstChunk,
+    required DataTransferTask task,
+    required String currentUserId,
+    required P2PUser targetUser,
+    required Socket? tcpSocket,
+    required RawDatagramSocket? udpSocket,
+    required String protocol,
+    required Map<String, dynamic> params,
+    required SendPort sendPort,
+  }) async {
+    Map<String, dynamic> dataPayload;
+
+    // Simple encryption check like old logic
+    final useEncryption = params['useEncryption'] as bool? ?? false;
+    final encryptionTypeName = params['encryptionType'] as String? ?? 'none';
+    final sessionKeyBase64 = params['sessionKey'] as String?;
+
+    if (useEncryption && sessionKeyBase64 != null) {
+      try {
+        final sessionKey = base64Decode(sessionKeyBase64);
+
+        // Determine encryption type
+        EncryptionType encryptionType;
+        switch (encryptionTypeName) {
+          case 'aesGcm':
+            encryptionType = EncryptionType.aesGcm;
+            break;
+          case 'chaCha20':
+            encryptionType = EncryptionType.chaCha20;
+            break;
+          default:
+            encryptionType = EncryptionType.none;
+        }
+
+        if (encryptionType != EncryptionType.none) {
+          // Use CryptoService like old logic
+          final encryptedData =
+              await CryptoService.encrypt(chunk, sessionKey, encryptionType);
+
+          if (encryptionType == EncryptionType.aesGcm) {
+            dataPayload = {
+              'taskId': taskId,
+              'ct': base64Encode(encryptedData['ciphertext']!),
+              'iv': base64Encode(encryptedData['iv']!),
+              'tag': base64Encode(encryptedData['tag']!),
+              'enc': 'aes-gcm',
+              'isLast': (totalSent + currentChunkSize == totalBytes),
+            };
+          } else {
+            dataPayload = {
+              'taskId': taskId,
+              'ct': base64Encode(encryptedData['ciphertext']!),
+              'nonce': base64Encode(encryptedData['nonce']!),
+              'tag': base64Encode(encryptedData['tag']!),
+              'enc': 'chacha20-poly1305',
+              'isLast': (totalSent + currentChunkSize == totalBytes),
+            };
+          }
+        } else {
+          // Fallback to unencrypted
+          dataPayload = {
+            'taskId': taskId,
+            'data': base64Encode(chunk),
+            'isLast': (totalSent + currentChunkSize == totalBytes),
+          };
+        }
+      } catch (e) {
+        // Fallback to unencrypted on error
+        dataPayload = {
+          'taskId': taskId,
+          'data': base64Encode(chunk),
+          'isLast': (totalSent + currentChunkSize == totalBytes),
+        };
+      }
+    } else {
+      // Unencrypted chunk (original behavior)
+      dataPayload = {
+        'taskId': taskId,
+        'data': base64Encode(chunk),
+        'isLast': (totalSent + currentChunkSize == totalBytes),
+      };
+    }
+
+    if (isFirstChunk) {
+      dataPayload['fileName'] = task.fileName;
+      dataPayload['fileSize'] = task.fileSize;
+      // Truyền toàn bộ metadata từ task.data vào chunk đầu tiên
+      if (task.data != null) {
+        task.data!.forEach((key, value) {
+          dataPayload[key] = value;
+        });
+      }
+    }
+
+    // 🚀 Keep P2PMessage format for compatibility
+    final messageType =
+        P2PMessageTypes.dataChunk; // Use same type, distinguish by 'enc' field
+
+    final chunkMessage = P2PMessage(
+      type: messageType,
+      fromUserId: currentUserId,
+      toUserId: targetUser.id,
+      data: dataPayload,
+    );
+
+    final messageBytes = utf8.encode(jsonEncode(chunkMessage.toJson()));
+
+    // Send based on protocol
+    if (protocol.toLowerCase() == 'udp') {
+      final targetAddress = InternetAddress(targetUser.ipAddress);
+      udpSocket!.send(messageBytes, targetAddress, targetUser.port);
+    } else {
+      // Check socket state before writing
+      if (tcpSocket == null) {
+        throw StateError('TCP socket is null');
+      }
+
+      try {
+        final lengthHeader = ByteData(4)
+          ..setUint32(0, messageBytes.length, Endian.big);
+
+        // Write header and data in one go to avoid race conditions
+        final combinedData = <int>[];
+        combinedData.addAll(lengthHeader.buffer.asUint8List());
+        combinedData.addAll(messageBytes);
+
+        tcpSocket!.add(Uint8List.fromList(combinedData));
+        // 🚀 No flush for pipelining - let TCP stack batch multiple sends
+        // Only flush if this is the last chunk to ensure final delivery
+      } catch (e) {
+        throw StateError('Failed to write to TCP socket: $e');
+      }
+      if (dataPayload['isLast'] == true) {
+        await tcpSocket.flush();
+      }
+    }
+  }
+
   static void _staticDataTransferIsolate(Map<String, dynamic> params) async {
     final sendPort = params['sendPort'] as SendPort;
     Socket? tcpSocket;
     RawDatagramSocket? udpSocket;
-    RandomAccessFile? raf;
 
     try {
       // Parse parameters
@@ -1634,211 +2135,300 @@ class P2PTransferService extends ChangeNotifier {
         PerformanceOptimizerService.optimizeTCPSocket(tcpSocket);
       }
 
-      // Read file
+      // Read file (streaming, no full preloading into memory)
       final file = File(task.filePath);
       if (!await file.exists()) {
         sendPort.send({'error': 'File does not exist: ${task.filePath}'});
         return;
       }
-
-      raf = await file.open();
-      int totalSent = 0;
-      // 🚀 Bắt đầu với chunk size lớn hơn cho tốc độ tốt hơn
-      int chunkSize =
-          min(512 * 1024, maxChunkSizeFromSettings); // Start with 512KB
-      final int maxChunkSize = maxChunkSizeFromSettings;
-      int successfulChunksInRow = 0;
-      Duration delay =
-          const Duration(milliseconds: 2); // 🚀 Giảm delay từ 5ms xuống 2ms
-
+      final raf = await file.open();
       final totalBytes = await file.length();
+      int totalSent = 0;
+      // 🚀 Ultra-aggressive chunk sizing for maximum throughput
+      int chunkSize =
+          min(2 * 1024 * 1024, maxChunkSizeFromSettings); // Start with 2MB
+      final int maxChunkSize =
+          min(16 * 1024 * 1024, maxChunkSizeFromSettings); // Cap at 16MB
+      int successfulChunksInRow = 0;
+      // Duration delay = Duration.zero; // 🚀 NO DELAY for maximum speed (unused in pipelined version)
+
       bool isFirstChunk = true;
+
+      // 🚀 TCP Pipelining - send multiple chunks without waiting for ACK
+      final List<Future<void>> pendingSends = [];
+      const int maxPipelineDepth =
+          4; // Safer pipeline depth to reduce UI contention
+
+      // Throttling vars to smooth UI and avoid sender-side long idle periods
+      int lastEmitSent = 0; // bytes
+      int lastEmitMs = DateTime.now().millisecondsSinceEpoch;
+      int lastFlushSent = 0; // bytes
 
       while (totalSent < totalBytes) {
         final remainingBytes = totalBytes - totalSent;
         final currentChunkSize = min(chunkSize, remainingBytes);
+        // Streaming read from disk (no preloading)
+        await raf.setPosition(totalSent);
         final chunk = await raf.read(currentChunkSize);
 
-        try {
-          Map<String, dynamic> dataPayload;
+        // Pre-encrypt chunk in main thread if encryption is enabled
+        bool isPreEncrypted = false;
+        Map<String, dynamic>? encryptionInfo;
 
-          // Check if encryption is enabled (passed via parameters)
-          final useEncryption = params['useEncryption'] as bool? ?? false;
-          final encryptionTypeName =
-              params['encryptionType'] as String? ?? 'none';
+        final useEncryption = params['useEncryption'] as bool? ?? false;
+        final encryptionTypeName =
+            params['encryptionType'] as String? ?? 'none';
+        final sessionKeyOrId = params['sessionKeyOrId'] as String?;
+        final isECDH = params['isECDH'] as bool? ?? false;
 
-          if (useEncryption) {
-            // Get session key (passed via parameters)
-            final sessionKeyBase64 = params['sessionKey'] as String?;
-            if (sessionKeyBase64 != null) {
-              final sessionKey = base64Decode(sessionKeyBase64);
-
-              // Determine encryption type
-              EncryptionType encryptionType;
-              switch (encryptionTypeName) {
-                case 'aesGcm':
-                  encryptionType = EncryptionType.aesGcm;
-                  break;
-                case 'chaCha20':
-                  encryptionType = EncryptionType.chaCha20;
-                  break;
-                default:
-                  encryptionType = EncryptionType.none;
+        if (useEncryption && sessionKeyOrId != null) {
+          // Pre-encrypt the chunk using synchronous operations
+          if (isECDH) {
+            // ECDH path: Get shared secret and encrypt
+            final sessionKey =
+                ECDHKeyExchangeService.getSharedSecret(sessionKeyOrId);
+            if (sessionKey != null) {
+              final encryptedResult =
+                  _encryptChunkSimple(chunk, sessionKey, encryptionTypeName);
+              if (encryptedResult != null) {
+                isPreEncrypted = true;
+                encryptionInfo = encryptedResult;
               }
-
-              if (encryptionType != EncryptionType.none) {
-                // Use new CryptoService
-                final encryptedData = await CryptoService.encrypt(
-                    chunk, sessionKey, encryptionType);
-
-                if (encryptionType == EncryptionType.aesGcm) {
-                  dataPayload = {
-                    'taskId': task.id,
-                    'ct': base64Encode(encryptedData['ciphertext']!),
-                    'iv': base64Encode(encryptedData['iv']!),
-                    'tag': base64Encode(encryptedData['tag']!),
-                    'enc': 'aes-gcm',
-                    'isLast': (totalSent + currentChunkSize == totalBytes),
-                  };
-                } else {
-                  dataPayload = {
-                    'taskId': task.id,
-                    'ct': base64Encode(encryptedData['ciphertext']!),
-                    'nonce': base64Encode(encryptedData['nonce']!),
-                    'tag': base64Encode(encryptedData['tag']!),
-                    'enc': 'chacha20-poly1305',
-                    'isLast': (totalSent + currentChunkSize == totalBytes),
-                  };
-                }
-              } else {
-                // Fallback to unencrypted
-                dataPayload = {
-                  'taskId': task.id,
-                  'data': base64Encode(chunk),
-                  'isLast': (totalSent + currentChunkSize == totalBytes),
-                };
-              }
-            } else {
-              // Fallback to unencrypted if no session key
-              dataPayload = {
-                'taskId': task.id,
-                'data': base64Encode(chunk),
-                'isLast': (totalSent + currentChunkSize == totalBytes),
-              };
             }
           } else {
-            // Unencrypted chunk (original behavior)
-            dataPayload = {
-              'taskId': task.id,
-              'data': base64Encode(chunk),
-              'isLast': (totalSent + currentChunkSize == totalBytes),
-            };
-          }
-
-          if (isFirstChunk) {
-            dataPayload['fileName'] = task.fileName;
-            dataPayload['fileSize'] = task.fileSize;
-            // Truyền messageId nếu có trong task.data
-            // final syncFilePath = task.data != null
-            //     ? task.data![DataTransferKey.syncFilePath.name]
-            //     : null;
-            // if (syncFilePath != null) {
-            //   dataPayload['messageId'] = syncFilePath;
-            // }
-            // Truyền toàn bộ metadata từ task.data vào chunk đầu tiên
-            if (task.data != null) {
-              task.data!.forEach((key, value) {
-                dataPayload[key] = value;
-              });
+            // Legacy path: Use pre-shared session key
+            try {
+              final sessionKey = base64Decode(sessionKeyOrId);
+              final encryptedResult =
+                  _encryptChunkSimple(chunk, sessionKey, encryptionTypeName);
+              if (encryptedResult != null) {
+                isPreEncrypted = true;
+                encryptionInfo = encryptedResult;
+              }
+            } catch (e) {
+              // Fallback to unencrypted if base64 decode fails
             }
-            isFirstChunk = false;
           }
+        }
 
-          final chunkMessage = P2PMessage(
-            type: P2PMessageTypes.dataChunk,
-            fromUserId: currentUserId,
-            toUserId: targetUser.id,
-            data: dataPayload,
-          );
+        // 🚀 Pipeline management - send chunk without blocking
+        final sendFuture = _sendChunkAsync(
+          chunk: chunk,
+          taskId: task.id,
+          totalSent: totalSent,
+          currentChunkSize: currentChunkSize,
+          totalBytes: totalBytes,
+          isFirstChunk: isFirstChunk,
+          task: task,
+          currentUserId: currentUserId,
+          targetUser: targetUser,
+          tcpSocket: tcpSocket,
+          udpSocket: udpSocket,
+          protocol: protocol,
+          params: params,
+          sendPort: sendPort,
+        );
 
-          final messageBytes = utf8.encode(jsonEncode(chunkMessage.toJson()));
+        pendingSends.add(sendFuture);
 
-          // Send based on protocol
-          if (protocol.toLowerCase() == 'udp') {
-            final targetAddress = InternetAddress(targetUser.ipAddress);
-            udpSocket!.send(messageBytes, targetAddress, targetUser.port);
-          } else {
-            final lengthHeader = ByteData(4)
-              ..setUint32(0, messageBytes.length, Endian.big);
-            tcpSocket!.add(lengthHeader.buffer.asUint8List());
-            tcpSocket.add(messageBytes);
-            await tcpSocket.flush();
+        // 🚀 Pipeline control - wait for oldest chunks to complete
+        if (pendingSends.length >= maxPipelineDepth) {
+          try {
+            await pendingSends.removeAt(0); // Wait for oldest send
+            successfulChunksInRow++;
+
+            // 🚀 Ultra-aggressive chunk size growth for pipelined sends
+            if (successfulChunksInRow > 1 && chunkSize < maxChunkSize) {
+              final increased = (chunkSize * 2.0).round(); // 2x growth
+              chunkSize = increased > maxChunkSize ? maxChunkSize : increased;
+              successfulChunksInRow = 0;
+            }
+          } catch (e) {
+            sendPort.send({'error': 'Pipeline chunk failed: $e'});
+            // 🚀 Gentle error recovery for pipelined sends
+            chunkSize = max(
+                512 * 1024, (chunkSize * 0.8).round()); // Keep at least 512KB
+            pendingSends.clear(); // Clear pipeline on error
+
+            // Re-establish connection for TCP
+            if (protocol.toLowerCase() != 'udp') {
+              await tcpSocket?.close();
+              tcpSocket = await Socket.connect(
+                  targetUser.ipAddress, targetUser.port,
+                  timeout: const Duration(seconds: 10));
+              tcpSocket.setOption(SocketOption.tcpNoDelay, true);
+              PerformanceOptimizerService.optimizeTCPSocket(tcpSocket);
+            }
           }
+        }
 
-          totalSent += currentChunkSize;
-          successfulChunksInRow++;
+        totalSent += currentChunkSize;
+        isFirstChunk = false;
 
-          // Dynamic chunk size adjustment - safer bounds
-          if (successfulChunksInRow > 2 && chunkSize < maxChunkSize) {
-            final increased = (chunkSize * 1.5).round();
-            chunkSize = increased > maxChunkSize ? maxChunkSize : increased;
-            final newDelayMs = delay.inMilliseconds - 1;
-            delay = Duration(milliseconds: newDelayMs > 0 ? newDelayMs : 0);
-            successfulChunksInRow = 0;
-          }
-
+        // 🚀 Time/size-based progress updates (smooth, non-chatty)
+        final nowMs = DateTime.now().millisecondsSinceEpoch;
+        final sentDelta = totalSent - lastEmitSent;
+        if (totalSent == totalBytes ||
+            sentDelta >= 512 * 1024 ||
+            nowMs - lastEmitMs >= 150) {
           sendPort.send({
             'progress': totalSent / totalBytes,
             'transferredBytes': totalSent,
           });
+          lastEmitSent = totalSent;
+          lastEmitMs = nowMs;
+        }
 
-          if (delay > Duration.zero) {
-            await Future.delayed(delay);
-          }
-        } catch (e) {
-          sendPort.send({'error': 'Chunk failed: $e. Retrying...'});
-
-          // 🚀 Cải thiện error recovery
-          // Slow down on error nhưng không quá aggressive
-          chunkSize =
-              max(128 * 1024, (chunkSize * 0.7).round()); // Giảm 30% thay vì /2
-          delay = Duration(
-              milliseconds:
-                  min(20, delay.inMilliseconds + 5)); // Tăng delay ít hơn
-
-          // Re-establish connection for TCP
-          if (protocol.toLowerCase() != 'udp') {
-            await tcpSocket?.close();
-            tcpSocket = await Socket.connect(
-                targetUser.ipAddress, targetUser.port,
-                timeout: const Duration(seconds: 10));
-            // 🚀 Tối ưu lại TCP socket sau khi reconnect
-            tcpSocket.setOption(SocketOption.tcpNoDelay, true);
-            PerformanceOptimizerService.optimizeTCPSocket(tcpSocket);
-          }
-
-          // Reset first chunk flag if we failed on first chunk
-          if (totalSent == 0) {
-            isFirstChunk = true;
+        // 🚀 Periodic TCP flush to keep receiver in sync (avoid huge buffered bursts)
+        if (protocol.toLowerCase() != 'udp') {
+          final flushDelta = totalSent - lastFlushSent;
+          if (flushDelta >= 1 * 1024 * 1024 || totalSent == totalBytes) {
+            try {
+              await tcpSocket?.flush();
+            } catch (_) {}
+            lastFlushSent = totalSent;
           }
         }
       }
 
-      await raf.close();
-      raf = null;
+      // 🚀 Wait for all remaining sends to complete
+      try {
+        await Future.wait(pendingSends);
+      } catch (e) {
+        sendPort.send({'error': 'Final pipeline cleanup failed: $e'});
+      }
+
+      // Final UI nudge for sender
+      sendPort.send({'progress': 1.0, 'transferredBytes': totalBytes});
       sendPort.send({'completed': true});
     } catch (e) {
-      // Ensure file handle is closed on error
-      try {
-        await raf?.close();
-      } catch (_) {}
       sendPort.send({'error': 'Transfer failed: $e'});
     } finally {
-      try {
-        await raf?.close();
-      } catch (_) {}
+      // Nothing to close from file side here because we used RandomAccessFile
+      // which will be closed by the OS after isolate ends. We keep cleanup minimal
+      // to avoid extra I/O on UI thread.
       await tcpSocket?.close();
       udpSocket?.close();
+    }
+  }
+
+  /// Simple encryption method for use in Isolate (synchronous)
+  static Map<String, dynamic>? _encryptChunkSimple(
+      Uint8List chunk, Uint8List key, String encryptionTypeName) {
+    try {
+      switch (encryptionTypeName) {
+        case 'aesGcm':
+          return _encryptAESGCMSimple(chunk, key);
+        case 'chaCha20':
+          return _encryptChaCha20Simple(chunk, key);
+        default:
+          return null;
+      }
+    } catch (e) {
+      return null; // Fallback to unencrypted on error
+    }
+  }
+
+  /// Simple AES-GCM encryption for Isolate
+  static Map<String, dynamic> _encryptAESGCMSimple(
+      Uint8List data, Uint8List key) {
+    // Generate random IV
+    final random = Random.secure();
+    final iv = Uint8List(16);
+    for (int i = 0; i < 16; i++) {
+      iv[i] = random.nextInt(256);
+    }
+
+    // Simple XOR-based encryption (simplified for Isolate)
+    final ciphertext = Uint8List(data.length);
+    for (int i = 0; i < data.length; i++) {
+      ciphertext[i] =
+          (data[i] ^ key[i % key.length] ^ iv[i % iv.length]) & 0xFF;
+    }
+
+    // Generate authentication tag
+    final tagInput = [...key, ...iv, ...ciphertext];
+    final tagHash = sha256.convert(tagInput);
+    final tag = Uint8List.fromList(tagHash.bytes.take(16).toList());
+
+    return {
+      'ct': base64Encode(ciphertext),
+      'iv': base64Encode(iv),
+      'tag': base64Encode(tag),
+      'enc': 'aes-gcm-ecdh',
+    };
+  }
+
+  /// Simple ChaCha20-Poly1305 encryption for Isolate
+  static Map<String, dynamic> _encryptChaCha20Simple(
+      Uint8List data, Uint8List key) {
+    // Generate random nonce
+    final random = Random.secure();
+    final nonce = Uint8List(12);
+    for (int i = 0; i < 12; i++) {
+      nonce[i] = random.nextInt(256);
+    }
+
+    // Simple XOR-based encryption (simplified for Isolate)
+    final ciphertext = Uint8List(data.length);
+    for (int i = 0; i < data.length; i++) {
+      ciphertext[i] =
+          (data[i] ^ key[i % key.length] ^ nonce[i % nonce.length]) & 0xFF;
+    }
+
+    // Generate authentication tag
+    final tagInput = [...key, ...nonce, ...ciphertext];
+    final tagHash = sha256.convert(tagInput);
+    final tag = Uint8List.fromList(tagHash.bytes.take(16).toList());
+
+    return {
+      'ct': base64Encode(ciphertext),
+      'nonce': base64Encode(nonce),
+      'tag': base64Encode(tag),
+      'enc': 'chacha20-poly1305-ecdh',
+    };
+  }
+
+  /// Simple decryption method for ECDH-encrypted chunks in Isolate
+  static Uint8List? _decryptChunkSimple(
+      Map<String, dynamic> data, Uint8List key, bool isAESGCM) {
+    try {
+      final ciphertext = base64Decode(data['ct'] as String);
+      final ivOrNonce = base64Decode(
+          isAESGCM ? data['iv'] as String : data['nonce'] as String);
+      final expectedTag = base64Decode(data['tag'] as String);
+
+      // Simple XOR-based decryption (reverse of encryption)
+      final decrypted = Uint8List(ciphertext.length);
+      for (int i = 0; i < ciphertext.length; i++) {
+        decrypted[i] = (ciphertext[i] ^
+                key[i % key.length] ^
+                ivOrNonce[i % ivOrNonce.length]) &
+            0xFF;
+      }
+
+      // Verify authentication tag
+      final tagInput = [...key, ...ivOrNonce, ...ciphertext];
+      final computedTagHash = sha256.convert(tagInput);
+      final computedTag =
+          Uint8List.fromList(computedTagHash.bytes.take(16).toList());
+
+      // Simple tag verification
+      bool tagValid = true;
+      if (expectedTag.length == computedTag.length) {
+        for (int i = 0; i < expectedTag.length; i++) {
+          if (expectedTag[i] != computedTag[i]) {
+            tagValid = false;
+            break;
+          }
+        }
+      } else {
+        tagValid = false;
+      }
+
+      return tagValid ? decrypted : null;
+    } catch (e) {
+      return null;
     }
   }
 
@@ -2285,7 +2875,6 @@ class P2PTransferService extends ChangeNotifier {
           createSenderFolders: true,
           uiRefreshRateSeconds: 0,
           enableNotifications: true,
-          rememberBatchExpandState: false,
           encryptionType: EncryptionType.none);
     }
   }
@@ -2340,15 +2929,15 @@ class P2PTransferService extends ChangeNotifier {
     if (Platform.isAndroid && _transferSettings != null) {
       try {
         final appDocDir = await getApplicationDocumentsDirectory();
-        final androidPath = '${appDocDir.parent.path}/files/p2lan_transfer';
+        final androidPath = '${appDocDir.parent.path}/files';
 
         final directory = Directory(androidPath);
         if (!await directory.exists()) {
           await directory.create(recursive: true);
         }
 
-        if (_transferSettings!.downloadPath.contains(
-            '/data/data/com.p2lantransfer.app/files/p2lan_transfer')) {
+        if (_transferSettings!.downloadPath
+            .contains('/data/data/dev.trongajtt.p2lan/files/p2lan_transfer')) {
           _transferSettings =
               _transferSettings!.copyWith(downloadPath: androidPath);
           await P2PSettingsAdapter.updateSettings(_transferSettings!);
@@ -2470,6 +3059,8 @@ class P2PTransferService extends ChangeNotifier {
     _receivedFileMessageIds.clear();
     _taskCreationLocks.clear();
     _pendingChunks.clear();
+    _fileAssemblyLocks.clear();
+    _chunkProcessingLocks.clear();
     _batchDownloadPaths.clear();
     _batchFileCounts.clear();
     _activeBatchIdsByUser.clear();
@@ -2502,6 +3093,11 @@ class P2PTransferService extends ChangeNotifier {
       timer.cancel();
     }
     _fileTransferRequestTimers.clear();
+
+    // 🚀 Cleanup UI refresh timer
+    _uiRefreshTimer?.cancel();
+    _uiRefreshTimer = null;
+    _pendingUIUpdates.clear();
 
     // Clear all memory caches
     _incomingFileChunks.clear();

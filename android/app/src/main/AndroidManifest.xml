@@ -15,14 +15,25 @@
                      android:usesPermissionFlags="neverForLocation"
                      android:minSdkVersion="33" />
 
+    <!-- Notification permission for Android 13+ (API 33+) only -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"
+                     android:minSdkVersion="33" />
+
+    <!-- Foreground service permission for media projection -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    
+    <!-- System alert window permission (required for some media projection scenarios) -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
     <!-- Storage permissions for importing/exporting templates -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <!-- For Android 10 (API level 29) and above -->
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
       <application
-        android:label="P2Lan Transfer"
-        android:name=".MainApplication"
+        android:label="P2Lan"
+        android:name="dev.trongajtt.p2lan.MainApplication"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true"
         android:networkSecurityConfig="@xml/network_security_config">
@@ -58,9 +69,16 @@
         <meta-data
             android:name="androidx.work.impl.background.systemjob.SystemJobService.NOTIFICATION_CHANNEL_ID"
             android:value="" />
+
+        <!-- Screen sharing foreground service -->
+        <service
+            android:name="dev.trongajtt.p2lan.ScreenSharingService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
         
         <activity
-            android:name=".MainActivity"
+            android:name="dev.trongajtt.p2lan.MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
             android:taskAffinity=""

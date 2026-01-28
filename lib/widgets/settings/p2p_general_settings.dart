@@ -1,16 +1,19 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:p2lan/utils/snackbar_utils.dart';
+import 'package:p2lan/utils/variables_utils.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/models/settings_models.dart';
-import 'package:p2lantransfer/services/settings_models_service.dart';
-import 'package:p2lantransfer/services/p2p_services/p2p_service_manager.dart';
-import 'package:p2lantransfer/services/p2p_services/p2p_notification_service.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/widgets/generic/option_slider.dart';
-import 'package:p2lantransfer/widgets/generic/generic_dialog.dart';
-import 'package:p2lantransfer/utils/size_utils.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/models/settings_models.dart';
+import 'package:p2lan/services/settings_models_service.dart';
+import 'package:p2lan/services/p2p_services/p2p_service_manager.dart';
+import 'package:p2lan/services/p2p_services/p2p_notification_service.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/widgets/generic/option_slider.dart';
+import 'package:p2lan/widgets/generic/generic_dialog.dart';
+import 'package:p2lan/widgets/generic/edit_text_dialog.dart';
+import 'package:p2lan/utils/size_utils.dart';
 
 class P2PGeneralSettings extends StatefulWidget {
   const P2PGeneralSettings({super.key});
@@ -20,7 +23,7 @@ class P2PGeneralSettings extends StatefulWidget {
 }
 
 class _P2PGeneralSettingsState extends State<P2PGeneralSettings> {
-  P2PTransferSettingsData? _settings;
+  P2PGeneralSettingsData? _settings;
   bool _loading = true;
   final _displayNameController = TextEditingController();
 
@@ -69,19 +72,21 @@ class _P2PGeneralSettingsState extends State<P2PGeneralSettings> {
       // Get device name first
       final deviceName = await _getDeviceName();
 
-      final settings = await ExtensibleSettingsService.getP2PTransferSettings();
+      final settings = await ExtensibleSettingsService.getGeneralSettings();
       if (mounted) {
         setState(() {
           _settings = settings;
-          // Set device name as display name instead of custom name
-          _displayNameController.text = deviceName;
+          _displayNameController.text =
+              settings.displayName?.trim().isNotEmpty == true
+                  ? settings.displayName!
+                  : deviceName;
           _loading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _settings = P2PTransferSettingsData(); // Default settings
+          _settings = const P2PGeneralSettingsData(); // Default settings
           _displayNameController.text = 'Unknown Device';
           _loading = false;
         });
@@ -91,14 +96,13 @@ class _P2PGeneralSettingsState extends State<P2PGeneralSettings> {
 
   Future<void> _saveSettings() async {
     if (_settings != null) {
-      // Don't save display name since it's now read-only device name
-      await ExtensibleSettingsService.updateP2PTransferSettings(_settings!);
+      await ExtensibleSettingsService.updateGeneralSettings(_settings!);
 
       // Refresh transfer service settings
       try {
         // Get transfer service and refresh its settings
         final transferService = P2PServiceManager.instance.transferService;
-        await transferService.refreshSettings();
+        await transferService.reloadTransferSettings();
         logInfo('Refreshed P2P transfer service settings after change');
       } catch (e) {
         logError('Failed to refresh transfer service settings: $e');
@@ -189,7 +193,7 @@ class _P2PGeneralSettingsState extends State<P2PGeneralSettings> {
           final userAction = await showDialog<bool>(
               context: context,
               builder: (context) {
-                final loc = AppLocalizations.of(context)!;
+                final loc = AppLocalizations.of(context);
                 return GenericDialog(
                   header: GenericDialogHeader(
                       title: loc.notificationRequestPermission),
@@ -254,7 +258,7 @@ class _P2PGeneralSettingsState extends State<P2PGeneralSettings> {
   }
 
   Future<bool?> _showClearNotificationsDialog() async {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     return await showDialog<bool>(
       context: context,
       builder: (context) => GenericDialog(
@@ -298,7 +302,10 @@ class _P2PGeneralSettingsState extends State<P2PGeneralSettings> {
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
+    final isDeskop = !isMobileLayoutContext(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    const double sizeHeight = 48;
 
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
@@ -308,48 +315,156 @@ class _P2PGeneralSettingsState extends State<P2PGeneralSettings> {
       return Center(child: Text(loc.failedToLoadSettings('null')));
     }
 
+    Future<void> changeDisplayName() async {
+      final deviceName = await _getDeviceName();
+      final current = _displayNameController.text.trim();
+      final result = await EditTextDialog.show(
+        context,
+        title: loc.deviceName,
+        message: loc.deviceNameEditDesc,
+        label: loc.displayName,
+        hint: loc.displayName,
+        initialValue: current,
+        defaultValue: deviceName,
+        minLength: 1,
+        maxLength: 20,
+        minWidth: 400,
+        maxWidth: 600,
+        saveButtonText: loc.save,
+        cancelButtonText: loc.cancel,
+        resetButtonText: loc.reset,
+      );
+
+      if (!mounted) return;
+      if (result == null) return; // cancelled
+
+      setState(() {
+        _displayNameController.text = result;
+        _settings = _settings?.copyWith(displayName: result);
+      });
+      await _saveSettings();
+    }
+
+    Future<void> resetDisplayName() async {
+      final deviceName = await _getDeviceName();
+
+      setState(() {
+        _displayNameController.text = deviceName;
+        _settings = _settings?.copyWith(displayName: deviceName);
+      });
+      await _saveSettings();
+
+      // Show confirmation
+      if (context.mounted) {
+        SnackbarUtils.showTyped(
+          context,
+          loc.displayNameHasReset,
+          SnackBarType.info,
+        );
+      }
+    }
+
     return SingleChildScrollView(
       // padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Device Name Section
-          _buildSectionHeader(loc.deviceName, Icons.person),
+          _buildSectionHeader(loc.yourProfile, Icons.person),
           const SizedBox(height: 16),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    loc.displayName,
+              child: ListTile(
+                leading: const Icon(Icons.devices),
+                title: Text(loc.displayName,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
+                        )),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(loc.deviceNameDesc),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: changeDisplayName,
+                            child: Container(
+                              height: sizeHeight,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 14),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: colorScheme.outline,
+                                ),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      _displayNameController.text,
+                                      style:
+                                          Theme.of(context).textTheme.bodyLarge,
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.edit,
+                                    size: 16,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _displayNameController,
-                    enabled: false, // Disable editing
-                    maxLength: 20,
-                    decoration: InputDecoration(
-                      labelText: loc.deviceName,
-                      border: const OutlineInputBorder(),
-                      prefixIcon: const Icon(Icons.devices),
-                      suffixIcon:
-                          const Icon(Icons.lock_outline), // Show lock icon
-                      helperText: loc.deviceNameAutoDetected,
-                      counterText: '', // Hide counter for disabled field
+                        const SizedBox(width: 12),
+                        if (isDeskop) ...[
+                          SizedBox(
+                            height: sizeHeight,
+                            child: FilledButton.icon(
+                              onPressed: resetDisplayName,
+                              icon: const Icon(Icons.refresh),
+                              label: Text(loc.reset),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: colorScheme.primary,
+                                foregroundColor: colorScheme.onPrimary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 12),
+                              ),
+                            ),
+                          ),
+                        ] else ...[
+                          SizedBox(
+                            height: sizeHeight,
+                            width: sizeHeight,
+                            child: IconButton(
+                              icon: const Icon(Icons.refresh),
+                              color: colorScheme.secondary,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: colorScheme.primary,
+                                foregroundColor: colorScheme.onPrimary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                minimumSize: const Size(0, sizeHeight),
+                              ),
+                              onPressed: resetDisplayName,
+                              tooltip: loc.reset,
+                            ),
+                          ),
+                        ]
+                      ],
                     ),
-                    style: TextStyle(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.6), // Make text dimmed
-                    ),
-                  ),
-                ],
+                  ],
+                ),
+                dense: false,
+                contentPadding: EdgeInsets.zero,
               ),
             ),
           ),
@@ -359,23 +474,6 @@ class _P2PGeneralSettingsState extends State<P2PGeneralSettings> {
           // User Preferences Section
           _buildSectionHeader(loc.userPreferences, Icons.settings),
           const SizedBox(height: 16),
-
-          // TODO: Implement actual user preference settings
-          Card(
-            child: SwitchListTile.adaptive(
-              title: Text('${loc.p2lanOptionRememberBatchExpandState} [BETA]'),
-              subtitle: Text(loc.p2lanOptionRememberBatchExpandStateDesc),
-              value: _settings!.rememberBatchExpandState,
-              onChanged: (value) {
-                setState(() {
-                  _settings =
-                      _settings!.copyWith(rememberBatchExpandState: value);
-                });
-                _saveSettings();
-              },
-              secondary: const Icon(Icons.expand_more),
-            ),
-          ),
 
           const SizedBox(height: 16),
 
@@ -435,7 +533,7 @@ class _P2PGeneralSettingsState extends State<P2PGeneralSettings> {
                   Text(
                     loc.autoRemoveTransferMessages,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          color: colorScheme.onSurfaceVariant,
                         ),
                   ),
                   const SizedBox(height: 8),

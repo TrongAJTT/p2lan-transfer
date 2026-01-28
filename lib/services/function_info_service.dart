@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:p2lantransfer/parsers/markdown_info_parser.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/utils/snackbar_utils.dart';
-import 'package:p2lantransfer/widgets/generic/generic_settings_helper.dart';
-import 'package:p2lantransfer/widgets/generic_function_info_screen.dart';
+import 'package:p2lan/parsers/markdown_info_parser.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/utils/snackbar_utils.dart';
+import 'package:p2lan/widgets/generic/generic_settings_helper.dart';
+import 'package:p2lan/widgets/generic_function_info_screen.dart';
 
 class FunctionInfo {
   static Future<void> show(BuildContext context, String featureName) async {
@@ -73,6 +73,7 @@ class FunctionInfo {
 
 class FunctionInfoKeys {
   static const String p2lanDataTransfer = 'p2lanDataTransfer';
+  static const String remoteControlHelp = 'remoteControlHelp';
 
   static const String currencyConverter = 'converter_tools/currencyConverter';
   static const String lengthConverter = 'converter_tools/lengthConverter';

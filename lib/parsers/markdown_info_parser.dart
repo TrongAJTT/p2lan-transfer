@@ -1,8 +1,8 @@
 // parsers/markdown_info_parser.dart
 import 'dart:ui';
 
-import 'package:p2lantransfer/models/info_models.dart';
-import 'package:p2lantransfer/utils/icon_mapper.dart';
+import 'package:p2lan/models/info_models.dart';
+import 'package:p2lan/utils/icon_mapper.dart';
 
 class MarkdownInfoParser {
   InfoPage parse(String content) {

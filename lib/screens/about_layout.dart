@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/library_list.dart';
-import 'package:p2lantransfer/screens/terms_of_use_screen.dart';
-import 'package:p2lantransfer/screens/donors_acknowledgment_screen.dart';
-import 'package:p2lantransfer/services/author_products_service.dart';
-import 'package:p2lantransfer/services/version_check_service.dart';
-import 'package:p2lantransfer/utils/network_utils.dart';
-import 'package:p2lantransfer/utils/snackbar_utils.dart';
-import 'package:p2lantransfer/utils/url_utils.dart';
-import 'package:p2lantransfer/utils/variables_utils.dart';
-import 'package:p2lantransfer/widgets/generic/generic_settings_helper.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/library_list.dart';
+import 'package:p2lan/screens/terms_of_use_screen.dart';
+import 'package:p2lan/services/author_products_service.dart';
+import 'package:p2lan/services/version_check_service.dart';
+import 'package:p2lan/utils/network_utils.dart';
+import 'package:p2lan/utils/snackbar_utils.dart';
+import 'package:p2lan/utils/url_utils.dart';
+import 'package:p2lan/utils/variables_utils.dart';
+import 'package:p2lan/widgets/generic/generic_settings_helper.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:p2lantransfer/variables.dart';
+import 'package:p2lan/variables.dart';
 
 /// About layout with GitHub, Sponsor, Credits, and Version information
 class AboutLayout extends StatefulWidget {
@@ -54,7 +53,7 @@ class _AboutLayoutState extends State<AboutLayout> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return SingleChildScrollView(
@@ -90,22 +89,22 @@ class _AboutLayoutState extends State<AboutLayout> {
             onTap: _showDonateDialog,
           ),
 
-          // Donors Acknowledgment section
-          ListTile(
-              leading: const Icon(
-                Icons.star,
-                color: Colors.yellow,
-              ),
-              title: Text(l10n.donorsAck),
-              subtitle: Text(l10n.donorsAckDesc),
-              trailing: const Icon(Icons.arrow_forward_ios),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const DonorsAcknowledgmentScreen(),
-                  ),
-                );
-              }),
+          // // Donors Acknowledgment section
+          // ListTile(
+          //     leading: const Icon(
+          //       Icons.star,
+          //       color: Colors.yellow,
+          //     ),
+          //     title: Text(l10n.donorsAck),
+          //     subtitle: Text(l10n.donorsAckDesc),
+          //     trailing: const Icon(Icons.arrow_forward_ios),
+          //     onTap: () {
+          //       Navigator.of(context).push(
+          //         MaterialPageRoute(
+          //           builder: (context) => const DonorsAcknowledgmentScreen(),
+          //         ),
+          //       );
+          //     }),
 
           // Credits & Acknowledgments section
           ListTile(
@@ -176,7 +175,8 @@ class _AboutLayoutState extends State<AboutLayout> {
             subtitle: Text(l10n.authorProductsDesc),
             trailing: const Icon(Icons.arrow_forward_ios),
             onTap: () {
-              AuthorProductsService.navigateToAuthorProductsScreen(context);
+              UriUtils.launchInBrowser(
+                  "https://www.trongajtt.com/apps/", context);
             },
           ),
         ],
@@ -224,7 +224,7 @@ class _AboutLayoutState extends State<AboutLayout> {
   }
 
   String _getVersionString() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final versionType = currentVersionType.getDisplayName(l10n);
 
     if (isLoading || packageInfo == null) {
@@ -235,7 +235,7 @@ class _AboutLayoutState extends State<AboutLayout> {
   }
 
   void _showDonateDialog() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final config = GenericSettingsConfig<dynamic>(
       title: l10n.donate,
       settingsLayout: _buildDonateContent(),
@@ -246,7 +246,7 @@ class _AboutLayoutState extends State<AboutLayout> {
   }
 
   Widget _buildDonateContent() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -268,95 +268,35 @@ class _AboutLayoutState extends State<AboutLayout> {
 
           // Github Sponsors
           ListTile(
-            leading: const Icon(Icons.favorite_border),
-            title: const Text('GitHub Sponsors'),
-            subtitle: Text(l10n.supportOnGitHub),
+            // leading: const Icon(Icons.favorite_border),
+            leading: const CircleAvatar(
+              backgroundImage: AssetImage('assets/logos/github.png'),
+              backgroundColor: Colors.white,
+              radius: 18,
+            ),
+            title: const Text(
+              'GitHub Sponsors',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            subtitle: Text(l10n.githubSponsorsDesc),
             trailing: const Icon(Icons.open_in_new),
             onTap: () => UriUtils.launchInBrowser(githubSponsorUrl, context),
           ),
           // Buy me a Coffee
           ListTile(
-            leading: const Icon(Icons.payment),
-            title: const Text('Buy me a Coffee'),
-            subtitle: Text(l10n.oneTimeDonation),
+            // leading: const Icon(Icons.payment),
+            leading: const CircleAvatar(
+              backgroundImage: AssetImage('assets/logos/buy_me_a_coffee.png'),
+              backgroundColor: Colors.white,
+              radius: 18,
+            ),
+            title: const Text(
+              'Buy me a Coffee',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            subtitle: Text(l10n.buyMeACoffeeDesc),
             trailing: const Icon(Icons.open_in_new),
             onTap: () => UriUtils.launchInBrowser(buyMeACoffeeUrl, context),
-          ),
-          // Check language is Vietnamese for Momo donation
-          if (Localizations.localeOf(context).languageCode == 'vi') ...[
-            ListTile(
-              leading: const Icon(Icons.mobile_friendly),
-              title: const Text('Momo'),
-              subtitle: Text(l10n.momoDonateDesc),
-              trailing: const Icon(Icons.open_in_new),
-              onTap: () => UriUtils.launchInBrowserWithConfirm(
-                  context: context,
-                  url: momoDonateUrl,
-                  content: 'Momo không phải là nền tảng ủng hộ chuyên dụng!\n'
-                      'Vui lòng để lại email để mình có thể liên hệ bạn.'),
-            ),
-          ],
-
-          const SizedBox(height: 32),
-
-          // Donor benefits
-          Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.donorBenefits,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.check_circle,
-                              color: Colors.green, size: 18),
-                          const SizedBox(width: 8),
-                          Expanded(child: Text(l10n.donorBenefit1)),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          const Icon(Icons.check_circle,
-                              color: Colors.green, size: 18),
-                          const SizedBox(width: 8),
-                          Expanded(child: Text(l10n.donorBenefit2)),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          const Icon(Icons.check_circle,
-                              color: Colors.green, size: 18),
-                          const SizedBox(width: 8),
-                          Expanded(child: Text(l10n.donorBenefit3)),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          const Icon(Icons.check_circle,
-                              color: Colors.green, size: 18),
-                          const SizedBox(width: 8),
-                          Expanded(child: Text(l10n.donorBenefit4)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
           ),
         ],
       ),
@@ -364,7 +304,7 @@ class _AboutLayoutState extends State<AboutLayout> {
   }
 
   void _showCreditsDialog() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final config = GenericSettingsConfig<dynamic>(
       title: l10n.creditAck,
       settingsLayout: _buildCreditsContent(),
@@ -381,7 +321,7 @@ class _AboutLayoutState extends State<AboutLayout> {
 
   Widget _buildCreditsContent() {
     final libraries = libraryList;
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return Column(
@@ -451,7 +391,7 @@ class _AboutLayoutState extends State<AboutLayout> {
   }
 
   void _showVersionDialog() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final config = GenericSettingsConfig<dynamic>(
       title: l10n.versionInfo,
       settingsLayout: _buildVersionContent(),
@@ -467,7 +407,7 @@ class _AboutLayoutState extends State<AboutLayout> {
   }
 
   Widget _buildVersionContent() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -477,11 +417,6 @@ class _AboutLayoutState extends State<AboutLayout> {
             subtitle: Text(
                 isLoading ? 'Loading...' : (packageInfo?.version ?? 'Unknown')),
           ),
-          // ListTile(
-          //   leading: const Icon(Icons.build),
-          //   title: const Text('Build Number'),
-          //   subtitle: Text(buildNumber),
-          // ),
           ListTile(
             leading: const Icon(Icons.science),
             title: Text(l10n.versionType),

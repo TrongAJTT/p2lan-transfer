@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
 
 /// A dialog that explains why location permission is needed for P2P functionality.
 class PermissionRequestDialog extends StatelessWidget {

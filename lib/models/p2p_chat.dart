@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/utils/url_utils.dart';
-import 'package:p2lantransfer/widgets/generic/option_slider.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/utils/url_utils.dart';
+import 'package:p2lan/widgets/generic/option_slider.dart';
 import 'package:uuid/uuid.dart';
 
 part 'p2p_chat.g.dart';
@@ -93,7 +93,7 @@ class P2PChat {
 
   static List<SliderOption<MessageRetention>> getMessageRetentionOptions(
       BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     return [
       SliderOption<MessageRetention>(
         value: MessageRetention.days7,

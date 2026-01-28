@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/main.dart';
-import 'package:p2lantransfer/screens/p2lan_transfer/p2lan_transfer_screen.dart';
-import 'package:p2lantransfer/screens/terms_of_use_screen.dart';
-import 'package:p2lantransfer/services/app_installation_service.dart';
-import 'package:p2lantransfer/variables.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/main.dart';
+import 'package:p2lan/screens/p2lan_transfer/p2lan_transfer_screen.dart';
+import 'package:p2lan/screens/terms_of_use_screen.dart';
+import 'package:p2lan/services/app_installation_service.dart';
+import 'package:p2lan/variables.dart';
 
 class AppSetupScreen extends StatefulWidget {
   const AppSetupScreen({super.key});
@@ -18,7 +18,7 @@ class _AppSetupScreenState extends State<AppSetupScreen> {
   int _currentPage = 0;
 
   // Config
-  static const double _imagesSize = 128;
+  static const double _imagesSize = 100;
 
   // Settings
   Locale _selectedLocale = const Locale('en');
@@ -140,7 +140,7 @@ class _AppSetupScreenState extends State<AppSetupScreen> {
                   const SizedBox(height: 16),
                   Text(
                     l10n.welcomeToApp,
-                    style: theme.textTheme.headlineMedium?.copyWith(
+                    style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
@@ -244,14 +244,14 @@ class _AppSetupScreenState extends State<AppSetupScreen> {
         children: [
           Text(
             l10n.languageSelection,
-            style: theme.textTheme.headlineSmall?.copyWith(
+            style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             l10n.selectYourLanguage,
-            style: theme.textTheme.bodyLarge?.copyWith(
+            style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: .7),
             ),
           ),
@@ -311,14 +311,14 @@ class _AppSetupScreenState extends State<AppSetupScreen> {
         children: [
           Text(
             l10n.themeSelection,
-            style: theme.textTheme.headlineSmall?.copyWith(
+            style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             l10n.selectYourTheme,
-            style: theme.textTheme.bodyLarge?.copyWith(
+            style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: .7),
             ),
           ),
@@ -388,7 +388,7 @@ class _AppSetupScreenState extends State<AppSetupScreen> {
             children: [
               Text(
                 l10n.privacyAndTerms,
-                style: theme.textTheme.headlineSmall?.copyWith(
+                style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -431,7 +431,7 @@ class _AppSetupScreenState extends State<AppSetupScreen> {
               // Terms agreement
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(12.0),
                   child: Column(
                     children: [
                       CheckboxListTile(

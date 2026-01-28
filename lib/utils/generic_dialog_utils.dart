@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/utils/icon_utils.dart';
-import 'package:p2lantransfer/utils/size_utils.dart';
-import 'package:p2lantransfer/utils/widget_layout_render_helper.dart';
-import 'package:p2lantransfer/widgets/generic/generic_dialog.dart';
-import 'package:p2lantransfer/widgets/hold_button.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/utils/icon_utils.dart';
+import 'package:p2lan/utils/size_utils.dart';
+import 'package:p2lan/utils/widget_layout_render_helper.dart';
+import 'package:p2lan/widgets/generic/generic_dialog.dart';
+import 'package:p2lan/widgets/hold_button.dart';
 
 /// A utility class for showing common generic dialogs.
 class GenericDialogUtils {
@@ -16,7 +16,7 @@ class GenericDialogUtils {
     String? description,
     GenericIcon? icon,
   }) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return showDialog<bool>(
@@ -88,7 +88,7 @@ class GenericDialogUtils {
   }) {
     // NOTE: This is a placeholder implementation.
     // You should replace this with your actual HoldToDeleteDialog widget.
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return showDialog<bool>(
       context: context,
       builder: (context) => GenericDialog(
@@ -140,7 +140,7 @@ class GenericDialogUtils {
     required BuildContext context,
     required VoidCallback onConfirm,
   }) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return showSimpleHoldClearDialog(
       context: context,
       title: l10n.clearAllBookmarks,

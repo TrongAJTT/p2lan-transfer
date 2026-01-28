@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/models/p2p_models.dart';
 
 class NetworkSecurityWarningDialog extends StatelessWidget {
   final NetworkInfo networkInfo;
@@ -16,7 +16,7 @@ class NetworkSecurityWarningDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return AlertDialog(
       icon: const Icon(
@@ -24,25 +24,25 @@ class NetworkSecurityWarningDialog extends StatelessWidget {
         color: Colors.orange,
         size: 48,
       ),
-      title: Text(l10n.networkSecurityWarning ?? 'Network Security Warning'),
+      title: Text(l10n.networkSecurityWarning),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            l10n.unsecureNetworkDetected ?? 'Unsecure network detected',
+            l10n.unsecureNetworkDetected,
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           _buildWarningItem(
             icon: Icons.wifi,
-            title: l10n.currentNetwork ?? 'Current Network',
+            title: l10n.currentNetwork,
             description: networkInfo.wifiName ?? 'Unknown WiFi',
           ),
           const SizedBox(height: 12),
           _buildWarningItem(
             icon: Icons.security,
-            title: l10n.securityLevel ?? 'Security Level',
+            title: l10n.securityLevel,
             description: _getSecurityDescription(context),
             isWarning: true,
           ),
@@ -62,15 +62,14 @@ class NetworkSecurityWarningDialog extends StatelessWidget {
                     const Icon(Icons.info, color: Colors.orange, size: 20),
                     const SizedBox(width: 8),
                     Text(
-                      l10n.securityRisks ?? 'Security Risks',
+                      l10n.securityRisks,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  l10n.unsecureNetworkRisks ??
-                      'On unsecure networks, your data transmissions may be intercepted by malicious users. Only proceed if you trust the network and other users.',
+                  l10n.unsecureNetworkRisks,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
@@ -89,7 +88,7 @@ class NetworkSecurityWarningDialog extends StatelessWidget {
             backgroundColor: Colors.orange,
             foregroundColor: Colors.white,
           ),
-          child: Text(l10n.proceedAnyway ?? 'Proceed Anyway'),
+          child: Text(l10n.proceedAnyway),
         ),
       ],
     );
@@ -133,15 +132,15 @@ class NetworkSecurityWarningDialog extends StatelessWidget {
   }
 
   String _getSecurityDescription(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     switch (networkInfo.securityLevel) {
       case NetworkSecurityLevel.secure:
-        return l10n.secureNetwork ?? 'Secure (WPA/WPA2)';
+        return l10n.secureNetwork;
       case NetworkSecurityLevel.unsecure:
-        return l10n.unsecureNetwork ?? 'Unsecure (Open/No Password)';
+        return l10n.unsecureNetwork;
       case NetworkSecurityLevel.unknown:
-        return l10n.unknownSecurity ?? 'Unknown Security';
+        return l10n.unknownSecurity;
     }
   }
 }

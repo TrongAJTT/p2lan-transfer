@@ -1,7 +1,7 @@
-import 'package:p2lantransfer/models/settings_models.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
-import 'package:p2lantransfer/services/settings_models_service.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
+import 'package:p2lan/models/settings_models.dart';
+import 'package:p2lan/models/p2p_models.dart';
+import 'package:p2lan/services/settings_models_service.dart';
+import 'package:p2lan/services/app_logger.dart';
 
 /// Utility class for resetting settings to safe defaults
 class SettingsResetUtils {
@@ -10,30 +10,38 @@ class SettingsResetUtils {
     try {
       logInfo('SettingsResetUtils: Resetting P2P settings to safe defaults');
 
-      // Create safe default settings
-      final safeSettings = P2PTransferSettingsData(
-        // Keep existing download path if any
+      // Create safe default settings split by modules
+      const general = P2PGeneralSettingsData(
+        enableNotifications: false,
+        autoCleanupCompletedTasks: false,
+        autoCleanupCancelledTasks: true,
+        autoCleanupFailedTasks: true,
+        autoCleanupDelaySeconds: 5,
+        clearTransfersAtStartup: false,
+        uiRefreshRateSeconds: 0,
+        autoCheckUpdatesDaily: true,
+      );
+      const receiver = P2PReceiverSettingsData(
         downloadPath: '',
         createDateFolders: false,
         createSenderFolders: true,
-        maxReceiveFileSize: 1073741824, // 1GB
-        maxTotalReceiveSize: 5368709120, // 5GB
-        maxConcurrentTasks: 3,
+        maxReceiveFileSize: 1073741824,
+        maxTotalReceiveSize: 5368709120,
+      );
+      const network = P2PNetworkSettingsData(
         sendProtocol: 'TCP',
-        maxChunkSize: 1024, // 1MB chunks - safe for all devices
-        customDisplayName: null,
-        uiRefreshRateSeconds: 0,
-        enableNotifications: false,
-        rememberBatchExpandState: false,
-        encryptionType: EncryptionType.none, // No encryption for stability
-        enableCompression: false, // No compression to avoid crashes
-        compressionAlgorithm: 'none',
-        compressionThreshold: 1.1,
-        adaptiveCompression: false,
+        maxConcurrentTasks: 3,
+        maxChunkSize: 1024,
+      );
+      const advanced = P2PAdvancedSettingsData(
+        encryptionType: EncryptionType.none,
       );
 
-      // Save the safe settings
-      await ExtensibleSettingsService.updateP2PTransferSettings(safeSettings);
+      // Save the safe settings per module
+      await ExtensibleSettingsService.updateGeneralSettings(general);
+      await ExtensibleSettingsService.updateReceiverSettings(receiver);
+      await ExtensibleSettingsService.updateNetworkSettings(network);
+      await ExtensibleSettingsService.updateAdvancedSettings(advanced);
 
       logInfo(
           'SettingsResetUtils: P2P settings reset to safe defaults successfully');
@@ -48,22 +56,17 @@ class SettingsResetUtils {
     try {
       logInfo('SettingsResetUtils: Resetting performance settings only');
 
-      // Get current settings
-      final currentSettings =
-          await ExtensibleSettingsService.getP2PTransferSettings();
-
       // Update only performance-related fields
-      final updatedSettings = currentSettings.copyWith(
+      const network = P2PNetworkSettingsData(
+        maxChunkSize: 1024,
+        maxConcurrentTasks: 3,
+      );
+      const advanced = P2PAdvancedSettingsData(
         encryptionType: EncryptionType.none,
-        enableCompression: false,
-        compressionAlgorithm: 'none',
-        adaptiveCompression: false,
-        maxChunkSize: 1024, // Safe chunk size
-        maxConcurrentTasks: 3, // Conservative concurrency
       );
 
-      await ExtensibleSettingsService.updateP2PTransferSettings(
-          updatedSettings);
+      await ExtensibleSettingsService.updateNetworkSettings(network);
+      await ExtensibleSettingsService.updateAdvancedSettings(advanced);
 
       logInfo('SettingsResetUtils: Performance settings reset successfully');
     } catch (e) {
@@ -75,13 +78,9 @@ class SettingsResetUtils {
   /// Get current settings summary for debugging
   static Future<Map<String, dynamic>> getSettingsSummary() async {
     try {
-      final settings = await ExtensibleSettingsService.getP2PTransferSettings();
+      final settings = await ExtensibleSettingsService.getNetworkSettings();
 
       return {
-        'encryptionType': settings.encryptionType.name,
-        'enableCompression': settings.enableCompression,
-        'compressionAlgorithm': settings.compressionAlgorithm,
-        'adaptiveCompression': settings.adaptiveCompression,
         'maxChunkSize': settings.maxChunkSize,
         'maxConcurrentTasks': settings.maxConcurrentTasks,
         'sendProtocol': settings.sendProtocol,

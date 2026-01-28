@@ -4,9 +4,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:open_file/open_file.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/utils/snackbar_utils.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/utils/snackbar_utils.dart';
 import 'package:path/path.dart';
 import 'package:path/path.dart' as path;
 import 'package:share_plus/share_plus.dart';
@@ -20,7 +20,7 @@ class UriUtils {
   /// Opens a file with the OS using open_file package.
   static Future<void> openFile(
       {required String filePath, required BuildContext context}) async {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     try {
       // Special handling for APK files on Android
       if (Platform.isAndroid && filePath.toLowerCase().endsWith('.apk')) {
@@ -76,7 +76,7 @@ class UriUtils {
       {required BuildContext context,
       required String url,
       required String content}) async {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -128,7 +128,7 @@ class UriUtils {
   }
 
   static void _handleErrorOpenUrl(Object e, String url, BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     if (context.mounted) {
       showDialog(
         context: context,
@@ -193,18 +193,77 @@ class UriUtils {
     }
   }
 
-  static void openInFileExplorer(String filePath) {
-    if (Platform.isWindows) {
-      try {
-        final file = File(filePath);
-        if (file.existsSync()) {
-          Process.run('explorer', [file.parent.path]);
-        } else {
-          throw Exception('File does not exist: $filePath');
-        }
-      } catch (e) {
-        logError('Error opening file explorer: $e');
+  /// Open folder in the file explorer
+  static void openFolderInFileExplorer(String folderPath) {
+    try {
+      final folder = Directory(folderPath);
+      if (!folder.existsSync()) {
+        throw Exception('Folder does not exist: $folderPath');
       }
+
+      if (Platform.isWindows) {
+        // Open the folder in Explorer
+        // Syntax: explorer "C:\\path\\to\\folder"
+        Process.run('explorer', [folder.path]);
+      }
+    } catch (e) {
+      logError('Error opening folder: $e');
+    }
+  }
+
+  /// Open and select a file in the file explorer
+  static void openInFileExplorer(String filePath) {
+    try {
+      final file = File(filePath);
+      if (!file.existsSync()) {
+        throw Exception('File does not exist: $filePath');
+      }
+
+      if (Platform.isWindows) {
+        // Highlight the file in Explorer
+        // Syntax: explorer /select,"C:\\path\\to\\file"
+        Process.run('explorer', ['/select,${file.path}']);
+        return;
+      }
+
+      if (Platform.isMacOS) {
+        // Reveal the file in Finder
+        // Syntax: open -R "/path/to/file"
+        Process.run('open', ['-R', file.path]);
+        return;
+      }
+
+      if (Platform.isLinux) {
+        // Try common file managers with "select" capability; fallback to opening the folder
+        final parentDir = file.parent.path;
+        Future<ProcessResult> tryRun(String cmd, List<String> args) async {
+          try {
+            return await Process.run(cmd, args);
+          } catch (_) {
+            return ProcessResult(0, 1, null, null);
+          }
+        }
+
+        () async {
+          // Nautilus (GNOME)
+          var res = await tryRun('nautilus', ['--select', file.path]);
+          if (res.exitCode == 0) return;
+          // Nemo (Cinnamon)
+          res = await tryRun('nemo', ['--select', file.path]);
+          if (res.exitCode == 0) return;
+          // Dolphin (KDE)
+          res = await tryRun('dolphin', ['--select', file.path]);
+          if (res.exitCode == 0) return;
+          // Thunar (XFCE)
+          res = await tryRun('thunar', ['--select', file.path]);
+          if (res.exitCode == 0) return;
+          // Fallback
+          await tryRun('xdg-open', [parentDir]);
+        }();
+        return;
+      }
+    } catch (e) {
+      logError('Error opening file explorer: $e');
     }
   }
 
@@ -236,6 +295,21 @@ class UriUtils {
       await file.delete();
     } else {
       logError('File does not exist: $filePath');
+    }
+  }
+
+  /// Delete a directory recursively and return whether it succeeded
+  static Future<bool> deleteDirectoryRecursive(String dirPath) async {
+    try {
+      final dir = Directory(dirPath);
+      if (await dir.exists()) {
+        await dir.delete(recursive: true);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      logError('Failed to delete directory $dirPath: $e');
+      return false;
     }
   }
 
@@ -361,7 +435,7 @@ class UriUtils {
   static Future<void> showDetailDialog(
       {required BuildContext context, required String filePath}) async {
     final stat = await getFileStat(filePath);
-    final _loc = AppLocalizations.of(context)!;
+    final _loc = AppLocalizations.of(context);
 
     Widget fileInfoSection({required String title, required String detail}) {
       return Padding(

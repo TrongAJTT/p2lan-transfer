@@ -219,7 +219,7 @@ class _TwoPanelsLayoutState extends State<TwoPanelsLayout>
     );
 
     return Scaffold(
-      appBar: widget.appBar ?? null,
+      appBar: widget.appBar,
       body: desktopContent,
       floatingActionButton: widget.floatingActionButton,
     );
@@ -265,7 +265,7 @@ class _TwoPanelsLayoutState extends State<TwoPanelsLayout>
     );
 
     return Scaffold(
-      appBar: widget.appBar ?? null,
+      appBar: widget.appBar,
       body: tabContent,
       floatingActionButton: widget.floatingActionButton,
     );

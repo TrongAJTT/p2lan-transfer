@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/utils/icon_utils.dart';
-import 'package:p2lantransfer/utils/size_utils.dart';
-import 'package:p2lantransfer/utils/widget_layout_render_helper.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/utils/icon_utils.dart';
+import 'package:p2lan/utils/size_utils.dart';
+import 'package:p2lan/utils/widget_layout_render_helper.dart';
 
 /// A decorator class to customize the appearance of a [GenericDialog].
 @immutable

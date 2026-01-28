@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/services/app_logger.dart';
 
 class LogViewerScreen extends StatefulWidget {
   final bool isEmbedded;
@@ -272,7 +272,7 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
   }
 
   Future<void> _clearLogs() async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -397,7 +397,7 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
   }
 
   Widget _buildSkeletonLoading() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       child: Container(
@@ -493,7 +493,7 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
@@ -728,7 +728,7 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
   }
 
   Widget _buildActionMenu() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return FloatingActionButton(
       onPressed: () => _showActionBottomSheet(),
       tooltip: l10n.logActions,
@@ -737,7 +737,7 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
   }
 
   Widget _buildMobileActionButtons() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -769,7 +769,7 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
   }
 
   void _showActionBottomSheet() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
       builder: (context) => SafeArea(

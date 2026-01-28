@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/models/p2p_models.dart';
 
 class DeviceInfoCard extends StatefulWidget {
   final P2PUser? user;
@@ -25,7 +25,7 @@ class DeviceInfoCard extends StatefulWidget {
 class _DeviceInfoCardState extends State<DeviceInfoCard> {
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     if (widget.user == null) {
       return Card(
         child: Padding(
@@ -176,7 +176,7 @@ class _DeviceInfoCardState extends State<DeviceInfoCard> {
   }
 
   Widget _buildStatusChips(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Wrap(
       spacing: 6.0,
       runSpacing: 4.0,

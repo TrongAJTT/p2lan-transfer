@@ -1,7 +1,7 @@
 import 'dart:io';
 // import 'package:hive/hive.dart'; // Commented out during Hive to Isar migration
-import 'package:path_provider/path_provider.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
+
+import 'package:p2lan/services/app_logger.dart';
 
 void main() async {
   logInfo('Clearing P2P Hive data...');

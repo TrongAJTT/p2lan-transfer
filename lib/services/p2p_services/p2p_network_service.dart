@@ -4,13 +4,16 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
-import 'package:p2lantransfer/models/app_installation.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
-import 'package:p2lantransfer/models/p2p_chat.dart';
-import 'package:p2lantransfer/services/isar_service.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/services/network_security_service.dart';
-import 'package:p2lantransfer/services/p2p_services/p2p_notification_service.dart';
+import 'package:p2lan/models/app_installation.dart';
+import 'package:p2lan/models/p2p_models.dart';
+import 'package:p2lan/models/p2p_chat.dart';
+import 'package:p2lan/services/isar_service.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/services/network_security_service.dart';
+import 'package:p2lan/services/settings_models_service.dart';
+import 'package:p2lan/services/p2p_services/p2p_notification_service.dart';
+import 'package:p2lan/utils/platform_detection_utils.dart';
+import 'package:p2lan/variables.dart';
 import 'package:workmanager/workmanager.dart';
 
 /// P2P Network Service - Manages network connections, servers, and basic networking
@@ -106,8 +109,8 @@ class P2PNetworkService extends ChangeNotifier {
   Function(Uint8List, InternetAddress, int)? _onUdpMessageReceived;
 
   // Constants
-  static const int _basePort = 8080;
-  static const int _maxPort = 8090;
+  static const int _basePort = p2pBasePort;
+  static const int _maxPort = p2pMaxPort;
   static const Duration _heartbeatInterval = Duration(seconds: 60);
 
   // Getters
@@ -228,8 +231,8 @@ class P2PNetworkService extends ChangeNotifier {
         timeout: const Duration(seconds: 5),
       );
 
-      logInfo(
-          'P2PNetworkService: Send chat message to ${targetUser.displayName} with data: $messageData');
+      // logInfo(
+      //     'P2PNetworkService: Send chat message to ${targetUser.displayName} with data: $messageData');
 
       final success = await sendMessageToSocket(socket, messageData);
 
@@ -294,16 +297,35 @@ class P2PNetworkService extends ChangeNotifier {
     final appInstallationId =
         await NetworkSecurityService.getAppInstallationId();
     final deviceName = await NetworkSecurityService.getDeviceName();
+    try {
+      final general = await ExtensibleSettingsService.getGeneralSettings();
+      if (general.displayName != null &&
+          general.displayName!.trim().isNotEmpty) {
+        // Prefer user-customized display name
+      }
+    } catch (_) {}
 
     _currentUser = P2PUser(
       id: appInstallationId,
-      displayName: deviceName,
+      displayName: (await _resolveDisplayName(deviceName)),
       profileId: appInstallationId,
       ipAddress: networkInfo.ipAddress ?? '127.0.0.1',
       port: _basePort,
       isOnline: true,
       lastSeen: DateTime.now(),
+      platform: PlatformDetectionUtils.getCurrentPlatform(),
     );
+  }
+
+  Future<String> _resolveDisplayName(String fallback) async {
+    try {
+      final general = await ExtensibleSettingsService.getGeneralSettings();
+      if (general.displayName != null &&
+          general.displayName!.trim().isNotEmpty) {
+        return general.displayName!.trim();
+      }
+    } catch (_) {}
+    return fallback;
   }
 
   Future<void> _startServers() async {
@@ -387,7 +409,8 @@ class P2PNetworkService extends ChangeNotifier {
   }
 
   void _handleClientConnection(Socket socket) {
-    logInfo('P2PNetworkService: New client connected: ${socket.remoteAddress}');
+    // logDebug(
+    // 'P2PNetworkService: New client connected: ${socket.remoteAddress}');
 
     // Optimize socket for high throughput
     socket.setOption(SocketOption.tcpNoDelay, true);
@@ -440,14 +463,15 @@ class P2PNetworkService extends ChangeNotifier {
   }
 
   void _handleClientDisconnection(Socket socket) {
-    logInfo('P2PNetworkService: Client disconnected: ${socket.remoteAddress}');
+    // @DebugLog
+    // logDebug('P2PNetworkService: Client disconnected: ${socket.remoteAddress}');
     final userId = _connectedSockets.entries
         .firstWhere((entry) => entry.value == socket,
             orElse: () => MapEntry('', socket))
         .key;
     if (userId.isNotEmpty) {
       _connectedSockets.remove(userId);
-      logInfo('P2PNetworkService: Removed socket for user $userId');
+      // logInfo('P2PNetworkService: Removed socket for user $userId');
     }
   }
 
@@ -524,6 +548,25 @@ class P2PNetworkService extends ChangeNotifier {
   /// Get socket for user ID
   Socket? getSocketForUser(String userId) {
     return _connectedSockets[userId];
+  }
+
+  /// Called when discovery is complete
+  void onDiscoveryComplete() {
+    if (_connectionStatus == ConnectionStatus.discovering) {
+      _connectionStatus = ConnectionStatus.connected;
+      logInfo(
+          'P2PNetworkService: Discovery complete, status changed to connected');
+      notifyListeners();
+    }
+  }
+
+  /// Set connection status (used by discovery service)
+  void setConnectionStatus(ConnectionStatus status) {
+    if (_connectionStatus != status) {
+      _connectionStatus = status;
+      logInfo('P2PNetworkService: Connection status changed to: $status');
+      notifyListeners();
+    }
   }
 
   @override

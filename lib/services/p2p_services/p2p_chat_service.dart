@@ -3,13 +3,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:p2lantransfer/models/app_installation.dart';
-import 'package:p2lantransfer/models/p2p_chat.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/services/settings_models_service.dart';
-import 'package:p2lantransfer/services/p2p_services/p2p_notification_service.dart';
-import 'package:p2lantransfer/utils/url_utils.dart';
+import 'package:p2lan/models/app_installation.dart';
+import 'package:p2lan/models/p2p_chat.dart';
+import 'package:p2lan/models/p2p_models.dart';
+import 'package:p2lan/models/p2p_cache_models.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/services/settings_models_service.dart';
+import 'package:p2lan/services/p2p_services/p2p_notification_service.dart';
+import 'package:p2lan/utils/url_utils.dart';
 
 class P2PChatService extends ChangeNotifier {
   /// Lấy 1 trang tin nhắn của đoạn chat, mặc định lấy từ dưới lên (mới nhất)
@@ -32,7 +33,7 @@ class P2PChatService extends ChangeNotifier {
     if (msg.containsFile() && Platform.isAndroid) {
       // move file to P2P service directory
       final appDocDir = await getApplicationDocumentsDirectory();
-      final basePath = '${appDocDir.parent.path}/files/p2lan_transfer';
+      final basePath = '${appDocDir.parent.path}/files';
       final fileName = UriUtils.getFileName(msg.filePath!);
       final newFilePath = '$basePath/$fileName';
       await Directory(basePath).create(recursive: true);
@@ -119,7 +120,7 @@ class P2PChatService extends ChangeNotifier {
           'Attempting to show notification for message: ${message.content}');
 
       // Check if notifications are enabled in settings
-      final settings = await ExtensibleSettingsService.getP2PTransferSettings();
+      final settings = await ExtensibleSettingsService.getGeneralSettings();
       if (!settings.enableNotifications) {
         logInfo('Notifications disabled in settings, skipping notification');
         return;
@@ -193,12 +194,80 @@ class P2PChatService extends ChangeNotifier {
 
   Future<List<P2PChat>> loadAllChats() async {
     final chats = await isar.p2PChats.where().sortByUpdatedAtDesc().findAll();
+
+    // Reorder by pinned list stored in P2PDataCache (id: 'chat_pins')
+    try {
+      final pins = await isar.p2PDataCaches.getByIndex('id', ["chat_pins"]);
+      if (pins != null) {
+        final map = pins.getDataAsMap();
+        final list =
+            (map['userBIds'] as List?)?.cast<String>() ?? const <String>[];
+        if (list.isNotEmpty) {
+          final pinnedSet = list.toSet();
+          chats.sort((a, b) {
+            final aPinned = pinnedSet.contains(a.userBId);
+            final bPinned = pinnedSet.contains(b.userBId);
+            if (aPinned && !bPinned) return -1;
+            if (!aPinned && bPinned) return 1;
+            return b.updatedAt.compareTo(a.updatedAt);
+          });
+        }
+      }
+    } catch (_) {}
     _chatMap.clear();
     for (final chat in chats) {
       _chatMap[chat.id.toString()] = chat;
     }
     notifyListeners();
     return chats;
+  }
+
+  // ----- Pinning API -----
+  Future<void> pinChat(String userBId) async {
+    final cacheId = 'chat_pins';
+    var cache = await isar.p2PDataCaches.where().idEqualTo(cacheId).findFirst();
+    List<String> userBIds = [];
+    if (cache != null) {
+      userBIds =
+          (cache.getDataAsMap()['userBIds'] as List?)?.cast<String>() ?? [];
+    } else {
+      cache = P2PDataCache(
+        id: cacheId,
+        cacheType: 'chat_pins',
+        data: '{"userBIds":[]}',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+    }
+    if (!userBIds.contains(userBId)) {
+      userBIds.add(userBId);
+      cache.setDataFromMap({'userBIds': userBIds});
+      await isar.writeTxn(() async => isar.p2PDataCaches.put(cache!));
+      await loadAllChats();
+    }
+  }
+
+  Future<void> unpinChat(String userBId) async {
+    final cacheId = 'chat_pins';
+    final cache =
+        await isar.p2PDataCaches.where().idEqualTo(cacheId).findFirst();
+    if (cache == null) return;
+    final userBIds =
+        (cache.getDataAsMap()['userBIds'] as List?)?.cast<String>() ?? [];
+    if (userBIds.remove(userBId)) {
+      cache.setDataFromMap({'userBIds': userBIds});
+      await isar.writeTxn(() async => isar.p2PDataCaches.put(cache));
+      await loadAllChats();
+    }
+  }
+
+  Future<bool> isPinned(String userBId) async {
+    final cache =
+        await isar.p2PDataCaches.where().idEqualTo('chat_pins').findFirst();
+    if (cache == null) return false;
+    final userBIds =
+        (cache.getDataAsMap()['userBIds'] as List?)?.cast<String>() ?? [];
+    return userBIds.contains(userBId);
   }
 
   Future<P2PChat> addChat(String userId,

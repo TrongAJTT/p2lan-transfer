@@ -1,13 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/models/p2p_chat.dart';
-import 'package:p2lantransfer/services/function_info_service.dart';
-import 'package:p2lantransfer/utils/widget_layout_render_helper.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/models/p2p_chat.dart';
+import 'package:p2lan/services/function_info_service.dart';
+import 'package:p2lan/utils/widget_layout_render_helper.dart';
 
-import 'package:p2lantransfer/widgets/generic/option_slider.dart';
-import 'package:p2lantransfer/widgets/generic/option_switch.dart';
+import 'package:p2lan/widgets/generic/option_slider.dart';
+import 'package:p2lan/widgets/generic/option_switch.dart';
 
 class P2PChatSettingsLayout extends StatefulWidget {
   final P2PChat chat;
@@ -45,7 +45,7 @@ class _P2PChatSettingsLayoutState extends State<P2PChatSettingsLayout> {
 
   @override
   void didChangeDependencies() {
-    _loc = AppLocalizations.of(context)!;
+    _loc = AppLocalizations.of(context);
     super.didChangeDependencies();
   }
 
@@ -63,7 +63,7 @@ class _P2PChatSettingsLayoutState extends State<P2PChatSettingsLayout> {
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Expanded(
         child: SingleChildScrollView(

@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'dart:async';
-import 'package:p2lantransfer/services/app_logger.dart';
+import 'package:p2lan/services/app_logger.dart';
 
 /// Performance optimizer for P2P data transfer
 /// Implements adaptive algorithms for optimal transfer speed

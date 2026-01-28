@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/utils/icon_utils.dart';
+import 'package:p2lan/utils/icon_utils.dart';
 
 /// Generic option item for all option-based widgets
 class OptionItem<T> {

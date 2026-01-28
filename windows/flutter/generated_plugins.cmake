@@ -5,6 +5,8 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   connectivity_plus
   desktop_drop
+  desktop_multi_window
+  flutter_webrtc
   isar_flutter_libs
   nsd_windows
   pasteboard

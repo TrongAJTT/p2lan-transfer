@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/models/p2p_models.dart';
 
 class UserPairingDialog extends StatefulWidget {
   final P2PUser user;
@@ -22,7 +22,7 @@ class _UserPairingDialogState extends State<UserPairingDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return AlertDialog(
       title: Row(
@@ -71,8 +71,8 @@ class _UserPairingDialogState extends State<UserPairingDialog> {
                           Theme.of(context).brightness == Brightness.dark
                               ? Theme.of(context).colorScheme.primary
                               : Theme.of(context).primaryColor,
-                      child: const Icon(
-                        Icons.devices,
+                      child: Icon(
+                        _getUserPlatformIcon(widget.user),
                         color: Colors.white,
                       ),
                     ),
@@ -197,6 +197,25 @@ class _UserPairingDialogState extends State<UserPairingDialog> {
     );
   }
 
+  IconData _getUserPlatformIcon(P2PUser user) {
+    switch (user.platform) {
+      case UserPlatform.android:
+        return Icons.android;
+      case UserPlatform.ios:
+        return Icons.phone_iphone;
+      case UserPlatform.windows:
+        return Icons.computer;
+      case UserPlatform.macos:
+        return Icons.laptop_mac;
+      case UserPlatform.linux:
+        return Icons.laptop;
+      case UserPlatform.web:
+        return Icons.web;
+      case UserPlatform.unknown:
+        return Icons.device_unknown;
+    }
+  }
+
   Widget _buildInfoRow({
     required IconData icon,
     required String label,
@@ -226,7 +245,7 @@ class _UserPairingDialogState extends State<UserPairingDialog> {
   }
 
   String _formatTime(DateTime time) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final now = DateTime.now();
     final difference = now.difference(time);
 

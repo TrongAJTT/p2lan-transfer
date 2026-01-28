@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/utils/size_utils.dart';
+import 'package:p2lan/utils/size_utils.dart';
 
 /// Condition types for determining when to render two widgets in a row
 sealed class TwoInARowConditionType {
@@ -716,10 +716,10 @@ class WidgetLayoutRenderHelper {
   }
 
   /// Convenience method for one widget on left, two widgets on right layout with flex sizing
-  static Widget oneLeftTwoRightFlex(
-    Widget widget1,
-    Widget widget2,
-    Widget widget3, {
+  static Widget oneLeftTwoRightFlex({
+    required Widget widget1,
+    required Widget widget2,
+    required Widget widget3,
     double threeInARowMinWidth = 800.0,
     double twoInARowMinWidth = 500.0,
     bool singleRowWidgetOnTop = true,

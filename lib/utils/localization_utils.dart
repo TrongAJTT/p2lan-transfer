@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/utils/date_utils.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/utils/date_utils.dart';
 
 class LocalizationUtils {
   static String formatDate(BuildContext context, DateTime date) {
@@ -32,7 +32,7 @@ class LocalizationUtils {
           return DateFormat.jm(locale).format(dateTime);
         } else if (MyDateUtils.isWithinWeek(dateTime)) {
           // Return weekday name if within the week
-          final l10n = AppLocalizations.of(context)!;
+          final l10n = AppLocalizations.of(context);
           return getLocalizedWeekdayName(dateTime.weekday, l10n);
         } else {
           // Return date only if older than a week

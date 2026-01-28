@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/screens/author_products_layout.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/screens/author_products_layout.dart';
 import 'dart:convert';
-import 'package:p2lantransfer/models/author_product_model.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/utils/network_utils.dart';
-import 'package:p2lantransfer/variables.dart';
-import 'package:p2lantransfer/widgets/generic/generic_settings_helper.dart';
-import 'package:p2lantransfer/widgets/generic/network_required_placeholder.dart';
+import 'package:p2lan/models/author_product_model.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/utils/network_utils.dart';
+import 'package:p2lan/variables.dart';
+import 'package:p2lan/widgets/generic/generic_settings_helper.dart';
+import 'package:p2lan/widgets/generic/network_required_placeholder.dart';
 
 class AuthorProductsService {
   static const String _userAgent = userAgent;
 
   static Future<void> navigateToAuthorProductsScreen(
       BuildContext context) async {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final hasNetwork = await NetworkUtils.isNetworkAvailable();
     GenericSettingsHelper.showSettings(
       context,

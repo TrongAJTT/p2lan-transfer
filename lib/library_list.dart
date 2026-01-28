@@ -151,6 +151,11 @@ List<Map<String, String>> libraryList = [
     'author': 'Sebastian Roth',
     'license': 'MIT',
   },
+  {
+    'name': 'flutter_webrtc',
+    'author': 'CloudWebRTC',
+    'license': 'MIT',
+  },
 
   // Security & Encryption
   {
@@ -247,5 +252,12 @@ List<Map<String, String>> libraryList = [
     'name': 'pasteboard',
     'author': 'Pasteboard Team',
     'license': 'MIT',
+  },
+
+  // Windows Platform Support
+  {
+    'name': 'win32',
+    'author': 'Dart Team',
+    'license': 'BSD-3-Clause',
   },
 ];

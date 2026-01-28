@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
-import 'package:p2lantransfer/models/settings_models.dart';
-import 'package:p2lantransfer/services/settings_models_service.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
+import 'package:p2lan/models/p2p_models.dart';
+import 'package:p2lan/models/settings_models.dart';
+import 'package:p2lan/services/settings_models_service.dart';
+import 'package:p2lan/services/app_logger.dart';
 
 /// Adapter service to bridge between old P2PDataTransferSettings and new ExtensibleSettings
 /// This allows existing UI to work unchanged while using the new settings system underneath
@@ -23,12 +23,7 @@ class P2PSettingsAdapter {
       customDisplayName: newSettings.customDisplayName,
       uiRefreshRateSeconds: newSettings.uiRefreshRateSeconds,
       enableNotifications: newSettings.enableNotifications,
-      rememberBatchExpandState: newSettings.rememberBatchExpandState,
       encryptionType: newSettings.encryptionType,
-      enableCompression: newSettings.enableCompression,
-      compressionAlgorithm: newSettings.compressionAlgorithm,
-      compressionThreshold: newSettings.compressionThreshold,
-      adaptiveCompression: newSettings.adaptiveCompression,
       autoCleanupCompletedTasks: newSettings.autoCleanupCompletedTasks,
       autoCleanupCancelledTasks: newSettings.autoCleanupCancelledTasks,
       autoCleanupFailedTasks: newSettings.autoCleanupFailedTasks,
@@ -52,12 +47,7 @@ class P2PSettingsAdapter {
       customDisplayName: oldSettings.customDisplayName,
       uiRefreshRateSeconds: oldSettings.uiRefreshRateSeconds,
       enableNotifications: oldSettings.enableNotifications,
-      rememberBatchExpandState: oldSettings.rememberBatchExpandState,
       encryptionType: oldSettings.encryptionType,
-      enableCompression: oldSettings.enableCompression,
-      compressionAlgorithm: oldSettings.compressionAlgorithm,
-      compressionThreshold: oldSettings.compressionThreshold,
-      adaptiveCompression: oldSettings.adaptiveCompression,
       autoCleanupCompletedTasks: oldSettings.autoCleanupCompletedTasks,
       autoCleanupCancelledTasks: oldSettings.autoCleanupCancelledTasks,
       autoCleanupFailedTasks: oldSettings.autoCleanupFailedTasks,
@@ -69,18 +59,17 @@ class P2PSettingsAdapter {
   /// Get settings in old format (for existing UI)
   static Future<P2PDataTransferSettings> getSettings() async {
     try {
-      final newSettings =
-          await ExtensibleSettingsService.getP2PTransferSettings();
-      final oldSettings = toOldSettings(newSettings);
+      // Combine split models via service
+      final combined = await ExtensibleSettingsService.getP2PTransferSettings();
+      final oldSettings = toOldSettings(combined);
 
       // Ensure download path is initialized
       if (oldSettings.downloadPath.isEmpty) {
         final defaultPath = await _getDefaultDownloadPath();
-        final updatedNewSettings =
-            newSettings.copyWith(downloadPath: defaultPath);
+        final updatedCombined = combined.copyWith(downloadPath: defaultPath);
         await ExtensibleSettingsService.updateP2PTransferSettings(
-            updatedNewSettings);
-        return toOldSettings(updatedNewSettings);
+            updatedCombined);
+        return toOldSettings(updatedCombined);
       }
 
       return oldSettings;
@@ -110,7 +99,7 @@ class P2PSettingsAdapter {
     } else if (Platform.isAndroid) {
       try {
         final appDocDir = await getApplicationDocumentsDirectory();
-        final androidPath = '${appDocDir.parent.path}/files/p2lan_transfer';
+        final androidPath = '${appDocDir.parent.path}/files';
 
         // Create directory if it doesn't exist
         final directory = Directory(androidPath);
@@ -145,7 +134,6 @@ class P2PSettingsAdapter {
       uiRefreshRateSeconds: 0,
       enableNotifications:
           false, // Default to false to reduce notification spam
-      rememberBatchExpandState: false, // Default to false for performance
       encryptionType: EncryptionType.none, // Default to no encryption
     );
   }

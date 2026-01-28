@@ -63,12 +63,12 @@ import 'app_localizations_vi.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
-  static AppLocalizations? of(BuildContext context) {
-    return Localizations.of<AppLocalizations>(context, AppLocalizations);
+  static AppLocalizations of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
   static const LocalizationsDelegate<AppLocalizations> delegate =
@@ -86,16 +86,16 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('vi'),
+    Locale('vi')
   ];
 
   /// No description provided for @title.
@@ -188,29 +188,23 @@ abstract class AppLocalizations {
   /// **'Libraries and resources used in this app'**
   String get creditAckDesc;
 
-  /// No description provided for @donorsAck.
-  ///
-  /// In en, this message translates to:
-  /// **'Supporters Acknowledgment'**
-  String get donorsAck;
-
-  /// No description provided for @donorsAckDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'List of publicly acknowledged supporters. Thank you very much!'**
-  String get donorsAckDesc;
-
   /// No description provided for @supportDesc.
   ///
   /// In en, this message translates to:
   /// **'P2Lan Transfer helps you transfer data between devices on the same network more easily. If you find it useful, consider supporting me to maintain and improve it. Thank you very much!'**
   String get supportDesc;
 
-  /// No description provided for @supportOnGitHub.
+  /// No description provided for @githubSponsorsDesc.
   ///
   /// In en, this message translates to:
-  /// **'Support on GitHub'**
-  String get supportOnGitHub;
+  /// **'Official support page on GitHub'**
+  String get githubSponsorsDesc;
+
+  /// No description provided for @buyMeACoffeeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'In case you don\'t have a Github Sponsors account'**
+  String get buyMeACoffeeDesc;
 
   /// No description provided for @donate.
   ///
@@ -223,48 +217,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Support me if you find this app useful'**
   String get donateDesc;
-
-  /// No description provided for @oneTimeDonation.
-  ///
-  /// In en, this message translates to:
-  /// **'One-time Donation'**
-  String get oneTimeDonation;
-
-  /// No description provided for @momoDonateDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Support me via Momo'**
-  String get momoDonateDesc;
-
-  /// No description provided for @donorBenefits.
-  ///
-  /// In en, this message translates to:
-  /// **'Supporter Benefits'**
-  String get donorBenefits;
-
-  /// No description provided for @donorBenefit1.
-  ///
-  /// In en, this message translates to:
-  /// **'Be listed in the acknowledgments and share your comments (if you want).'**
-  String get donorBenefit1;
-
-  /// No description provided for @donorBenefit2.
-  ///
-  /// In en, this message translates to:
-  /// **'Prioritized feedback consideration.'**
-  String get donorBenefit2;
-
-  /// No description provided for @donorBenefit3.
-  ///
-  /// In en, this message translates to:
-  /// **'Access to beta (debug) versions, however updates are not guaranteed to be frequent.'**
-  String get donorBenefit3;
-
-  /// No description provided for @donorBenefit4.
-  ///
-  /// In en, this message translates to:
-  /// **'Access to dev repo (Github Sponsors only).'**
-  String get donorBenefit4;
 
   /// No description provided for @checkForNewVersion.
   ///
@@ -625,6 +577,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search...'**
   String get searchHint;
+
+  /// No description provided for @remoteControl.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote Control'**
+  String get remoteControl;
+
+  /// No description provided for @beingRemoteControlled.
+  ///
+  /// In en, this message translates to:
+  /// **'Being Remote Controlled'**
+  String get beingRemoteControlled;
+
+  /// No description provided for @remoteControlling.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote Controlling'**
+  String get remoteControlling;
+
+  /// No description provided for @screenSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Screen Sharing'**
+  String get screenSharing;
+
+  /// No description provided for @sharingScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing Screen'**
+  String get sharingScreen;
+
+  /// No description provided for @viewingScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Viewing Screen'**
+  String get viewingScreen;
+
+  /// No description provided for @isControllingThisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'{userName} is controlling this device'**
+  String isControllingThisDevice(Object userName);
+
+  /// No description provided for @controllingUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Controlling {userName}'**
+  String controllingUser(Object userName);
+
+  /// No description provided for @endSession.
+  ///
+  /// In en, this message translates to:
+  /// **'End Session'**
+  String get endSession;
+
+  /// No description provided for @duration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get duration;
+
+  /// No description provided for @started.
+  ///
+  /// In en, this message translates to:
+  /// **'Started'**
+  String get started;
+
+  /// No description provided for @disconnectRemoteControl.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect Remote Control'**
+  String get disconnectRemoteControl;
+
+  /// No description provided for @disconnectRemoteControlConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to disconnect from {userName}?'**
+  String disconnectRemoteControlConfirm(Object userName);
+
+  /// No description provided for @disconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get disconnect;
+
+  /// No description provided for @connectingTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting to {userName}...'**
+  String connectingTo(Object userName);
+
+  /// No description provided for @connectedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected to {userName}'**
+  String connectedTo(Object userName);
+
+  /// No description provided for @controlsInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Controls info'**
+  String get controlsInfo;
+
+  /// No description provided for @touchpadArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Touchpad Area'**
+  String get touchpadArea;
+
+  /// No description provided for @moveFingerToControlMouse.
+  ///
+  /// In en, this message translates to:
+  /// **'Move finger to control mouse'**
+  String get moveFingerToControlMouse;
+
+  /// No description provided for @leftClick.
+  ///
+  /// In en, this message translates to:
+  /// **'Left Mouse'**
+  String get leftClick;
+
+  /// No description provided for @middleClick.
+  ///
+  /// In en, this message translates to:
+  /// **'Middle Mouse'**
+  String get middleClick;
+
+  /// No description provided for @rightClick.
+  ///
+  /// In en, this message translates to:
+  /// **'Right Mouse'**
+  String get rightClick;
+
+  /// No description provided for @scrollUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll Up'**
+  String get scrollUp;
+
+  /// No description provided for @scrollDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll Down'**
+  String get scrollDown;
+
+  /// No description provided for @remoteControlHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote Control Help'**
+  String get remoteControlHelp;
+
+  /// No description provided for @howToControlRemoteComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'How to control the remote computer:'**
+  String get howToControlRemoteComputer;
+
+  /// No description provided for @noteWindowsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Note: This feature only works when controlling Windows computers.'**
+  String get noteWindowsOnly;
+
+  /// No description provided for @gotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get gotIt;
 
   /// No description provided for @history.
   ///
@@ -1943,7 +2063,7 @@ abstract class AppLocalizations {
   /// Instructions for file options
   ///
   /// In en, this message translates to:
-  /// **'Tap or right-click for options'**
+  /// **'Long tap or right-click for options'**
   String get tapRightClickForOptions;
 
   /// Option for unlimited size/count
@@ -2240,6 +2360,12 @@ abstract class AppLocalizations {
   /// **'Checking network...'**
   String get checkingNetwork;
 
+  /// No description provided for @pausedNoInternet.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused (No Internet)'**
+  String get pausedNoInternet;
+
   /// No description provided for @connectedViaMobileData.
   ///
   /// In en, this message translates to:
@@ -2288,17 +2414,29 @@ abstract class AppLocalizations {
   /// **'Custom Display Name'**
   String get customDisplayName;
 
+  /// No description provided for @yourProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Profile'**
+  String get yourProfile;
+
   /// No description provided for @deviceName.
   ///
   /// In en, this message translates to:
   /// **'Device Name'**
   String get deviceName;
 
-  /// No description provided for @deviceNameHint.
+  /// No description provided for @deviceNameDesc.
   ///
   /// In en, this message translates to:
-  /// **'Enter custom device name...'**
-  String get deviceNameHint;
+  /// **'Your device name to appear with other users'**
+  String get deviceNameDesc;
+
+  /// No description provided for @deviceNameEditDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize your device name to appear with other users'**
+  String get deviceNameEditDesc;
 
   /// No description provided for @general.
   ///
@@ -2335,6 +2473,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Protocol settings, performance tuning & optimization'**
   String get networkSpeedDesc;
+
+  /// No description provided for @estimatedSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated Speed'**
+  String get estimatedSpeed;
 
   /// No description provided for @advanced.
   ///
@@ -2377,6 +2521,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New Devices'**
   String get newDevices;
+
+  /// No description provided for @blockedDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked Devices'**
+  String get blockedDevices;
+
+  /// No description provided for @blockedDevicesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'These devices are blocked and cannot contact you'**
+  String get blockedDevicesSubtitle;
 
   /// No description provided for @addTrust.
   ///
@@ -2461,6 +2617,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Default: {name}'**
   String defaultDisplayName(String name);
+
+  /// No description provided for @displayNameHasReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name has been reset'**
+  String get displayNameHasReset;
 
   /// No description provided for @notifications.
   ///
@@ -2699,8 +2861,26 @@ abstract class AppLocalizations {
   /// No description provided for @confirmDelete.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to delete file'**
+  /// **'Confirm delete'**
   String get confirmDelete;
+
+  /// No description provided for @confirmDeleteFileNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete {number} file(s)'**
+  String confirmDeleteFileNumber(int number);
+
+  /// No description provided for @confirmDeleteFolderNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete {number} folder(s)'**
+  String confirmDeleteFolderNumber(int number);
+
+  /// No description provided for @confirmDeleteFoldersAndFilesNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete {numberFolder} folder(s) and {numberFile} file(s)'**
+  String confirmDeleteFoldersAndFilesNumber(int numberFolder, int numberFile);
 
   /// No description provided for @removeSelected.
   ///
@@ -2725,6 +2905,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'file'**
   String get file;
+
+  /// No description provided for @folder.
+  ///
+  /// In en, this message translates to:
+  /// **'folder'**
+  String get folder;
 
   /// No description provided for @fileInfo.
   ///
@@ -2779,18 +2965,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Modified'**
   String get modified;
-
-  /// No description provided for @p2lanOptionRememberBatchExpandState.
-  ///
-  /// In en, this message translates to:
-  /// **'Remember Batch Expand State'**
-  String get p2lanOptionRememberBatchExpandState;
-
-  /// No description provided for @p2lanOptionRememberBatchExpandStateDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Remember the expand state of each batch when the app is closed and reopened'**
-  String get p2lanOptionRememberBatchExpandStateDesc;
 
   /// No description provided for @securityAndEncryption.
   ///
@@ -3086,84 +3260,6 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to clear this batch and delete all files associated with it?'**
   String get clearTransferBatchWithFilesDesc;
 
-  /// No description provided for @dataCompression.
-  ///
-  /// In en, this message translates to:
-  /// **'Data Compression'**
-  String get dataCompression;
-
-  /// No description provided for @enableCompression.
-  ///
-  /// In en, this message translates to:
-  /// **'Enable Compression'**
-  String get enableCompression;
-
-  /// No description provided for @enableCompressionDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Compress files before sending to reduce transfer size. This may increase CPU usage.'**
-  String get enableCompressionDesc;
-
-  /// No description provided for @compressionAlgorithm.
-  ///
-  /// In en, this message translates to:
-  /// **'Compression Algorithm'**
-  String get compressionAlgorithm;
-
-  /// No description provided for @compressionAlgorithmAuto.
-  ///
-  /// In en, this message translates to:
-  /// **'Auto (Smart Selection)'**
-  String get compressionAlgorithmAuto;
-
-  /// No description provided for @compressionAlgorithmGZIP.
-  ///
-  /// In en, this message translates to:
-  /// **'GZIP (Best Compression)'**
-  String get compressionAlgorithmGZIP;
-
-  /// No description provided for @compressionAlgorithmDEFLATE.
-  ///
-  /// In en, this message translates to:
-  /// **'DEFLATE (Fastest)'**
-  String get compressionAlgorithmDEFLATE;
-
-  /// No description provided for @compressionAlgorithmNone.
-  ///
-  /// In en, this message translates to:
-  /// **'None (Disabled)'**
-  String get compressionAlgorithmNone;
-
-  /// No description provided for @estimatedSpeed.
-  ///
-  /// In en, this message translates to:
-  /// **'Estimated Speed'**
-  String get estimatedSpeed;
-
-  /// No description provided for @compressionThreshold.
-  ///
-  /// In en, this message translates to:
-  /// **'Compression Threshold'**
-  String get compressionThreshold;
-
-  /// No description provided for @compressionThresholdDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Minimum file size to apply compression. Smaller files may not benefit from compression.'**
-  String get compressionThresholdDesc;
-
-  /// No description provided for @adaptiveCompression.
-  ///
-  /// In en, this message translates to:
-  /// **'Adaptive Compression'**
-  String get adaptiveCompression;
-
-  /// No description provided for @adaptiveCompressionDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Automatically adjusts compression level based on file type and size for optimal performance.'**
-  String get adaptiveCompressionDesc;
-
   /// No description provided for @performanceInfo.
   ///
   /// In en, this message translates to:
@@ -3176,35 +3272,11 @@ abstract class AppLocalizations {
   /// **'Encryption'**
   String get performanceInfoEncrypt;
 
-  /// No description provided for @performanceInfoCompress.
-  ///
-  /// In en, this message translates to:
-  /// **'Compression'**
-  String get performanceInfoCompress;
-
-  /// No description provided for @performanceInfoExpectedImprovement.
-  ///
-  /// In en, this message translates to:
-  /// **'Expected Improvement'**
-  String get performanceInfoExpectedImprovement;
-
   /// No description provided for @performanceInfoSecuLevel.
   ///
   /// In en, this message translates to:
   /// **'Security Level'**
   String get performanceInfoSecuLevel;
-
-  /// No description provided for @compressionBenefits.
-  ///
-  /// In en, this message translates to:
-  /// **'Compression Benefits'**
-  String get compressionBenefits;
-
-  /// No description provided for @compressionBenefitsInfo.
-  ///
-  /// In en, this message translates to:
-  /// **'• Text files: 3-5x faster transfers\n• Source code: 2-4x faster transfers\n• JSON/XML data: 4-6x faster transfers\n• Media files: No overhead (auto-detected)'**
-  String get compressionBenefitsInfo;
 
   /// No description provided for @performanceWarning.
   ///
@@ -3215,7 +3287,7 @@ abstract class AppLocalizations {
   /// No description provided for @performanceWarningInfo.
   ///
   /// In en, this message translates to:
-  /// **'Encryption and compression may cause crashes on some Android devices, especially older or lower-end models. If you experience crashes, disable these features for stable transfers.'**
+  /// **'Encryption may cause crashes on some Android devices, especially older or lower-end models. If you experience crashes, disable this feature for stable transfers.'**
   String get performanceWarningInfo;
 
   /// No description provided for @resetToSafeDefaults.
@@ -3686,30 +3758,6 @@ abstract class AppLocalizations {
   /// **'This app uses several open-source libraries that make it possible. We are grateful to all the authors for their hard work and dedication.'**
   String get thanksLibAuthorDesc;
 
-  /// No description provided for @thanksDonors.
-  ///
-  /// In en, this message translates to:
-  /// **'Thank You, Supporters!'**
-  String get thanksDonors;
-
-  /// No description provided for @thanksDonorsDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Special thanks to our supporters who support the development of this app. Your contributions help us keep improving and maintaining the project.'**
-  String get thanksDonorsDesc;
-
-  /// No description provided for @thanksForUrSupport.
-  ///
-  /// In en, this message translates to:
-  /// **'Thank you for your support!'**
-  String get thanksForUrSupport;
-
-  /// No description provided for @supporterS.
-  ///
-  /// In en, this message translates to:
-  /// **'Supporter(s)'**
-  String get supporterS;
-
   /// No description provided for @pressBackAgainToExit.
   ///
   /// In en, this message translates to:
@@ -4159,6 +4207,312 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} product(s)'**
   String productCount(int count);
+
+  /// No description provided for @processingNumberOfTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing {current} of {total} file(s)'**
+  String processingNumberOfTotal(int current, int total);
+
+  /// No description provided for @waitingForFileSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for file selection and processing file resources'**
+  String get waitingForFileSelection;
+
+  /// No description provided for @expand.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand'**
+  String get expand;
+
+  /// No description provided for @collapse.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse'**
+  String get collapse;
+
+  /// No description provided for @block.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get block;
+
+  /// No description provided for @blockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Block this user'**
+  String get blockTitle;
+
+  /// No description provided for @blockDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to block this user?\nThis user will not be able to contact you until you unblock them.'**
+  String get blockDesc;
+
+  /// No description provided for @unblock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get unblock;
+
+  /// No description provided for @unblockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock this user'**
+  String get unblockTitle;
+
+  /// No description provided for @unblockDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to unblock this user?\nThis user will be able to contact you.'**
+  String get unblockDesc;
+
+  /// No description provided for @connectToDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to Device'**
+  String get connectToDevice;
+
+  /// No description provided for @enterDeviceIpAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the IP address of the device you want to connect to:'**
+  String get enterDeviceIpAddress;
+
+  /// No description provided for @connectToDeviceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Make sure the device is on the same network and P2P networking is enabled.'**
+  String get connectToDeviceHint;
+
+  /// No description provided for @connecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting...'**
+  String get connecting;
+
+  /// No description provided for @customStatusCards.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize Status Cards'**
+  String get customStatusCards;
+
+  /// No description provided for @customStatusCardsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which status cards to display'**
+  String get customStatusCardsDesc;
+
+  /// No description provided for @endRemoteToCustomizeStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'End the remote control session to customize status'**
+  String get endRemoteToCustomizeStatus;
+
+  /// No description provided for @noStatusCardsEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'No status cards enabled'**
+  String get noStatusCardsEnabled;
+
+  /// No description provided for @useTheCustomizeButtonToEnableStatusCards.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the customize button to enable status cards'**
+  String get useTheCustomizeButtonToEnableStatusCards;
+
+  /// No description provided for @thisDeviceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Device information and settings'**
+  String get thisDeviceDesc;
+
+  /// No description provided for @connectionStatusDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Network connection and debug info'**
+  String get connectionStatusDesc;
+
+  /// No description provided for @statisticsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer and device statistics'**
+  String get statisticsDesc;
+
+  /// No description provided for @remoteControlRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote Control Request'**
+  String get remoteControlRequest;
+
+  /// No description provided for @remoteControlRequestMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{userName} wants to control your computer remotely.'**
+  String remoteControlRequestMessage(String userName);
+
+  /// No description provided for @reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get reason;
+
+  /// No description provided for @securityWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Security Warning'**
+  String get securityWarning;
+
+  /// No description provided for @securityWarningMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Granting remote control access allows the other user to:'**
+  String get securityWarningMessage;
+
+  /// No description provided for @controlMouseCursor.
+  ///
+  /// In en, this message translates to:
+  /// **'Control your mouse cursor'**
+  String get controlMouseCursor;
+
+  /// No description provided for @clickAnywhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Click anywhere on your screen'**
+  String get clickAnywhere;
+
+  /// No description provided for @scrollScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll on your screen'**
+  String get scrollScreen;
+
+  /// No description provided for @trustWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Only accept requests from users you trust.'**
+  String get trustWarning;
+
+  /// No description provided for @confirmRemoteControlAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Remote Control Access'**
+  String get confirmRemoteControlAccess;
+
+  /// No description provided for @confirmRemoteControlMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold to confirm that you want to allow {userName} to control your computer.'**
+  String confirmRemoteControlMessage(String userName);
+
+  /// No description provided for @holdToAllowControl.
+  ///
+  /// In en, this message translates to:
+  /// **'HOLD TO ALLOW CONTROL'**
+  String get holdToAllowControl;
+
+  /// No description provided for @allowing.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowing...'**
+  String get allowing;
+
+  /// No description provided for @controlInstruction.
+  ///
+  /// In en, this message translates to:
+  /// **'This will give {userName} control over your mouse and screen.'**
+  String controlInstruction(String userName);
+
+  /// No description provided for @requestRemoteControl.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Remote Control'**
+  String get requestRemoteControl;
+
+  /// No description provided for @sendRemoteControlRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a remote control request to {userName}?'**
+  String sendRemoteControlRequest(String userName);
+
+  /// No description provided for @reasonOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason (optional)'**
+  String get reasonOptional;
+
+  /// No description provided for @reasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Why do you need remote control access?'**
+  String get reasonHint;
+
+  /// No description provided for @remoteControlAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote Control Access'**
+  String get remoteControlAccess;
+
+  /// No description provided for @remoteControlAccessMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'If accepted, you will be able to:'**
+  String get remoteControlAccessMessage;
+
+  /// No description provided for @controlRemoteMouse.
+  ///
+  /// In en, this message translates to:
+  /// **'Control the remote mouse cursor'**
+  String get controlRemoteMouse;
+
+  /// No description provided for @clickRemoteScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Click anywhere on the remote screen'**
+  String get clickRemoteScreen;
+
+  /// No description provided for @scrollRemoteScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll on the remote screen'**
+  String get scrollRemoteScreen;
+
+  /// No description provided for @requestExpiresIn60.
+  ///
+  /// In en, this message translates to:
+  /// **'The request will expire in 60 seconds.'**
+  String get requestExpiresIn60;
+
+  /// No description provided for @sendText.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Text'**
+  String get sendText;
+
+  /// No description provided for @sendTextHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter text to send...'**
+  String get sendTextHint;
+
+  /// No description provided for @textSentSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Text sent successfully'**
+  String get textSentSuccessfully;
+
+  /// No description provided for @textSendError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error sending text: {error}'**
+  String textSendError(Object error);
+
+  /// No description provided for @send.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get send;
 }
 
 class _AppLocalizationsDelegate
@@ -4188,9 +4542,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
-  );
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }

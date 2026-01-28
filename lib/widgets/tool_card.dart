@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
 
 class ToolCard extends StatelessWidget {
   final String title;
@@ -85,20 +85,20 @@ class ToolCard extends StatelessWidget {
                       onPressed: quickActionCallback,
                       icon: const Icon(Icons.arrow_forward_ios),
                       iconSize: 20,
-                      tooltip: AppLocalizations.of(context)!.quickAccess,
+                      tooltip: AppLocalizations.of(context).quickAccess,
                       color: colorScheme.primary,
                     ),
                   ],
                   if (showActions && !showQuickAction)
                     PopupMenuButton<String>(
-                      tooltip: AppLocalizations.of(context)!.options,
+                      tooltip: AppLocalizations.of(context).options,
                       icon: const Icon(Icons.more_vert),
                       itemBuilder: (context) => [
                         PopupMenuItem(
                           value: 'info',
                           child: ListTile(
                             leading: const Icon(Icons.info_outline),
-                            title: Text(AppLocalizations.of(context)!.about),
+                            title: Text(AppLocalizations.of(context).about),
                             contentPadding: EdgeInsets.zero,
                           ),
                         ),
@@ -114,7 +114,7 @@ class ToolCard extends StatelessWidget {
                                 TextButton(
                                   onPressed: () => Navigator.pop(context),
                                   child:
-                                      Text(AppLocalizations.of(context)!.close),
+                                      Text(AppLocalizations.of(context).close),
                                 ),
                               ],
                             ),

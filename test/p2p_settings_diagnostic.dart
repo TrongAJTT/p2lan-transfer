@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'package:p2lantransfer/utils/settings_reset_utils.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
+import 'package:p2lan/utils/settings_reset_utils.dart';
+import 'package:p2lan/services/app_logger.dart';
 
 /// Quick test script to check and reset P2P settings
 void main() async {

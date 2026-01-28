@@ -89,6 +89,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+.claude/
+
 .l10n-manager
 l10n.yaml
 plan.md
@@ -96,3 +98,4 @@ plan.md
 .obsidian/
 PLAN.md
 desiredFileName.txt
+_*

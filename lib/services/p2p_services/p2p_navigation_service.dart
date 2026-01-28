@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
+import 'package:p2lan/services/app_logger.dart';
 
 /// P2P Navigation destination
 enum P2PNavigationTarget {

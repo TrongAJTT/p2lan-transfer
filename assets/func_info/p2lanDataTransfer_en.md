@@ -1,4 +1,4 @@
-# P2Lan Data Transfer
+# About P2Lan Transfer
 Fast and secure data transfer over LAN between devices on the same WiFi network, supporting file and folder sending/receiving, direct chat messaging and various security options with optimized performance.
 
 ## [lan, blue] Key Features
@@ -65,22 +65,6 @@ Fast and secure data transfer over LAN between devices on the same WiFi network,
 - [icon:share] Clipboard Sharing: Automatically send new clipboard content as messages.
 - [icon:delete_forever] Delete After Share: Automatically delete messages after sharing from clipboard.
 
-## [keyboard, cyan] Keyboard Shortcuts
-Quickly access commonly used functions with keyboard shortcuts for enhanced productivity.
-[#:cyan] Main Screen
-- [icon:keyboard] Ctrl+1: Open Chat screen
-- [icon:keyboard] Ctrl+2: Open Local Files (Android only)
-- [icon:keyboard] Ctrl+3: Show Pairing Requests (when available)
-- [icon:keyboard] Ctrl+4: Open Transfer Settings
-- [icon:keyboard] Ctrl+5: Show Help documentation
-- [icon:keyboard] Ctrl+6: Show About information
-- [icon:keyboard] Ctrl+O: Start/Stop Networking
-- [icon:keyboard] Ctrl+R: Manual Device Discovery (when networking is active)
-- [icon:keyboard] Ctrl+Del: Clear All Transfers (when transfers exist)
-[#:blue] Settings Screen, Chat Screen & Some Dialogs
-- [icon:keyboard] Esc: Exit and return to previous screen
-- [icon:keyboard] Ctrl+Enter: Send message
-
 ## [build, purple] Usage Tips & Optimization
 - Use an easy-to-remember device name for quick identification when pairing.
 - Use ChaCha20-Poly1305 encryption for mobile devices or AES-GCM for powerful computers.
@@ -113,3 +97,27 @@ Quickly access commonly used functions with keyboard shortcuts for enhanced prod
 - Encryption will reduce transfer speed but increase security.
 - Avoid transferring very large files on devices with weak configurations or unstable networks.
 - Chat history is stored locally and automatically deleted according to time settings.
+
+## [keyboard, cyan] Keyboard Shortcuts
+Quickly access commonly used functions with keyboard shortcuts for enhanced productivity.
+[#:cyan] Main Screen
+- [icon:keyboard] Ctrl+1: Open Chat screen
+- [icon:keyboard] Ctrl+2: Open Local Files (Android only)
+- [icon:keyboard] Ctrl+3: Show Pairing Requests (when available)
+- [icon:keyboard] Ctrl+4: Open Transfer Settings
+- [icon:keyboard] Ctrl+5: Show Help documentation
+- [icon:keyboard] Ctrl+6: Show About information
+- [icon:keyboard] Ctrl+O: Start/Stop Networking
+- [icon:keyboard] Ctrl+R: Manual Device Discovery (when networking is active)
+- [icon:keyboard] Ctrl+Del: Clear All Transfers (when transfers exist)
+[#:yellow] Chat Screen
+- [icon:keyboard] Ctrl+Shift+R: Reload all chats
+- [icon:keyboard] Ctrl+R: Reload the current chat
+- [icon:keyboard] Ctrl+O: Customize the current chat
+- [icon:keyboard] Ctrl+I: Start composing a text message
+- [icon:keyboard] Ctrl+,: Select a media file in the chat
+- [icon:keyboard] Ctrl+.: Select a file in the chat
+- [icon:keyboard] Ctrl+Enter: Send message
+[#:blue] Settings, Chat, and some dialogs
+- [icon:keyboard] Esc: Exit and return to the previous screen
+- [icon:keyboard] Ctrl+1...Ctrl+9: Select the corresponding chat or settings section

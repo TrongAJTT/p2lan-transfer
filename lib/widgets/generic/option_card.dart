@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/utils/icon_utils.dart';
-import 'package:p2lantransfer/widgets/generic/option_item.dart';
+import 'package:p2lan/utils/icon_utils.dart';
+import 'package:p2lan/widgets/generic/option_item.dart';
 
 class CardDecorator {
   final EdgeInsets? padding;

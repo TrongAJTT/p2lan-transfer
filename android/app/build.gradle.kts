@@ -6,8 +6,8 @@ plugins {
 }
 
 android {
-    namespace = "com.p2lantransfer.app"
-    compileSdk = 35
+    namespace = "dev.trongajtt.p2lan"
+    compileSdk = 36
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -22,7 +22,7 @@ android {
 
     defaultConfig {
         // Application ID for P2Lan Transfer app
-        applicationId = "com.p2lantransfer.app"
+        applicationId = "dev.trongajtt.p2lan"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

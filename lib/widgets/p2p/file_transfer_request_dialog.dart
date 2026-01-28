@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/models/p2p_models.dart';
+import 'package:p2lan/services/app_logger.dart';
 
 class FileTransferRequestDialog extends StatefulWidget {
   final FileTransferRequest request;
@@ -138,7 +138,7 @@ class _FileTransferRequestDialogState extends State<FileTransferRequestDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final isWide = MediaQuery.of(context).size.width > 500;
     final theme = Theme.of(context);
     final deviceName = widget.request.fromUserName;

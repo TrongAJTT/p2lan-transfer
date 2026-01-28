@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:p2lantransfer/utils/localization_utils.dart';
+
+import 'package:p2lan/utils/localization_utils.dart';
 
 Future<DateTime?> showGenericDateTimePickerDialog(
   BuildContext context, {

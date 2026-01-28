@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:isar/isar.dart';
-import 'package:p2lantransfer/models/app_installation.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/services/isar_service.dart';
+import 'package:p2lan/models/app_installation.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/services/isar_service.dart';
 
 /// Service quản lý stable app installation ID
 /// ID này chỉ thay đổi khi người dùng xóa toàn bộ dữ liệu ứng dụng

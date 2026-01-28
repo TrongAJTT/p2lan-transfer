@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/models/info_models.dart';
-import 'package:p2lantransfer/utils/url_utils.dart';
+import 'package:p2lan/models/info_models.dart';
+import 'package:p2lan/utils/url_utils.dart';
 
 class GenericInfoScreen extends StatelessWidget {
   final InfoPage page;

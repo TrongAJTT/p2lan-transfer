@@ -1,10 +1,10 @@
 import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
-import 'package:p2lantransfer/services/crypto_service.dart';
+
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/models/p2p_models.dart';
+import 'package:p2lan/services/crypto_service.dart';
 
 void main() {
   group('CryptoService Tests', () {
@@ -82,7 +82,7 @@ void main() {
 
     test('should provide correct descriptions', () {
       final l10n = AppLocalizations.of(Get.context!);
-      expect(CryptoService.getEncryptionDescription(EncryptionType.none, l10n!),
+      expect(CryptoService.getEncryptionDescription(EncryptionType.none, l10n),
           contains('fastest'));
       expect(
           CryptoService.getEncryptionDescription(EncryptionType.aesGcm, l10n),

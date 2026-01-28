@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/services.dart';
-import 'package:p2lantransfer/services/network_security_service.dart';
+import 'package:p2lan/services/network_security_service.dart';
 
 void main() {
   group('NetworkSecurityService Mobile IP Tests', () {
@@ -8,7 +8,7 @@ void main() {
       // Mock the method channel for testing
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('com.p2lantransfer.app/network_security'),
+        const MethodChannel('dev.trongajtt.p2lan/network_security'),
         (MethodCall methodCall) async {
           switch (methodCall.method) {
             case 'getMobileIpAddress':
@@ -36,7 +36,7 @@ void main() {
     tearDownAll(() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('com.p2lantransfer.app/network_security'),
+        const MethodChannel('dev.trongajtt.p2lan/network_security'),
         null,
       );
     });

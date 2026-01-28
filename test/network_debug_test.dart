@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:p2lantransfer/services/network_security_service.dart';
+import 'package:p2lan/services/network_security_service.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 void main() {

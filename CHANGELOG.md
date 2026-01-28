@@ -2,6 +2,29 @@
 
 All notable changes since release will be documented in this file.
 
+## [1.2.0] - 2026-01-28
+
+## Fixed
+- Correct visible action count calculation in three panels layout.
+- Fixed a bug that did not update receiver's limit when changed on Settings.
+
+## Added
+- Added user platform detection.
+- Added the ability to select files from the app's local storage for sending.
+- Added user blocking feature.
+- Added direct pairing feature via manual entry of local IP address.
+- Enable folder opening in file explorer on Windows platforms.
+- Add remote control feature to allow controlling another device's screen from Android to Windows.
+
+## Changed
+- Rename app to "P2Lan" and package to "dev.trongajtt.p2lan".
+- Improve compact layout.
+- Simplify transfer tab switching, not scroll to bottom anymore.
+- Remove batch expand state feature from P2P settings and UI.
+
+## Note
+- This version also has integrated screen sharing, but it is hardcoded disabled by default because of incompatibility. You need to toggle it in the code so as to to test it.
+
 ## [1.1.0] - 2025-08-09
 
 ## Added
@@ -26,7 +49,7 @@ Hotfix
 
 ## [1.0.0] - 2025-08-05
 
-First release.
+First release of the app.
 
 ### Added
 - **Direct P2P sharing**: Send files directly between devices on the same network

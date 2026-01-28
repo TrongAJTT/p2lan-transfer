@@ -1,6 +1,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:p2lantransfer/services/network_security_service.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
+import 'package:p2lan/services/network_security_service.dart';
+import 'package:p2lan/services/app_logger.dart';
 
 class NetworkDebugUtils {
   /// Debug network connectivity and log detailed information

@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/services/shared_preferences_service.dart';
-import 'package:p2lantransfer/utils/variables_utils.dart';
-import 'package:p2lantransfer/main.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/services/shared_preferences_service.dart';
+import 'package:p2lan/utils/variables_utils.dart';
+import 'package:p2lan/main.dart';
 
 // Settings modules
-import 'package:p2lantransfer/widgets/settings/user_interface_settings.dart';
-import 'package:p2lantransfer/widgets/settings/data_management_settings.dart';
-import 'package:p2lantransfer/widgets/settings/about_settings.dart';
-import 'package:p2lantransfer/widgets/settings/p2p_general_settings.dart';
-import 'package:p2lantransfer/widgets/settings/p2p_receiver_location_settings.dart';
-import 'package:p2lantransfer/widgets/settings/p2p_network_speed_settings.dart';
-import 'package:p2lantransfer/widgets/settings/p2p_advanced_settings.dart';
+import 'package:p2lan/widgets/settings/user_interface_settings.dart';
+import 'package:p2lan/widgets/settings/data_management_settings.dart';
+import 'package:p2lan/widgets/settings/about_settings.dart';
+import 'package:p2lan/widgets/settings/p2p_general_settings.dart';
+import 'package:p2lan/widgets/settings/p2p_receiver_location_settings.dart';
+import 'package:p2lan/widgets/settings/p2p_network_speed_settings.dart';
+import 'package:p2lan/widgets/settings/p2p_advanced_settings.dart';
 
 // Layout components
-import 'package:p2lantransfer/layouts/section_sidebar_scrolling_layout.dart';
-import 'package:p2lantransfer/widgets/generic/section_item.dart';
-import 'package:p2lantransfer/screens/settings/single_section_display_screen.dart';
+import 'package:p2lan/layouts/section_sidebar_scrolling_layout.dart';
+import 'package:p2lan/widgets/generic/section_item.dart';
+import 'package:p2lan/screens/settings/single_section_display_screen.dart';
 
 class MainSettingsScreen extends StatefulWidget {
   final VoidCallback? onToolVisibilityChanged;
@@ -39,6 +39,7 @@ class _MainSettingsScreenState extends State<MainSettingsScreen> {
 
   // Keyboard shortcut focus node
   final FocusNode _keyboardFocusNode = FocusNode();
+  String? _selectedSectionId;
 
   @override
   void initState() {
@@ -53,12 +54,15 @@ class _MainSettingsScreenState extends State<MainSettingsScreen> {
       _loadSettings();
     }
 
-    // Request focus for keyboard shortcuts
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !_keyboardFocusNode.hasFocus) {
-        _keyboardFocusNode.requestFocus();
-      }
-    });
+    // Request focus for keyboard shortcuts on desktop only
+    final isDesktop = !isMobileLayoutContext(context);
+    if (isDesktop) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_keyboardFocusNode.hasFocus) {
+          _keyboardFocusNode.requestFocus();
+        }
+      });
+    }
   }
 
   @override
@@ -113,12 +117,43 @@ class _MainSettingsScreenState extends State<MainSettingsScreen> {
       }
       return;
     }
+
+    // Desktop-only: Ctrl+1..Ctrl+7 jump to sections
+    final isDesktop = !isMobileLayoutContext(context);
+    if (isDesktop && HardwareKeyboard.instance.isControlPressed) {
+      int? index;
+      if (event.logicalKey == LogicalKeyboardKey.digit1) {
+        index = 0;
+      } else if (event.logicalKey == LogicalKeyboardKey.digit2) {
+        index = 1;
+      } else if (event.logicalKey == LogicalKeyboardKey.digit3) {
+        index = 2;
+      } else if (event.logicalKey == LogicalKeyboardKey.digit4) {
+        index = 3;
+      } else if (event.logicalKey == LogicalKeyboardKey.digit5) {
+        index = 4;
+      } else if (event.logicalKey == LogicalKeyboardKey.digit6) {
+        index = 5;
+      } else if (event.logicalKey == LogicalKeyboardKey.digit7) {
+        index = 6;
+      }
+      if (index != null) {
+        final sections = _buildSections(AppLocalizations.of(context));
+        if (index >= 0 && index < sections.length) {
+          final i = index;
+          setState(() {
+            _selectedSectionId = sections[i].id;
+          });
+        }
+      }
+    }
   }
 
   Widget _wrapWithKeyboardListener(Widget child) {
+    final isDesktop = !isMobileLayoutContext(context);
     return KeyboardListener(
       focusNode: _keyboardFocusNode,
-      autofocus: true,
+      autofocus: isDesktop,
       onKeyEvent: (KeyEvent event) {
         if (event is KeyDownEvent) {
           _handleKeyboardShortcuts(event);
@@ -130,7 +165,7 @@ class _MainSettingsScreenState extends State<MainSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final isDesktop = !isMobileLayoutContext(context);
 
     if (_loading) {
@@ -179,6 +214,7 @@ class _MainSettingsScreenState extends State<MainSettingsScreen> {
       body: SectionSidebarScrollingLayout(
         isEmbedded: true,
         sections: _buildSections(loc),
+        selectedSectionId: _selectedSectionId,
       ),
     );
     return _wrapWithKeyboardListener(desktopWidget);

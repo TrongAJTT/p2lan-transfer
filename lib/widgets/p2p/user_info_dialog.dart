@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/models/p2p_models.dart';
 
 class UserInfoDialog extends StatelessWidget {
   final P2PUser user;
@@ -57,6 +57,13 @@ class UserInfoDialog extends StatelessWidget {
               l10n.port,
               user.port.toString(),
               icon: Icons.router,
+            ),
+            const SizedBox(height: 12),
+            _buildInfoRow(
+              context,
+              'Platform',
+              _getPlatformDisplayName(user.platform),
+              icon: _getUserStatusIcon(user),
             ),
             const SizedBox(height: 12),
             _buildInfoRow(
@@ -213,14 +220,41 @@ class UserInfoDialog extends StatelessWidget {
   }
 
   IconData _getUserStatusIcon(P2PUser user) {
-    if (user.isPaired && user.isOnline) {
-      return Icons.check_circle; // Connected and paired
-    } else if (user.isPaired) {
-      return Icons.link; // Paired but offline
-    } else if (user.isOnline) {
-      return Icons.person; // Online but not paired
-    } else {
-      return Icons.person_outline; // Offline and not paired
+    // Use platform icon instead of status icon
+    switch (user.platform) {
+      case UserPlatform.android:
+        return Icons.android;
+      case UserPlatform.ios:
+        return Icons.phone_iphone;
+      case UserPlatform.windows:
+        return Icons.computer;
+      case UserPlatform.macos:
+        return Icons.laptop_mac;
+      case UserPlatform.linux:
+        return Icons.laptop;
+      case UserPlatform.web:
+        return Icons.web;
+      case UserPlatform.unknown:
+        return Icons.device_unknown;
+    }
+  }
+
+  String _getPlatformDisplayName(UserPlatform platform) {
+    switch (platform) {
+      case UserPlatform.android:
+        return 'Android';
+      case UserPlatform.ios:
+        return 'iOS';
+      case UserPlatform.windows:
+        return 'Windows';
+      case UserPlatform.macos:
+        return 'macOS';
+      case UserPlatform.linux:
+        return 'Linux';
+      case UserPlatform.web:
+        return 'Web';
+      case UserPlatform.unknown:
+        return 'Unknown';
     }
   }
 }

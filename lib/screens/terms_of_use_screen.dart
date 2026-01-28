@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:http/http.dart' as http;
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/utils/network_utils.dart';
-import 'package:p2lantransfer/variables.dart';
-import 'package:p2lantransfer/widgets/generic/network_required_placeholder.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/utils/network_utils.dart';
+import 'package:p2lan/variables.dart';
+import 'package:p2lan/utils/variables_utils.dart';
+import 'package:p2lan/widgets/generic/network_required_placeholder.dart';
 
 class TermsOfUseScreen extends StatefulWidget {
   final String localeCode;
@@ -80,13 +81,13 @@ class _TermsOfUseScreenState extends State<TermsOfUseScreen> {
   }
 
   Widget _wrapWithKeyboardListener(Widget child) {
+    final isDesktop = !isMobileLayoutContext(context);
     return KeyboardListener(
       focusNode: _keyboardFocusNode,
-      autofocus: true,
+      autofocus: isDesktop,
       onKeyEvent: (KeyEvent event) {
-        if (event is KeyDownEvent) {
-          _handleKeyboardShortcuts(event);
-        }
+        if (!isDesktop) return;
+        if (event is KeyDownEvent) _handleKeyboardShortcuts(event);
       },
       child: child,
     );
@@ -127,7 +128,7 @@ class _TermsOfUseScreenState extends State<TermsOfUseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return _wrapWithKeyboardListener(Scaffold(

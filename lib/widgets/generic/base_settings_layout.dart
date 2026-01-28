@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/utils/snackbar_utils.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/utils/snackbar_utils.dart';
 
 /// Result of a settings save operation
 class SettingsSaveResult<T> {

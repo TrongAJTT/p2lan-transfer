@@ -1,26 +1,32 @@
+// Search @DebugLog for debugging mode toggle in development
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/screens/p2lan_transfer/p2lan_transfer_screen.dart';
-import 'package:p2lantransfer/screens/app_setup_screen.dart';
-import 'package:p2lantransfer/services/isar_service.dart';
-import 'package:p2lantransfer/services/settings_models_service.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/services/app_installation_service.dart';
-import 'package:p2lantransfer/services/p2p_services/p2p_notification_service.dart';
-import 'package:p2lantransfer/services/p2p_services/p2p_service_manager.dart';
-import 'package:p2lantransfer/utils/date_utils.dart';
-import 'package:p2lantransfer/utils/network_utils.dart';
-import 'package:p2lantransfer/utils/snackbar_utils.dart';
-import 'package:p2lantransfer/variables.dart';
+import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/screens/p2lan_transfer/p2lan_transfer_screen.dart';
+import 'package:p2lan/screens/p2lan_transfer/screen_sharing_window.dart';
+import 'package:p2lan/screens/app_setup_screen.dart';
+import 'package:p2lan/widgets/floating_window_manager.dart';
+import 'package:p2lan/services/isar_service.dart';
+import 'package:p2lan/services/settings_models_service.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/services/app_installation_service.dart';
+import 'package:p2lan/services/p2p_services/p2p_notification_service.dart';
+import 'package:p2lan/services/p2p_services/p2p_service_manager.dart';
+import 'package:p2lan/utils/date_utils.dart';
+import 'package:p2lan/utils/network_utils.dart';
+import 'package:p2lan/utils/snackbar_utils.dart';
+import 'package:p2lan/utils/shortcut_tooltip_utils.dart';
+import 'package:p2lan/variables.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:flutter/services.dart';
 import 'package:workmanager/workmanager.dart';
 import 'dart:io';
-import 'package:p2lantransfer/services/version_check_service.dart';
-import 'package:p2lantransfer/services/shared_preferences_service.dart';
+import 'package:p2lan/services/version_check_service.dart';
+import 'package:p2lan/services/shared_preferences_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
@@ -104,9 +110,51 @@ class BreadcrumbData {
   });
 }
 
-Future<void> main() async {
-  // Ensure Flutter binding is initialized
+Future<void> main(List<String> args) async {
+  // Ensure Flutter binding is initialized first (needed for all windows)
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Check if this is a sub-window (desktop_multi_window)
+  // IMPORTANT: Must check args BEFORE any other initialization
+  if (args.isNotEmpty && args.first == 'multi_window') {
+    // This is a sub-window, run minimal initialization
+    try {
+      final windowId = int.parse(args[1]);
+      final argument = args[2].isEmpty
+          ? <String, dynamic>{}
+          : Map<String, dynamic>.from(jsonDecode(args[2]) as Map);
+
+      // Log for debugging
+      debugPrint('=== SUB-WINDOW START ===');
+      debugPrint('Window ID: $windowId');
+      debugPrint('Window Type: ${argument['windowType']}');
+
+      // Handle different window types
+      final windowType = argument['windowType'] as String?;
+      if (windowType == 'screen_sharing') {
+        // For sub-windows, run minimal app
+        runApp(ScreenSharingWindow(
+          controller: WindowController.fromWindowId(windowId),
+          args: argument,
+        ));
+        return; // CRITICAL: Return here to avoid main window initialization
+      }
+
+      // Unknown window type
+      debugPrint('ERROR: Unknown window type: $windowType');
+      return;
+    } catch (e, stackTrace) {
+      debugPrint('ERROR parsing sub-window args: $e\n$stackTrace');
+      return;
+    }
+  }
+
+  // ========================================================================
+  // MAIN WINDOW INITIALIZATION BELOW THIS LINE
+  // Sub-windows should have returned above
+  // ========================================================================
+
+  debugPrint('=== MAIN WINDOW START ===');
 
   // Initialize workmanager for background tasks on mobile platforms
   if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
@@ -185,6 +233,21 @@ Future<void> main() async {
   runApp(const MainApp());
 }
 
+// Initialize ShortcutTooltipUtils from settings
+Future<void> _initializeShortcutTooltipUtils() async {
+  try {
+    final uiSettings =
+        await ExtensibleSettingsService.getUserInterfaceSettings();
+    ShortcutTooltipUtils.I
+        .setShowShortcutsInTooltips(uiSettings.showShortcutsInTooltips);
+    logDebug(
+        'ShortcutTooltipUtils initialized with value: ${uiSettings.showShortcutsInTooltips}');
+  } catch (e) {
+    logWarning('Failed to load shortcut tooltip settings, using default: $e');
+    // Keep default value (true)
+  }
+}
+
 // Initialize non-critical services in background
 void _initializeServicesInBackground() {
   Future.microtask(() async {
@@ -213,6 +276,10 @@ void _initializeServicesInBackground() {
       // Initialize settings controller and load saved settings
       await settingsController.loadSettings();
       logDebug('Settings loaded');
+
+      // Initialize ShortcutTooltipUtils from user interface settings
+      await _initializeShortcutTooltipUtils();
+      logDebug('ShortcutTooltipUtils initialized');
 
       // Initialize P2P Notification Service
       await P2PNotificationService.init();
@@ -248,7 +315,7 @@ void _initializeServicesInBackground() {
 
 Future<void> _maybeCheckForUpdatesDaily() async {
   try {
-    final settings = await ExtensibleSettingsService.getP2PTransferSettings();
+    final settings = await ExtensibleSettingsService.getGeneralSettings();
     if (!settings.autoCheckUpdatesDaily) return;
 
     final prefs = await SharedPreferences.getInstance();
@@ -483,7 +550,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
                       // Show snackbar using scaffold messenger
                       final currentContext = navigatorKey.currentContext;
                       if (currentContext != null) {
-                        final loc = AppLocalizations.of(currentContext)!;
+                        final loc = AppLocalizations.of(currentContext);
                         SnackbarUtils.showTyped(currentContext,
                             loc.pressBackAgainToExit, SnackBarType.info);
                       }
@@ -502,15 +569,17 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
                     navigator.pop();
                   }
                 },
-                child: _isFirstTimeSetup
-                    ? const AppSetupScreen()
-                    : P2LanTransferScreen(
-                        isEmbedded: false,
-                        onToolSelected: (Widget tool, String toolType,
-                            {IconData? icon, String? parentCategory}) {
-                          // Implement your logic here or leave empty if not needed
-                        },
-                      ),
+                child: FloatingWindowManager(
+                  child: _isFirstTimeSetup
+                      ? const AppSetupScreen()
+                      : P2LanTransferScreen(
+                          isEmbedded: false,
+                          onToolSelected: (Widget tool, String toolType,
+                              {IconData? icon, String? parentCategory}) {
+                            // Implement your logic here or leave empty if not needed
+                          },
+                        ),
+                ),
               );
             },
           ),

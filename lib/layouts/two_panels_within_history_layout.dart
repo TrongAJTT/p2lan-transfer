@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
 /// Generic layout widget for all random generators to ensure consistency
@@ -99,7 +99,7 @@ class _RandomGeneratorLayoutState extends State<RandomGeneratorLayout>
       if (widget.historyEnabled &&
           widget.hasHistory &&
           widget.historyWidget != null) {
-        final loc = AppLocalizations.of(context)!;
+        final loc = AppLocalizations.of(context);
         content = Column(
           children: [
             TabBar(
@@ -184,7 +184,7 @@ class RandomGeneratorHistoryWidget extends StatelessWidget {
       return customItemBuilder!(item, context);
     }
 
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
 
     // Format timestamp based on locale
     String formattedTimestamp;
@@ -231,7 +231,7 @@ class RandomGeneratorHistoryWidget extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth < 300) {
@@ -279,7 +279,7 @@ class RandomGeneratorHistoryWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (history.isEmpty) {
-      final loc = AppLocalizations.of(context)!;
+      final loc = AppLocalizations.of(context);
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

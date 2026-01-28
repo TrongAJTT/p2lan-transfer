@@ -15,19 +15,11 @@
   "githubRepoDesc": "View source code of the application on GitHub",
   "creditAck": "Credits & Acknowledgements",
   "creditAckDesc": "Libraries and resources used in this app",
-  "donorsAck": "Supporters Acknowledgment",
-  "donorsAckDesc": "List of publicly acknowledged supporters. Thank you very much!",
   "supportDesc": "P2Lan Transfer helps you transfer data between devices on the same network more easily. If you find it useful, consider supporting me to maintain and improve it. Thank you very much!",
-  "supportOnGitHub": "Support on GitHub",
+  "githubSponsorsDesc": "Official support page on GitHub",
+  "buyMeACoffeeDesc": "In case you don't have a Github Sponsors account",
   "donate": "Donate",
   "donateDesc": "Support me if you find this app useful",
-  "oneTimeDonation": "One-time Donation",
-  "momoDonateDesc": "Support me via Momo",
-  "donorBenefits": "Supporter Benefits",
-  "donorBenefit1": "Be listed in the acknowledgments and share your comments (if you want).",
-  "donorBenefit2": "Prioritized feedback consideration.",
-  "donorBenefit3": "Access to beta (debug) versions, however updates are not guaranteed to be frequent.",
-  "donorBenefit4": "Access to dev repo (Github Sponsors only).",
   "checkForNewVersion": "Check for New Version",
   "checkForNewVersionDesc": "Check if there is a new version of the app and download the latest version if available",
   "platform": "Platform",
@@ -98,6 +90,34 @@
   "cancel": "Cancel",
   "search": "Search",
   "searchHint": "Search...",
+  "remoteControl": "Remote Control",
+  "beingRemoteControlled": "Being Remote Controlled",
+  "remoteControlling": "Remote Controlling",
+  "screenSharing": "Screen Sharing",
+  "sharingScreen": "Sharing Screen",
+  "viewingScreen": "Viewing Screen",
+  "isControllingThisDevice": "{userName} is controlling this device",
+  "controllingUser": "Controlling {userName}",
+  "endSession": "End Session",
+  "duration": "Duration",
+  "started": "Started",
+  "disconnectRemoteControl": "Disconnect Remote Control",
+  "disconnectRemoteControlConfirm": "Are you sure you want to disconnect from {userName}?",
+  "disconnect": "Disconnect",
+  "connectingTo": "Connecting to {userName}...",
+  "connectedTo": "Connected to {userName}",
+  "controlsInfo": "Controls info",
+  "touchpadArea": "Touchpad Area",
+  "moveFingerToControlMouse": "Move finger to control mouse",
+  "leftClick": "Left Mouse",
+  "middleClick": "Middle Mouse",
+  "rightClick": "Right Mouse",
+  "scrollUp": "Scroll Up",
+  "scrollDown": "Scroll Down",
+  "remoteControlHelp": "Remote Control Help",
+  "howToControlRemoteComputer": "How to control the remote computer:",
+  "noteWindowsOnly": "Note: This feature only works when controlling Windows computers.",
+  "gotIt": "Got it",
   "history": "History",
   "aboutDesc": "App information and acknowledgements",
   "random": "Random Generator",
@@ -587,7 +607,7 @@
   "@noFilesSelected": {
     "description": "Message when no files are selected"
   },
-  "tapRightClickForOptions": "Tap or right-click for options",
+  "tapRightClickForOptions": "Long tap or right-click for options",
   "@tapRightClickForOptions": {
     "description": "Instructions for file options"
   },
@@ -756,6 +776,7 @@
   "connected": "Connected",
   "pairing": "Pairing...",
   "checkingNetwork": "Checking network...",
+  "pausedNoInternet": "Paused (No Internet)",
   "connectedViaMobileData": "Connected via mobile data (secure)",
   "connectedToWifi": "Connected to {name} ({security})",
   "@connectedToWifi": {
@@ -774,14 +795,17 @@
   "noNetworkConnection": "No network connection",
   "maxConcurrentTasks": "Max Concurrent Tasks",
   "customDisplayName": "Custom Display Name",
+  "yourProfile": "Your Profile",
   "deviceName": "Device Name",
-  "deviceNameHint": "Enter custom device name...",
+  "deviceNameDesc": "Your device name to appear with other users",
+  "deviceNameEditDesc": "Customize your device name to appear with other users",
   "general": "General",
   "generalDesc": "Device name, notifications & user preferences",
   "receiverLocationSizeLimits": "Receiver Location & Size Limits",
   "receiverLocationSizeLimitsDesc": "Download folder, file organization & size limits",
   "networkSpeed": "Network & Speed",
   "networkSpeedDesc": "Protocol settings, performance tuning & optimization",
+  "estimatedSpeed": "Estimated Speed",
   "advanced": "Advanced",
   "advancedDesc": "Security, encryption & compression settings",
   "openSettings": "Open Settings",
@@ -789,6 +813,8 @@
   "secondsPlural": "seconds",
   "onlineDevices": "Online Devices",
   "newDevices": "New Devices",
+  "blockedDevices": "Blocked Devices",
+  "blockedDevicesSubtitle": "These devices are blocked and cannot contact you",
   "addTrust": "Add Trust",
   "p2pTemporarilyDisabled": "P2P temporarily disabled - waiting for internet connection",
   "fileOrgNoneDescription": "Files go directly to download folder",
@@ -810,6 +836,7 @@
       }
     }
   },
+  "displayNameHasReset": "Display name has been reset",
   "notifications": "Notifications",
   "notSupportedOnWindows": "Not supported on Windows",
   "uiPerformance": "User Interface Performance",
@@ -849,11 +876,39 @@
   "moveTo": "Move to",
   "moveOrCopyAndRename": "Move or Copy and Rename",
   "share": "Share",
-  "confirmDelete": "Are you sure you want to delete file",
+  "confirmDelete": "Confirm delete",
+  "confirmDeleteFileNumber": "Are you sure you want to delete {number} file(s)",
+  "@confirmDeleteFileNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "confirmDeleteFolderNumber": "Are you sure you want to delete {number} folder(s)",
+  "@confirmDeleteFolderNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "confirmDeleteFoldersAndFilesNumber": "Are you sure you want to delete {numberFolder} folder(s) and {numberFile} file(s)",
+  "@confirmDeleteFoldersAndFilesNumber": {
+    "placeholders": {
+      "numberFolder": {
+        "type": "int"
+      },
+      "numberFile": {
+        "type": "int"
+      }
+    }
+  },
   "removeSelected": "Remove selected content",
   "noFilesFound": "No files found",
   "emptyFolder": "Empty folder",
   "file": "file",
+  "folder": "folder",
   "fileInfo": "File information",
   "quickAccess": "Quick Access",
   "restore": "Restore",
@@ -863,8 +918,7 @@
   "size": "Size",
   "type": "Type",
   "modified": "Modified",
-  "p2lanOptionRememberBatchExpandState": "Remember Batch Expand State",
-  "p2lanOptionRememberBatchExpandStateDesc": "Remember the expand state of each batch when the app is closed and reopened",
+
   "securityAndEncryption": "Security & Encryption",
   "security": "Security",
   "p2lanOptionEncryptionNoneDesc": "No encryption (fastest transfer)",
@@ -942,28 +996,11 @@
   "clearTransferBatchDesc": "Are you sure you want to clear this batch from the transfer list?",
   "clearTransferBatchWithFiles": "Clear Batch with Files",
   "clearTransferBatchWithFilesDesc": "Are you sure you want to clear this batch and delete all files associated with it?",
-  "dataCompression": "Data Compression",
-  "enableCompression": "Enable Compression",
-  "enableCompressionDesc": "Compress files before sending to reduce transfer size. This may increase CPU usage.",
-  "compressionAlgorithm": "Compression Algorithm",
-  "compressionAlgorithmAuto": "Auto (Smart Selection)",
-  "compressionAlgorithmGZIP": "GZIP (Best Compression)",
-  "compressionAlgorithmDEFLATE": "DEFLATE (Fastest)",
-  "compressionAlgorithmNone": "None (Disabled)",
-  "estimatedSpeed": "Estimated Speed",
-  "compressionThreshold": "Compression Threshold",
-  "compressionThresholdDesc": "Minimum file size to apply compression. Smaller files may not benefit from compression.",
-  "adaptiveCompression": "Adaptive Compression",
-  "adaptiveCompressionDesc": "Automatically adjusts compression level based on file type and size for optimal performance.",
   "performanceInfo": "Performance Information",
   "performanceInfoEncrypt": "Encryption",
-  "performanceInfoCompress": "Compression",
-  "performanceInfoExpectedImprovement": "Expected Improvement",
   "performanceInfoSecuLevel": "Security Level",
-  "compressionBenefits": "Compression Benefits",
-  "compressionBenefitsInfo": "• Text files: 3-5x faster transfers\n• Source code: 2-4x faster transfers\n• JSON/XML data: 4-6x faster transfers\n• Media files: No overhead (auto-detected)",
   "performanceWarning": "Performance Warning",
-  "performanceWarningInfo": "Encryption and compression may cause crashes on some Android devices, especially older or lower-end models. If you experience crashes, disable these features for stable transfers.",
+  "performanceWarningInfo": "Encryption may cause crashes on some Android devices, especially older or lower-end models. If you experience crashes, disable this feature for stable transfers.",
   "resetToSafeDefaults": "Reset to Safe Defaults",
   "ddefault": "Default",
   "aggressive": "Aggressive",
@@ -1104,10 +1141,6 @@
   "refresh": "Refresh",
   "thanksLibAuthor": "Thank You, Library Authors!",
   "thanksLibAuthorDesc": "This app uses several open-source libraries that make it possible. We are grateful to all the authors for their hard work and dedication.",
-  "thanksDonors": "Thank You, Supporters!",
-  "thanksDonorsDesc": "Special thanks to our supporters who support the development of this app. Your contributions help us keep improving and maintaining the project.",
-  "thanksForUrSupport": "Thank you for your support!",
-  "supporterS": "Supporter(s)",
   "pressBackAgainToExit": "Press back again to exit the app",
 
   "canNotOpenFile": "Cannot open file",
@@ -1273,5 +1306,100 @@
         "type": "int"
       }
     }
-  }
+  },
+
+  "processingNumberOfTotal": "Processing {current} of {total} file(s)",
+  "@processingNumberOfTotal": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "waitingForFileSelection": "Waiting for file selection and processing file resources",
+
+  "expand": "Expand",
+  "collapse": "Collapse",
+  "block": "Block",
+  "blockTitle": "Block this user",
+  "blockDesc": "Are you sure you want to block this user?\nThis user will not be able to contact you until you unblock them.",
+  "unblock": "Unblock",
+  "unblockTitle": "Unblock this user",
+  "unblockDesc": "Are you sure you want to unblock this user?\nThis user will be able to contact you.",
+  "connectToDevice": "Connect to Device",
+  "enterDeviceIpAddress": "Enter the IP address of the device you want to connect to:",
+  "connectToDeviceHint": "Make sure the device is on the same network and P2P networking is enabled.",
+  "sendRequest": "Send Request",
+  "connecting": "Connecting...",
+
+  "customStatusCards": "Customize Status Cards",
+  "customStatusCardsDesc": "Choose which status cards to display",
+  "endRemoteToCustomizeStatus": "End the remote control session to customize status",
+  "noStatusCardsEnabled": "No status cards enabled",
+  "useTheCustomizeButtonToEnableStatusCards": "Use the customize button to enable status cards",
+  "thisDeviceDesc": "Device information and settings",
+  "connectionStatusDesc": "Network connection and debug info",
+  "statisticsDesc": "Transfer and device statistics",
+
+  "remoteControlRequest": "Remote Control Request",
+  "remoteControlRequestMessage": "{userName} wants to control your computer remotely.",
+  "@remoteControlRequestMessage": {
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  "reason": "Reason",
+  "securityWarning": "Security Warning",
+  "securityWarningMessage": "Granting remote control access allows the other user to:",
+  "controlMouseCursor": "Control your mouse cursor",
+  "clickAnywhere": "Click anywhere on your screen",
+  "scrollScreen": "Scroll on your screen",
+  "trustWarning": "Only accept requests from users you trust.",
+  "confirmRemoteControlAccess": "Confirm Remote Control Access",
+  "confirmRemoteControlMessage": "Hold to confirm that you want to allow {userName} to control your computer.",
+  "@confirmRemoteControlMessage": {
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  "holdToAllowControl": "HOLD TO ALLOW CONTROL",
+  "allowing": "Allowing...",
+  "controlInstruction": "This will give {userName} control over your mouse and screen.",
+  "@controlInstruction": {
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  "requestRemoteControl": "Request Remote Control",
+  "sendRemoteControlRequest": "Send a remote control request to {userName}?",
+  "@sendRemoteControlRequest": {
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  "reasonOptional": "Reason (optional)",
+  "reasonHint": "Why do you need remote control access?",
+  "remoteControlAccess": "Remote Control Access",
+  "remoteControlAccessMessage": "If accepted, you will be able to:",
+  "controlRemoteMouse": "Control the remote mouse cursor",
+  "clickRemoteScreen": "Click anywhere on the remote screen",
+  "scrollRemoteScreen": "Scroll on the remote screen",
+  "requestExpiresIn60": "The request will expire in 60 seconds.",
+  "sendRequest": "Send Request",
+  "sendText": "Send Text",
+  "sendTextHint": "Enter text to send...",
+  "textSentSuccessfully": "Text sent successfully",
+  "textSendError": "Error sending text: {error}",
+  "send": "Send"
 }

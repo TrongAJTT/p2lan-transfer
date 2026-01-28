@@ -1,13 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/utils/size_utils.dart';
-import 'package:p2lantransfer/utils/url_utils.dart';
-import 'package:p2lantransfer/utils/widget_layout_render_helper.dart';
-import 'package:p2lantransfer/widgets/generic/generic_dialog.dart';
-import 'package:p2lantransfer/variables.dart';
+import 'package:p2lan/models/p2p_models.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/utils/size_utils.dart';
+import 'package:p2lan/utils/url_utils.dart';
+import 'package:p2lan/utils/widget_layout_render_helper.dart';
+import 'package:p2lan/widgets/generic/generic_dialog.dart';
+import 'package:p2lan/variables.dart';
 
 class DataTransferProgressWidget extends StatelessWidget {
   final DataTransferTask task;
@@ -86,7 +86,7 @@ class DataTransferProgressWidget extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context, {bool isCompact = false}) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final batchSummary = showBatchSummary ? _getBatchSummary() : null;
 
     return Column(
@@ -305,7 +305,7 @@ class DataTransferProgressWidget extends StatelessWidget {
   }
 
   Widget _buildActionButtons(BuildContext context, bool isCompact) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     if (task.status == DataTransferStatus.transferring && onCancel != null) {
       return IconButton(
@@ -454,7 +454,7 @@ class DataTransferProgressWidget extends StatelessWidget {
   }
 
   void _showDeleteWithFileDialog(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => GenericDialog(
@@ -666,7 +666,7 @@ class DataTransferProgressWidget extends StatelessWidget {
 
   Widget _buildDirectionIcon(BuildContext context) {
     final color = _directionColor();
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final label = task.isOutgoing ? l10n.sending : l10n.receiving;
     return Tooltip(
       message: label,

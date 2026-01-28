@@ -1,0 +1,16 @@
+// This file is applied to fix isar_flutter_libs compileSdk issue
+subprojects { subproject ->
+    afterEvaluate {
+        if (subproject.hasProperty('android')) {
+            def android = subproject.android
+            if (android.hasProperty('compileSdkVersion')) {
+                android.compileSdkVersion 34
+            }
+            if (android.hasProperty('defaultConfig')) {
+                android.defaultConfig {
+                    targetSdkVersion 34
+                }
+            }
+        }
+    }
+}

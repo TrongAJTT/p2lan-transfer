@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
-import 'package:p2lantransfer/utils/url_utils.dart' hide FileType;
-import 'package:p2lantransfer/services/app_logger.dart';
+import 'package:p2lan/utils/url_utils.dart' hide FileType;
+import 'package:p2lan/services/app_logger.dart';
 import 'package:path_provider/path_provider.dart';
 
 class FileDirectoryService {

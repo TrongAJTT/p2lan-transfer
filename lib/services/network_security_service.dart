@@ -3,16 +3,16 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:network_info_plus/network_info_plus.dart' as network_info_plus;
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/services.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/services/app_installation_service.dart';
+import 'package:p2lan/models/p2p_models.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/services/app_installation_service.dart';
 
 class NetworkSecurityService {
   static final network_info_plus.NetworkInfo _networkInfo =
       network_info_plus.NetworkInfo();
   static final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
   static const MethodChannel _channel =
-      MethodChannel('com.p2lantransfer.app/network_security');
+      MethodChannel('dev.trongajtt.p2lan/network_security');
 
   /// Check current network security level
   static Future<NetworkInfo> checkNetworkSecurity({bool verbose = true}) async {
@@ -130,8 +130,9 @@ class NetworkSecurityService {
             }
           }
         } catch (e) {
-          if (verbose)
+          if (verbose) {
             logWarning('Failed to get native WiFi security info: $e');
+          }
           // Fallback to assuming secure
           isSecure = true;
         }

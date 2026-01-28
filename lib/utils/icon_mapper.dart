@@ -112,7 +112,9 @@ class IconMapper {
     'timer': Icons.timer,
     'schedule': Icons.schedule,
     'delete_forever': Icons.delete_forever,
-    'keyboard': Icons.keyboard
+    'keyboard': Icons.keyboard,
+    "mouse": Icons.mouse,
+    "text_fields": Icons.text_fields,
   };
 
   static const Map<String, Color> _colorMap = {
@@ -126,6 +128,7 @@ class IconMapper {
     'grey': Colors.grey,
     'red': Colors.red,
     'cyan': Colors.cyan,
+    'yellow': Colors.yellow,
   };
 
   static IconData getIcon(String name) {

@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
+import 'package:p2lan/services/app_logger.dart';
 
 class TaskQueueManager {
   final ValueNotifier<bool> _isBusy = ValueNotifier<bool>(false);

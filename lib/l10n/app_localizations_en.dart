@@ -54,47 +54,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get creditAckDesc => 'Libraries and resources used in this app';
 
   @override
-  String get donorsAck => 'Supporters Acknowledgment';
-
-  @override
-  String get donorsAckDesc =>
-      'List of publicly acknowledged supporters. Thank you very much!';
-
-  @override
   String get supportDesc =>
       'P2Lan Transfer helps you transfer data between devices on the same network more easily. If you find it useful, consider supporting me to maintain and improve it. Thank you very much!';
 
   @override
-  String get supportOnGitHub => 'Support on GitHub';
+  String get githubSponsorsDesc => 'Official support page on GitHub';
+
+  @override
+  String get buyMeACoffeeDesc =>
+      'In case you don\'t have a Github Sponsors account';
 
   @override
   String get donate => 'Donate';
 
   @override
   String get donateDesc => 'Support me if you find this app useful';
-
-  @override
-  String get oneTimeDonation => 'One-time Donation';
-
-  @override
-  String get momoDonateDesc => 'Support me via Momo';
-
-  @override
-  String get donorBenefits => 'Supporter Benefits';
-
-  @override
-  String get donorBenefit1 =>
-      'Be listed in the acknowledgments and share your comments (if you want).';
-
-  @override
-  String get donorBenefit2 => 'Prioritized feedback consideration.';
-
-  @override
-  String get donorBenefit3 =>
-      'Access to beta (debug) versions, however updates are not guaranteed to be frequent.';
-
-  @override
-  String get donorBenefit4 => 'Access to dev repo (Github Sponsors only).';
 
   @override
   String get checkForNewVersion => 'Check for New Version';
@@ -282,6 +256,102 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchHint => 'Search...';
+
+  @override
+  String get remoteControl => 'Remote Control';
+
+  @override
+  String get beingRemoteControlled => 'Being Remote Controlled';
+
+  @override
+  String get remoteControlling => 'Remote Controlling';
+
+  @override
+  String get screenSharing => 'Screen Sharing';
+
+  @override
+  String get sharingScreen => 'Sharing Screen';
+
+  @override
+  String get viewingScreen => 'Viewing Screen';
+
+  @override
+  String isControllingThisDevice(Object userName) {
+    return '$userName is controlling this device';
+  }
+
+  @override
+  String controllingUser(Object userName) {
+    return 'Controlling $userName';
+  }
+
+  @override
+  String get endSession => 'End Session';
+
+  @override
+  String get duration => 'Duration';
+
+  @override
+  String get started => 'Started';
+
+  @override
+  String get disconnectRemoteControl => 'Disconnect Remote Control';
+
+  @override
+  String disconnectRemoteControlConfirm(Object userName) {
+    return 'Are you sure you want to disconnect from $userName?';
+  }
+
+  @override
+  String get disconnect => 'Disconnect';
+
+  @override
+  String connectingTo(Object userName) {
+    return 'Connecting to $userName...';
+  }
+
+  @override
+  String connectedTo(Object userName) {
+    return 'Connected to $userName';
+  }
+
+  @override
+  String get controlsInfo => 'Controls info';
+
+  @override
+  String get touchpadArea => 'Touchpad Area';
+
+  @override
+  String get moveFingerToControlMouse => 'Move finger to control mouse';
+
+  @override
+  String get leftClick => 'Left Mouse';
+
+  @override
+  String get middleClick => 'Middle Mouse';
+
+  @override
+  String get rightClick => 'Right Mouse';
+
+  @override
+  String get scrollUp => 'Scroll Up';
+
+  @override
+  String get scrollDown => 'Scroll Down';
+
+  @override
+  String get remoteControlHelp => 'Remote Control Help';
+
+  @override
+  String get howToControlRemoteComputer =>
+      'How to control the remote computer:';
+
+  @override
+  String get noteWindowsOnly =>
+      'Note: This feature only works when controlling Windows computers.';
+
+  @override
+  String get gotIt => 'Got it';
 
   @override
   String get history => 'History';
@@ -996,7 +1066,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noFilesSelected => 'No files selected';
 
   @override
-  String get tapRightClickForOptions => 'Tap or right-click for options';
+  String get tapRightClickForOptions => 'Long tap or right-click for options';
 
   @override
   String get unlimited => 'Unlimited';
@@ -1158,6 +1228,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checkingNetwork => 'Checking network...';
 
   @override
+  String get pausedNoInternet => 'Paused (No Internet)';
+
+  @override
   String get connectedViaMobileData => 'Connected via mobile data (secure)';
 
   @override
@@ -1184,10 +1257,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customDisplayName => 'Custom Display Name';
 
   @override
+  String get yourProfile => 'Your Profile';
+
+  @override
   String get deviceName => 'Device Name';
 
   @override
-  String get deviceNameHint => 'Enter custom device name...';
+  String get deviceNameDesc => 'Your device name to appear with other users';
+
+  @override
+  String get deviceNameEditDesc =>
+      'Customize your device name to appear with other users';
 
   @override
   String get general => 'General';
@@ -1210,6 +1290,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Protocol settings, performance tuning & optimization';
 
   @override
+  String get estimatedSpeed => 'Estimated Speed';
+
+  @override
   String get advanced => 'Advanced';
 
   @override
@@ -1229,6 +1312,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newDevices => 'New Devices';
+
+  @override
+  String get blockedDevices => 'Blocked Devices';
+
+  @override
+  String get blockedDevicesSubtitle =>
+      'These devices are blocked and cannot contact you';
 
   @override
   String get addTrust => 'Add Trust';
@@ -1275,6 +1365,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String defaultDisplayName(String name) {
     return 'Default: $name';
   }
+
+  @override
+  String get displayNameHasReset => 'Display name has been reset';
 
   @override
   String get notifications => 'Notifications';
@@ -1403,7 +1496,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get share => 'Share';
 
   @override
-  String get confirmDelete => 'Are you sure you want to delete file';
+  String get confirmDelete => 'Confirm delete';
+
+  @override
+  String confirmDeleteFileNumber(int number) {
+    return 'Are you sure you want to delete $number file(s)';
+  }
+
+  @override
+  String confirmDeleteFolderNumber(int number) {
+    return 'Are you sure you want to delete $number folder(s)';
+  }
+
+  @override
+  String confirmDeleteFoldersAndFilesNumber(int numberFolder, int numberFile) {
+    return 'Are you sure you want to delete $numberFolder folder(s) and $numberFile file(s)';
+  }
 
   @override
   String get removeSelected => 'Remove selected content';
@@ -1416,6 +1524,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get file => 'file';
+
+  @override
+  String get folder => 'folder';
 
   @override
   String get fileInfo => 'File information';
@@ -1444,14 +1555,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get modified => 'Modified';
-
-  @override
-  String get p2lanOptionRememberBatchExpandState =>
-      'Remember Batch Expand State';
-
-  @override
-  String get p2lanOptionRememberBatchExpandStateDesc =>
-      'Remember the expand state of each batch when the app is closed and reopened';
 
   @override
   String get securityAndEncryption => 'Security & Encryption';
@@ -1628,75 +1731,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Are you sure you want to clear this batch and delete all files associated with it?';
 
   @override
-  String get dataCompression => 'Data Compression';
-
-  @override
-  String get enableCompression => 'Enable Compression';
-
-  @override
-  String get enableCompressionDesc =>
-      'Compress files before sending to reduce transfer size. This may increase CPU usage.';
-
-  @override
-  String get compressionAlgorithm => 'Compression Algorithm';
-
-  @override
-  String get compressionAlgorithmAuto => 'Auto (Smart Selection)';
-
-  @override
-  String get compressionAlgorithmGZIP => 'GZIP (Best Compression)';
-
-  @override
-  String get compressionAlgorithmDEFLATE => 'DEFLATE (Fastest)';
-
-  @override
-  String get compressionAlgorithmNone => 'None (Disabled)';
-
-  @override
-  String get estimatedSpeed => 'Estimated Speed';
-
-  @override
-  String get compressionThreshold => 'Compression Threshold';
-
-  @override
-  String get compressionThresholdDesc =>
-      'Minimum file size to apply compression. Smaller files may not benefit from compression.';
-
-  @override
-  String get adaptiveCompression => 'Adaptive Compression';
-
-  @override
-  String get adaptiveCompressionDesc =>
-      'Automatically adjusts compression level based on file type and size for optimal performance.';
-
-  @override
   String get performanceInfo => 'Performance Information';
 
   @override
   String get performanceInfoEncrypt => 'Encryption';
 
   @override
-  String get performanceInfoCompress => 'Compression';
-
-  @override
-  String get performanceInfoExpectedImprovement => 'Expected Improvement';
-
-  @override
   String get performanceInfoSecuLevel => 'Security Level';
-
-  @override
-  String get compressionBenefits => 'Compression Benefits';
-
-  @override
-  String get compressionBenefitsInfo =>
-      '• Text files: 3-5x faster transfers\n• Source code: 2-4x faster transfers\n• JSON/XML data: 4-6x faster transfers\n• Media files: No overhead (auto-detected)';
 
   @override
   String get performanceWarning => 'Performance Warning';
 
   @override
   String get performanceWarningInfo =>
-      'Encryption and compression may cause crashes on some Android devices, especially older or lower-end models. If you experience crashes, disable these features for stable transfers.';
+      'Encryption may cause crashes on some Android devices, especially older or lower-end models. If you experience crashes, disable this feature for stable transfers.';
 
   @override
   String get resetToSafeDefaults => 'Reset to Safe Defaults';
@@ -1958,19 +2006,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'This app uses several open-source libraries that make it possible. We are grateful to all the authors for their hard work and dedication.';
 
   @override
-  String get thanksDonors => 'Thank You, Supporters!';
-
-  @override
-  String get thanksDonorsDesc =>
-      'Special thanks to our supporters who support the development of this app. Your contributions help us keep improving and maintaining the project.';
-
-  @override
-  String get thanksForUrSupport => 'Thank you for your support!';
-
-  @override
-  String get supporterS => 'Supporter(s)';
-
-  @override
   String get pressBackAgainToExit => 'Press back again to exit the app';
 
   @override
@@ -2227,4 +2262,177 @@ class AppLocalizationsEn extends AppLocalizations {
   String productCount(int count) {
     return '$count product(s)';
   }
+
+  @override
+  String processingNumberOfTotal(int current, int total) {
+    return 'Processing $current of $total file(s)';
+  }
+
+  @override
+  String get waitingForFileSelection =>
+      'Waiting for file selection and processing file resources';
+
+  @override
+  String get expand => 'Expand';
+
+  @override
+  String get collapse => 'Collapse';
+
+  @override
+  String get block => 'Block';
+
+  @override
+  String get blockTitle => 'Block this user';
+
+  @override
+  String get blockDesc =>
+      'Are you sure you want to block this user?\nThis user will not be able to contact you until you unblock them.';
+
+  @override
+  String get unblock => 'Unblock';
+
+  @override
+  String get unblockTitle => 'Unblock this user';
+
+  @override
+  String get unblockDesc =>
+      'Are you sure you want to unblock this user?\nThis user will be able to contact you.';
+
+  @override
+  String get connectToDevice => 'Connect to Device';
+
+  @override
+  String get enterDeviceIpAddress =>
+      'Enter the IP address of the device you want to connect to:';
+
+  @override
+  String get connectToDeviceHint =>
+      'Make sure the device is on the same network and P2P networking is enabled.';
+
+  @override
+  String get connecting => 'Connecting...';
+
+  @override
+  String get customStatusCards => 'Customize Status Cards';
+
+  @override
+  String get customStatusCardsDesc => 'Choose which status cards to display';
+
+  @override
+  String get endRemoteToCustomizeStatus =>
+      'End the remote control session to customize status';
+
+  @override
+  String get noStatusCardsEnabled => 'No status cards enabled';
+
+  @override
+  String get useTheCustomizeButtonToEnableStatusCards =>
+      'Use the customize button to enable status cards';
+
+  @override
+  String get thisDeviceDesc => 'Device information and settings';
+
+  @override
+  String get connectionStatusDesc => 'Network connection and debug info';
+
+  @override
+  String get statisticsDesc => 'Transfer and device statistics';
+
+  @override
+  String get remoteControlRequest => 'Remote Control Request';
+
+  @override
+  String remoteControlRequestMessage(String userName) {
+    return '$userName wants to control your computer remotely.';
+  }
+
+  @override
+  String get reason => 'Reason';
+
+  @override
+  String get securityWarning => 'Security Warning';
+
+  @override
+  String get securityWarningMessage =>
+      'Granting remote control access allows the other user to:';
+
+  @override
+  String get controlMouseCursor => 'Control your mouse cursor';
+
+  @override
+  String get clickAnywhere => 'Click anywhere on your screen';
+
+  @override
+  String get scrollScreen => 'Scroll on your screen';
+
+  @override
+  String get trustWarning => 'Only accept requests from users you trust.';
+
+  @override
+  String get confirmRemoteControlAccess => 'Confirm Remote Control Access';
+
+  @override
+  String confirmRemoteControlMessage(String userName) {
+    return 'Hold to confirm that you want to allow $userName to control your computer.';
+  }
+
+  @override
+  String get holdToAllowControl => 'HOLD TO ALLOW CONTROL';
+
+  @override
+  String get allowing => 'Allowing...';
+
+  @override
+  String controlInstruction(String userName) {
+    return 'This will give $userName control over your mouse and screen.';
+  }
+
+  @override
+  String get requestRemoteControl => 'Request Remote Control';
+
+  @override
+  String sendRemoteControlRequest(String userName) {
+    return 'Send a remote control request to $userName?';
+  }
+
+  @override
+  String get reasonOptional => 'Reason (optional)';
+
+  @override
+  String get reasonHint => 'Why do you need remote control access?';
+
+  @override
+  String get remoteControlAccess => 'Remote Control Access';
+
+  @override
+  String get remoteControlAccessMessage => 'If accepted, you will be able to:';
+
+  @override
+  String get controlRemoteMouse => 'Control the remote mouse cursor';
+
+  @override
+  String get clickRemoteScreen => 'Click anywhere on the remote screen';
+
+  @override
+  String get scrollRemoteScreen => 'Scroll on the remote screen';
+
+  @override
+  String get requestExpiresIn60 => 'The request will expire in 60 seconds.';
+
+  @override
+  String get sendText => 'Send Text';
+
+  @override
+  String get sendTextHint => 'Enter text to send...';
+
+  @override
+  String get textSentSuccessfully => 'Text sent successfully';
+
+  @override
+  String textSendError(Object error) {
+    return 'Error sending text: $error';
+  }
+
+  @override
+  String get send => 'Send';
 }

@@ -3,11 +3,11 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:p2lantransfer/services/p2p_services/p2p_navigation_service.dart';
-import 'package:p2lantransfer/services/settings_models_service.dart';
+import 'package:p2lan/services/p2p_services/p2p_navigation_service.dart';
+import 'package:p2lan/services/settings_models_service.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/models/p2p_models.dart';
 
 /// P2P notification types for different events
 enum P2PNotificationType {
@@ -291,7 +291,7 @@ class P2PNotificationService {
   /// Check if notifications are enabled in user settings
   Future<bool> _isNotificationEnabledInSettings() async {
     try {
-      final settings = await ExtensibleSettingsService.getP2PTransferSettings();
+      final settings = await ExtensibleSettingsService.getGeneralSettings();
       return settings.enableNotifications;
     } catch (e) {
       logError('Failed to check notification settings: $e');

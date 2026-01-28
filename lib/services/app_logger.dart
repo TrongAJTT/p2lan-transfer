@@ -499,7 +499,8 @@ class AppLogger {
   /// Cleanup old logs based on settings
   Future<void> cleanupOldLogs() async {
     try {
-      final settings = await ExtensibleSettingsService.getGlobalSettings();
+      final settings =
+          await ExtensibleSettingsService.getDataAndStorageSettings();
       final retentionDays = settings.logRetentionDays;
       if (retentionDays == -1) return; // Keep forever
 
@@ -536,7 +537,8 @@ class AppLogger {
   /// Force cleanup now - manual trigger for immediate cleanup
   Future<int> forceCleanupNow() async {
     try {
-      final settings = await ExtensibleSettingsService.getGlobalSettings();
+      final settings =
+          await ExtensibleSettingsService.getDataAndStorageSettings();
       final retentionDays = settings.logRetentionDays;
       if (retentionDays == -1) {
         info('Force cleanup skipped: retention set to keep forever');

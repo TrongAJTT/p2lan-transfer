@@ -1,19 +1,28 @@
 import 'dart:convert';
 import 'package:isar/isar.dart';
-import 'package:p2lantransfer/models/settings_models.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/services/isar_service.dart';
+import 'package:p2lan/models/settings_models.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/services/isar_service.dart';
+import 'package:p2lan/services/p2p_services/p2p_service_manager.dart';
 
 /// Service for managing ExtensibleSettings with extensible architecture
 class ExtensibleSettingsService {
   // Model codes for different settings types
-  static const String globalSettingsCode = 'global_settings';
+  // Data & Storage (replaces global settings)
+  static const String dataAndStorageSettingsCode = 'data_and_storage_settings';
   static const String userInterfaceSettingsCode = 'user_interface_settings';
-  static const String converterToolsSettingsCode = 'converter_tools_settings';
-  static const String randomToolsSettingsCode = 'random_tools_settings';
-  static const String calculatorToolsSettingsCode = 'calculator_tools_settings';
-  static const String textTemplateSettingsCode = 'text_template_settings';
+  // Legacy aggregate P2P settings
   static const String p2pTransferSettingsCode = 'p2p_transfer_settings';
+  // Old split codes (for migration)
+  static const String _oldGeneralSettingsCode = 'p2p_general_settings';
+  static const String _oldReceiverSettingsCode = 'p2p_receiver_settings';
+  static const String _oldNetworkSettingsCode = 'p2p_network_settings';
+  static const String _oldAdvancedSettingsCode = 'p2p_advanced_settings';
+  // New split settings codes per section (without 'p2p')
+  static const String generalSettingsCode = 'general_settings';
+  static const String receiverSettingsCode = 'receiver_settings';
+  static const String networkSettingsCode = 'network_settings';
+  static const String advancedSettingsCode = 'advanced_settings';
 
   /// Initialize the settings system and create defaults if needed
   /// Internal beta v0.5.0 - No migration needed
@@ -22,6 +31,11 @@ class ExtensibleSettingsService {
 
     // Ensure all default settings exist
     await _ensureDefaultSettings();
+
+    // Migrate legacy aggregate P2P settings to split models if needed
+    await _migrateLegacyP2PToSplit();
+    // Rename old split codes to new simple codes if needed
+    await _migrateOldSplitCodesToNew();
 
     logInfo("ExtensibleSettingsService: Initialization completed.");
   }
@@ -33,19 +47,22 @@ class ExtensibleSettingsService {
 
   /// Ensure all default settings exist
   static Future<void> _ensureDefaultSettings() async {
-    await _ensureGlobalSettings();
+    await _ensureDataAndStorageSettings();
     await _ensureUserInterfaceSettings();
-    await _ensureP2PTransferSettings();
+    // Ensure new split settings exist
+    await _ensureReceiverSettings();
+    await _ensureNetworkSettings();
+    await _ensureAdvancedSettings();
+    await _ensureGeneralSettings();
   }
 
-  /// Ensure global settings exist with defaults
-  static Future<void> _ensureGlobalSettings() async {
-    final existing = await getSettingsModel(globalSettingsCode);
+  /// Ensure Data & Storage settings exist with defaults
+  static Future<void> _ensureDataAndStorageSettings() async {
+    final existing = await getSettingsModel(dataAndStorageSettingsCode);
     if (existing == null) {
-      final defaultData = GlobalSettingsData();
+      const defaultData = DataAndStorageSettingsData();
       await saveSettingsModel(
-        globalSettingsCode,
-        SettingsModelType.global,
+        dataAndStorageSettingsCode,
         defaultData.toJson(),
       );
     }
@@ -58,22 +75,42 @@ class ExtensibleSettingsService {
       final defaultData = UserInterfaceSettingsData();
       await saveSettingsModel(
         userInterfaceSettingsCode,
-        SettingsModelType.userInterface,
         defaultData.toJson(),
       );
     }
   }
 
-  /// Ensure P2P transfer settings exist with defaults
-  static Future<void> _ensureP2PTransferSettings() async {
-    final existing = await getSettingsModel(p2pTransferSettingsCode);
+  // Legacy aggregate defaults are no longer created
+
+  static Future<void> _ensureGeneralSettings() async {
+    final existing = await getSettingsModel(generalSettingsCode);
     if (existing == null) {
-      final defaultData = P2PTransferSettingsData();
-      await saveSettingsModel(
-        p2pTransferSettingsCode,
-        SettingsModelType.p2pTransfer,
-        defaultData.toJson(),
-      );
+      final defaultData = P2PGeneralSettingsData();
+      await saveSettingsModel(generalSettingsCode, defaultData.toJson());
+    }
+  }
+
+  static Future<void> _ensureReceiverSettings() async {
+    final existing = await getSettingsModel(receiverSettingsCode);
+    if (existing == null) {
+      final defaultData = P2PReceiverSettingsData();
+      await saveSettingsModel(receiverSettingsCode, defaultData.toJson());
+    }
+  }
+
+  static Future<void> _ensureNetworkSettings() async {
+    final existing = await getSettingsModel(networkSettingsCode);
+    if (existing == null) {
+      final defaultData = P2PNetworkSettingsData();
+      await saveSettingsModel(networkSettingsCode, defaultData.toJson());
+    }
+  }
+
+  static Future<void> _ensureAdvancedSettings() async {
+    final existing = await getSettingsModel(advancedSettingsCode);
+    if (existing == null) {
+      final defaultData = P2PAdvancedSettingsData();
+      await saveSettingsModel(advancedSettingsCode, defaultData.toJson());
     }
   }
 
@@ -89,7 +126,6 @@ class ExtensibleSettingsService {
   /// Save a settings model
   static Future<void> saveSettingsModel(
     String modelCode,
-    SettingsModelType modelType,
     Map<String, dynamic> settingsData,
   ) async {
     final isar = IsarService.isar;
@@ -110,7 +146,6 @@ class ExtensibleSettingsService {
         // Create new
         final newModel = ExtensibleSettings(
           modelCode: modelCode,
-          modelType: modelType,
           settingsJson: jsonEncode(settingsData),
         );
         await isar.extensibleSettings.put(newModel);
@@ -120,23 +155,23 @@ class ExtensibleSettingsService {
     logInfo("ExtensibleSettingsService: Settings saved for $modelCode");
   }
 
-  /// Get global settings
-  static Future<GlobalSettingsData> getGlobalSettings() async {
-    final model = await getSettingsModel(globalSettingsCode);
+  /// Get Data & Storage settings
+  static Future<DataAndStorageSettingsData> getDataAndStorageSettings() async {
+    final model = await getSettingsModel(dataAndStorageSettingsCode);
     if (model == null) {
-      await _ensureGlobalSettings();
-      return GlobalSettingsData();
+      await _ensureDataAndStorageSettings();
+      return const DataAndStorageSettingsData();
     }
 
     final json = jsonDecode(model.settingsJson) as Map<String, dynamic>;
-    return GlobalSettingsData.fromJson(json);
+    return DataAndStorageSettingsData.fromJson(json);
   }
 
-  /// Update global settings
-  static Future<void> updateGlobalSettings(GlobalSettingsData data) async {
+  /// Update Data & Storage settings
+  static Future<void> updateDataAndStorageSettings(
+      DataAndStorageSettingsData data) async {
     await saveSettingsModel(
-      globalSettingsCode,
-      SettingsModelType.global,
+      dataAndStorageSettingsCode,
       data.toJson(),
     );
   }
@@ -158,31 +193,130 @@ class ExtensibleSettingsService {
       UserInterfaceSettingsData data) async {
     await saveSettingsModel(
       userInterfaceSettingsCode,
-      SettingsModelType.userInterface,
       data.toJson(),
     );
   }
 
   /// Get P2P transfer settings
   static Future<P2PTransferSettingsData> getP2PTransferSettings() async {
-    final model = await getSettingsModel(p2pTransferSettingsCode);
-    if (model == null) {
-      await _ensureP2PTransferSettings();
-      return P2PTransferSettingsData();
-    }
-
-    final json = jsonDecode(model.settingsJson) as Map<String, dynamic>;
-    return P2PTransferSettingsData.fromJson(json);
+    // Combine from split models to provide a full view
+    return await _combineP2PSettingsFromSplit();
   }
 
   /// Update P2P transfer settings
   static Future<void> updateP2PTransferSettings(
       P2PTransferSettingsData data) async {
+    // Fan-out to split models and keep legacy aggregate in sync
     await saveSettingsModel(
-      p2pTransferSettingsCode,
-      SettingsModelType.p2pTransfer,
-      data.toJson(),
-    );
+        generalSettingsCode,
+        P2PGeneralSettingsData(
+          enableNotifications: data.enableNotifications,
+          autoCleanupCompletedTasks: data.autoCleanupCompletedTasks,
+          autoCleanupCancelledTasks: data.autoCleanupCancelledTasks,
+          autoCleanupFailedTasks: data.autoCleanupFailedTasks,
+          autoCleanupDelaySeconds: data.autoCleanupDelaySeconds,
+          clearTransfersAtStartup: data.clearTransfersAtStartup,
+          uiRefreshRateSeconds: data.uiRefreshRateSeconds,
+          autoCheckUpdatesDaily: data.autoCheckUpdatesDaily,
+        ).toJson());
+
+    await saveSettingsModel(
+        receiverSettingsCode,
+        P2PReceiverSettingsData(
+          downloadPath: data.downloadPath,
+          createDateFolders: data.createDateFolders,
+          createSenderFolders: data.createSenderFolders,
+          maxReceiveFileSize: data.maxReceiveFileSize,
+          maxTotalReceiveSize: data.maxTotalReceiveSize,
+        ).toJson());
+
+    await saveSettingsModel(
+        networkSettingsCode,
+        P2PNetworkSettingsData(
+          sendProtocol: data.sendProtocol,
+          maxConcurrentTasks: data.maxConcurrentTasks,
+          maxChunkSize: data.maxChunkSize,
+        ).toJson());
+
+    await saveSettingsModel(
+        advancedSettingsCode,
+        P2PAdvancedSettingsData(
+          encryptionType: data.encryptionType,
+        ).toJson());
+
+    // No longer persist legacy aggregate record
+  }
+
+  // Split P2P getters
+  static Future<P2PGeneralSettingsData> getGeneralSettings() async {
+    final model = await getSettingsModel(generalSettingsCode);
+    if (model == null) {
+      await _ensureGeneralSettings();
+      return P2PGeneralSettingsData();
+    }
+    final json = jsonDecode(model.settingsJson) as Map<String, dynamic>;
+    return P2PGeneralSettingsData.fromJson(json);
+  }
+
+  static Future<P2PReceiverSettingsData> getReceiverSettings() async {
+    final model = await getSettingsModel(receiverSettingsCode);
+    if (model == null) {
+      await _ensureReceiverSettings();
+      return P2PReceiverSettingsData();
+    }
+    final json = jsonDecode(model.settingsJson) as Map<String, dynamic>;
+    return P2PReceiverSettingsData.fromJson(json);
+  }
+
+  static Future<P2PNetworkSettingsData> getNetworkSettings() async {
+    final model = await getSettingsModel(networkSettingsCode);
+    if (model == null) {
+      await _ensureNetworkSettings();
+      return P2PNetworkSettingsData();
+    }
+    final json = jsonDecode(model.settingsJson) as Map<String, dynamic>;
+    return P2PNetworkSettingsData.fromJson(json);
+  }
+
+  static Future<P2PAdvancedSettingsData> getAdvancedSettings() async {
+    final model = await getSettingsModel(advancedSettingsCode);
+    if (model == null) {
+      await _ensureAdvancedSettings();
+      return P2PAdvancedSettingsData();
+    }
+    final json = jsonDecode(model.settingsJson) as Map<String, dynamic>;
+    return P2PAdvancedSettingsData.fromJson(json);
+  }
+
+  // Split P2P updaters
+  static Future<void> updateGeneralSettings(P2PGeneralSettingsData data) async {
+    await saveSettingsModel(generalSettingsCode, data.toJson());
+    // Also update current user's display name if provided
+    try {
+      if (data.displayName != null && data.displayName!.trim().isNotEmpty) {
+        final manager = P2PServiceManager.instance;
+        if (manager.currentUser != null &&
+            manager.currentUser!.displayName != data.displayName) {
+          manager.currentUser!.displayName = data.displayName!.trim();
+          logInfo(
+              'ExtensibleSettingsService: Updated current user displayName to ${data.displayName}');
+        }
+      }
+    } catch (_) {}
+  }
+
+  static Future<void> updateReceiverSettings(
+      P2PReceiverSettingsData data) async {
+    await saveSettingsModel(receiverSettingsCode, data.toJson());
+  }
+
+  static Future<void> updateNetworkSettings(P2PNetworkSettingsData data) async {
+    await saveSettingsModel(networkSettingsCode, data.toJson());
+  }
+
+  static Future<void> updateAdvancedSettings(
+      P2PAdvancedSettingsData data) async {
+    await saveSettingsModel(advancedSettingsCode, data.toJson());
   }
 
   /// Get all settings models
@@ -217,5 +351,79 @@ class ExtensibleSettingsService {
     });
 
     logInfo("ExtensibleSettingsService: All settings models cleared");
+  }
+
+  // Combine all split P2P models into the legacy aggregate representation
+  static Future<P2PTransferSettingsData> _combineP2PSettingsFromSplit() async {
+    final general = await getGeneralSettings();
+    final receiver = await getReceiverSettings();
+    final network = await getNetworkSettings();
+    final advanced = await getAdvancedSettings();
+
+    return P2PTransferSettingsData(
+      downloadPath: receiver.downloadPath,
+      createDateFolders: receiver.createDateFolders,
+      createSenderFolders: receiver.createSenderFolders,
+      maxReceiveFileSize: receiver.maxReceiveFileSize,
+      maxTotalReceiveSize: receiver.maxTotalReceiveSize,
+      maxConcurrentTasks: network.maxConcurrentTasks,
+      sendProtocol: network.sendProtocol,
+      maxChunkSize: network.maxChunkSize,
+      uiRefreshRateSeconds: general.uiRefreshRateSeconds,
+      enableNotifications: general.enableNotifications,
+      encryptionType: advanced.encryptionType,
+      autoCleanupCompletedTasks: general.autoCleanupCompletedTasks,
+      autoCleanupCancelledTasks: general.autoCleanupCancelledTasks,
+      autoCleanupFailedTasks: general.autoCleanupFailedTasks,
+      autoCleanupDelaySeconds: general.autoCleanupDelaySeconds,
+      clearTransfersAtStartup: general.clearTransfersAtStartup,
+      autoCheckUpdatesDaily: general.autoCheckUpdatesDaily,
+    );
+  }
+
+  // Legacy aggregate sync removed
+
+  // One-time migration from legacy aggregate record to the split models
+  static Future<void> _migrateLegacyP2PToSplit() async {
+    final legacy = await getSettingsModel(p2pTransferSettingsCode);
+    final hasGeneral = await getSettingsModel(generalSettingsCode) != null;
+    final hasReceiver = await getSettingsModel(receiverSettingsCode) != null;
+    final hasNetwork = await getSettingsModel(networkSettingsCode) != null;
+    final hasAdvanced = await getSettingsModel(advancedSettingsCode) != null;
+
+    if (legacy != null &&
+        !(hasGeneral && hasReceiver && hasNetwork && hasAdvanced)) {
+      try {
+        final json = jsonDecode(legacy.settingsJson) as Map<String, dynamic>;
+        final data = P2PTransferSettingsData.fromJson(json);
+
+        await updateP2PTransferSettings(data);
+        // Remove legacy aggregate after successful migration
+        await deleteSettingsModel(p2pTransferSettingsCode);
+        logInfo(
+            'Migrated legacy P2P aggregate settings to split models and deleted legacy record');
+      } catch (e) {
+        logError('Migration of legacy P2P settings failed: $e');
+      }
+    }
+  }
+
+  /// Migrate old split codes (with 'p2p_' prefix) to new simplified codes
+  static Future<void> _migrateOldSplitCodesToNew() async {
+    Future<void> migrateCode(String oldCode, String newCode) async {
+      final old = await getSettingsModel(oldCode);
+      final hasNew = await getSettingsModel(newCode) != null;
+      if (old != null && !hasNew) {
+        final json = jsonDecode(old.settingsJson) as Map<String, dynamic>;
+        await saveSettingsModel(newCode, json);
+        await deleteSettingsModel(oldCode);
+        logInfo('Migrated $oldCode -> $newCode');
+      }
+    }
+
+    await migrateCode(_oldGeneralSettingsCode, generalSettingsCode);
+    await migrateCode(_oldReceiverSettingsCode, receiverSettingsCode);
+    await migrateCode(_oldNetworkSettingsCode, networkSettingsCode);
+    await migrateCode(_oldAdvancedSettingsCode, advancedSettingsCode);
   }
 }

@@ -8,6 +8,8 @@
 
 #include <connectivity_plus/connectivity_plus_windows_plugin.h>
 #include <desktop_drop/desktop_drop_plugin.h>
+#include <desktop_multi_window/desktop_multi_window_plugin.h>
+#include <flutter_webrtc/flutter_web_r_t_c_plugin.h>
 #include <isar_flutter_libs/isar_flutter_libs_plugin.h>
 #include <nsd_windows/nsd_windows_plugin_c_api.h>
 #include <pasteboard/pasteboard_plugin.h>
@@ -22,6 +24,10 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("ConnectivityPlusWindowsPlugin"));
   DesktopDropPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("DesktopDropPlugin"));
+  DesktopMultiWindowPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("DesktopMultiWindowPlugin"));
+  FlutterWebRTCPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("FlutterWebRTCPlugin"));
   IsarFlutterLibsPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("IsarFlutterLibsPlugin"));
   NsdWindowsPluginCApiRegisterWithRegistrar(

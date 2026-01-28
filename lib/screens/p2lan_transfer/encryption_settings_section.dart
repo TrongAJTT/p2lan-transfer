@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:p2lantransfer/l10n/app_localizations.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
-import 'package:p2lantransfer/services/crypto_service.dart';
-import 'package:p2lantransfer/widgets/generic/option_list_picker.dart';
-import 'package:p2lantransfer/widgets/generic/option_item.dart';
+import 'package:p2lan/l10n/app_localizations.dart';
+import 'package:p2lan/models/p2p_models.dart';
+import 'package:p2lan/services/crypto_service.dart';
+import 'package:p2lan/widgets/generic/option_list_picker.dart';
+import 'package:p2lan/widgets/generic/option_item.dart';
 
 /// Encryption settings section widget for P2P transfer settings
 class EncryptionSettingsSection extends StatelessWidget {
@@ -20,7 +20,7 @@ class EncryptionSettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

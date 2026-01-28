@@ -1,13 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:p2lantransfer/models/p2p_models.dart';
-import 'package:p2lantransfer/services/app_logger.dart';
-import 'package:p2lantransfer/services/isar_service.dart';
-import 'package:p2lantransfer/services/p2p_services/p2p_discovery_service.dart';
-import 'package:p2lantransfer/services/p2p_services/p2p_network_service.dart';
-import 'package:p2lantransfer/services/p2p_services/p2p_notification_service.dart';
-import 'package:p2lantransfer/services/p2p_services/p2p_transfer_service.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:p2lan/models/p2p_models.dart';
+import 'package:p2lan/services/app_logger.dart';
+import 'package:p2lan/services/isar_service.dart';
+import 'package:p2lan/services/p2p_services/p2p_discovery_service.dart';
+import 'package:p2lan/services/p2p_services/p2p_network_service.dart';
+import 'package:p2lan/services/p2p_services/p2p_notification_service.dart';
+import 'package:p2lan/services/p2p_services/p2p_transfer_service.dart';
+import 'package:p2lan/services/p2p_services/p2p_remote_control_service.dart';
+import 'package:p2lan/services/p2p_services/p2p_screen_sharing_service.dart';
+import 'package:p2lan/services/ecdh_key_exchange_service.dart';
 
 /// P2P Service Manager - Facade pattern that coordinates all P2P services
 /// Provides a unified API that replaces the monolithic P2PService
@@ -22,6 +26,8 @@ class P2PServiceManager extends ChangeNotifier {
   late final P2PNetworkService _networkService;
   late final P2PDiscoveryService _discoveryService;
   late final P2PTransferService _transferService;
+  late final P2PRemoteControlService _remoteControlService;
+  late final P2PScreenSharingService _screenSharingService;
 
   // State
   bool _isInitialized = false;
@@ -31,6 +37,8 @@ class P2PServiceManager extends ChangeNotifier {
     _networkService = P2PNetworkService();
     _discoveryService = P2PDiscoveryService(_networkService);
     _transferService = P2PTransferService(_networkService);
+    _remoteControlService = P2PRemoteControlService(_networkService);
+    _screenSharingService = P2PScreenSharingService(_networkService);
 
     // Set up cross-service connections
     _setupServiceConnections();
@@ -71,6 +79,28 @@ class P2PServiceManager extends ChangeNotifier {
   List<DataTransferTask> get activeTransfers =>
       _transferService.activeTransfers;
 
+  // Getters - Remote Control Service
+  bool get isControlling => _remoteControlService.isControlling;
+  bool get isBeingControlled => _remoteControlService.isBeingControlled;
+  P2PUser? get controllingUser => _remoteControlService.controllingUser;
+  P2PUser? get controlledUser => _remoteControlService.controlledUser;
+  List<RemoteControlRequest> get pendingRemoteControlRequests =>
+      _remoteControlService.pendingRequests;
+
+  // Getters - Screen Sharing Service
+  bool get isScreenSharing => _screenSharingService.isSharing;
+  bool get isScreenReceiving => _screenSharingService.isReceiving;
+  bool get isScreenSharingActive => _screenSharingService.isActive;
+  ScreenSharingSession? get currentScreenSharingSession =>
+      _screenSharingService.currentSession;
+  List<ScreenSharingRequest> get pendingScreenSharingRequests =>
+      _screenSharingService.pendingRequests;
+  List<ScreenInfo> get availableScreens =>
+      _screenSharingService.availableScreens;
+  P2PUser? get screenSharingUser => _screenSharingService.sharingUser;
+  P2PUser? get screenReceivingUser => _screenSharingService.receivingUser;
+  MediaStream? get remoteScreenStream => _screenSharingService.remoteStream;
+
   // Đã xóa hoàn toàn mọi tham chiếu đến P2PFileStorageSettings
 
   /// Initialize P2P service manager
@@ -95,6 +125,8 @@ class P2PServiceManager extends ChangeNotifier {
       // Initialize all services
       await _discoveryService.initialize();
       await _transferService.initialize();
+      await _remoteControlService.initialize();
+      await _screenSharingService.initialize();
 
       _isInitialized = true;
       logInfo('P2PServiceManager: Initialized successfully');
@@ -292,6 +324,195 @@ class P2PServiceManager extends ChangeNotifier {
     _transferService.setNewFileTransferRequestCallback(callback);
   }
 
+  // =============================================================================
+  // REMOTE CONTROL METHODS
+  // =============================================================================
+
+  /// Check if user can be controlled
+  bool canControlUser(P2PUser user) {
+    return _remoteControlService.canControlUser(user);
+  }
+
+  /// Check if this device can be controlled
+  bool get canBeControlled => _remoteControlService.canBeControlled;
+
+  /// Send remote control request to user
+  Future<bool> sendRemoteControlRequest(P2PUser targetUser,
+      {String? reason}) async {
+    return await _remoteControlService.sendRemoteControlRequest(targetUser,
+        reason: reason);
+  }
+
+  /// Respond to remote control request
+  Future<bool> respondToRemoteControlRequest(String requestId, bool accept,
+      {String? rejectReason}) async {
+    return await _remoteControlService.respondToRemoteControlRequest(
+        requestId, accept,
+        rejectReason: rejectReason);
+  }
+
+  /// Send remote control event (mouse movement, clicks, etc.)
+  Future<bool> sendRemoteControlEvent(RemoteControlEvent event) async {
+    return await _remoteControlService.sendRemoteControlEvent(event);
+  }
+
+  /// Disconnect from remote control session
+  Future<void> disconnectRemoteControl({bool isActiveDisconnect = true}) async {
+    await _remoteControlService.disconnectRemoteControl(
+        isActiveDisconnect: isActiveDisconnect);
+  }
+
+  /// Set callback for new remote control requests
+  void setNewRemoteControlRequestCallback(
+      Function(RemoteControlRequest)? callback) {
+    _remoteControlService.setNewRemoteControlRequestCallback(callback);
+  }
+
+  /// Clear callback for new remote control requests
+  void clearNewRemoteControlRequestCallback() {
+    _remoteControlService.clearNewRemoteControlRequestCallback();
+  }
+
+  /// Set callback for remote control accepted (for navigation)
+  void setRemoteControlAcceptedCallback(Function(P2PUser)? callback) {
+    _remoteControlService.setRemoteControlAcceptedCallback(callback);
+  }
+
+  /// Clear callback for remote control accepted
+  void clearRemoteControlAcceptedCallback() {
+    _remoteControlService.clearRemoteControlAcceptedCallback();
+  }
+
+  /// Set callback for session started (controller, controlled, sessionId)
+  void setSessionStartedCallback(Function(P2PUser, P2PUser, String)? callback) {
+    _remoteControlService.setSessionStartedCallback(callback);
+  }
+
+  /// Clear callback for session started
+  void clearSessionStartedCallback() {
+    _remoteControlService.clearSessionStartedCallback();
+  }
+
+  /// Set callback for session ended
+  void setSessionEndedCallback(Function()? callback) {
+    _remoteControlService.setSessionEndedCallback(callback);
+  }
+
+  /// Clear callback for session ended
+  void clearSessionEndedCallback() {
+    _remoteControlService.clearSessionEndedCallback();
+  }
+
+  /// Set callback for user disconnected
+  void setUserDisconnectedCallback(Function(String)? callback) {
+    _remoteControlService.setUserDisconnectedCallback(callback);
+  }
+
+  /// Clear callback for user disconnected
+  void clearUserDisconnectedCallback() {
+    _remoteControlService.clearUserDisconnectedCallback();
+  }
+
+  // =============================================================================
+  // SCREEN SHARING METHODS
+  // =============================================================================
+
+  /// Check if screen sharing is supported
+  bool get isScreenSharingSupported => _screenSharingService.isSupported;
+
+  /// Check if user can share screen with target user
+  bool canShareScreenWith(P2PUser user) {
+    return _screenSharingService.canShareScreenWith(user);
+  }
+
+  /// Send screen sharing request to user
+  Future<bool> sendScreenSharingRequest(
+    P2PUser targetUser, {
+    String? reason,
+    ScreenSharingQuality quality = ScreenSharingQuality.medium,
+  }) async {
+    return await _screenSharingService.sendScreenSharingRequest(
+      targetUser,
+      reason: reason,
+      quality: quality,
+    );
+  }
+
+  /// Respond to screen sharing request
+  Future<bool> respondToScreenSharingRequest(
+    String requestId,
+    bool accept, {
+    String? rejectReason,
+    ScreenSharingQuality? quality,
+  }) async {
+    return await _screenSharingService.respondToScreenSharingRequest(
+      requestId,
+      accept,
+      rejectReason: rejectReason,
+      quality: quality,
+    );
+  }
+
+  /// Start sharing screen
+  Future<bool> startScreenSharing(
+    P2PUser targetUser, {
+    ScreenSharingQuality quality = ScreenSharingQuality.medium,
+    int? screenIndex,
+  }) async {
+    return await _screenSharingService.startSharing(
+      targetUser,
+      quality: quality,
+      screenIndex: screenIndex,
+    );
+  }
+
+  /// Stop sharing screen
+  Future<void> stopScreenSharing() async {
+    await _screenSharingService.stopSharing();
+  }
+
+  /// Stop receiving screen
+  Future<void> stopScreenReceiving() async {
+    await _screenSharingService.stopReceiving();
+  }
+
+  /// Disconnect from screen sharing session
+  Future<void> disconnectScreenSharing() async {
+    await _screenSharingService.disconnect();
+  }
+
+  /// Set callback for new screen sharing requests
+  void setNewScreenSharingRequestCallback(
+      Function(ScreenSharingRequest)? callback) {
+    _screenSharingService.setNewRequestCallback(callback);
+  }
+
+  /// Clear callback for new screen sharing requests
+  void clearNewScreenSharingRequestCallback() {
+    _screenSharingService.clearNewRequestCallback();
+  }
+
+  /// Set callback for screen sharing session started
+  void setScreenSharingSessionStartedCallback(
+      Function(ScreenSharingSession)? callback) {
+    _screenSharingService.setSessionStartedCallback(callback);
+  }
+
+  /// Clear callback for screen sharing session started
+  void clearScreenSharingSessionStartedCallback() {
+    _screenSharingService.clearSessionStartedCallback();
+  }
+
+  /// Set callback for screen sharing session ended
+  void setScreenSharingSessionEndedCallback(Function()? callback) {
+    _screenSharingService.setSessionEndedCallback(callback);
+  }
+
+  /// Clear callback for screen sharing session ended
+  void clearScreenSharingSessionEndedCallback() {
+    _screenSharingService.clearSessionEndedCallback();
+  }
+
   /// Clear all pairing requests
   Future<void> clearPairingRequests() async {
     final isar = IsarService.isar;
@@ -334,6 +555,17 @@ class P2PServiceManager extends ChangeNotifier {
     logInfo('P2PServiceManager: All P2P data has been cleared');
     notifyListeners();
   }
+
+  // ECDH Key Exchange methods
+
+  /// Start key exchange with a user for encryption
+  Future<bool> startKeyExchange(P2PUser user) async {
+    return await _transferService.startKeyExchange(user);
+  }
+
+  /// Get device's public key fingerprint for verification
+  String? get devicePublicKeyFingerprint =>
+      _transferService.devicePublicKeyFingerprint;
 
   /// Cleanup expired messages from all chats
   Future<void> cleanupExpiredMessages() async {
@@ -405,9 +637,13 @@ class P2PServiceManager extends ChangeNotifier {
     _networkService.addListener(_onNetworkServiceChange);
     _discoveryService.addListener(_onDiscoveryServiceChange);
     _transferService.addListener(_onTransferServiceChange);
+    _remoteControlService.addListener(_onRemoteControlServiceChange);
+    _screenSharingService.addListener(_onScreenSharingServiceChange);
 
     // Set up cross-service method dependencies
     _setupTransferServiceDependencies();
+    _setupRemoteControlServiceDependencies();
+    _setupScreenSharingServiceDependencies();
   }
 
   void _setupTransferServiceDependencies() {
@@ -422,6 +658,36 @@ class P2PServiceManager extends ChangeNotifier {
     });
   }
 
+  void _setupRemoteControlServiceDependencies() {
+    // Remote control service needs access to discovered users from discovery service
+    _remoteControlService.setUserLookupCallback((String userId) {
+      return _discoveryService.getUserById(userId);
+    });
+
+    // Discovery service should forward remote control messages to remote control service
+    _discoveryService.setRemoteControlMessageCallback((socket, messageData) {
+      _remoteControlService.handleTcpMessage(socket, messageData);
+    });
+
+    // Discovery service should forward screen sharing messages to screen sharing service
+    _discoveryService.setScreenSharingMessageCallback((socket, messageData) {
+      _screenSharingService.handleTcpMessage(socket, messageData);
+    });
+
+    // Discovery service should notify screen sharing service when users disconnect
+    _discoveryService.setUserDisconnectedCallback((String userId) {
+      _remoteControlService.notifyUserDisconnected(userId);
+      _screenSharingService.notifyUserDisconnected(userId);
+    });
+  }
+
+  void _setupScreenSharingServiceDependencies() {
+    // Screen sharing service needs access to discovered users from discovery service
+    _screenSharingService.setUserLookupCallback((String userId) {
+      return _discoveryService.getUserById(userId);
+    });
+  }
+
   void _onNetworkServiceChange() {
     notifyListeners();
   }
@@ -431,6 +697,14 @@ class P2PServiceManager extends ChangeNotifier {
   }
 
   void _onTransferServiceChange() {
+    notifyListeners();
+  }
+
+  void _onRemoteControlServiceChange() {
+    notifyListeners();
+  }
+
+  void _onScreenSharingServiceChange() {
     notifyListeners();
   }
 
@@ -507,6 +781,34 @@ class P2PServiceManager extends ChangeNotifier {
     await _discoveryService.performCleanup();
   }
 
+  /// Notify that a user has been disconnected (called by discovery service)
+  void notifyUserDisconnected(String userId) {
+    _remoteControlService.notifyUserDisconnected(userId);
+  }
+
+  /// Block or create-and-block a user quickly (used by pairing dialog)
+  Future<void> blockUserFromPairing({
+    required String userId,
+    required String displayName,
+    required String profileId,
+    required String ipAddress,
+    required int port,
+  }) async {
+    await _discoveryService.blockUserFromPairing(
+      userId: userId,
+      displayName: displayName,
+      profileId: profileId,
+      ipAddress: ipAddress,
+      port: port,
+    );
+    notifyListeners();
+  }
+
+  /// Get detailed debug information for screen sharing
+  Map<String, dynamic> getScreenSharingDebugInfo() {
+    return _screenSharingService.getDebugInfo();
+  }
+
   @override
   void dispose() {
     logInfo('P2PServiceManager: Disposing service manager...');
@@ -514,13 +816,25 @@ class P2PServiceManager extends ChangeNotifier {
     // Send emergency disconnect before disposing
     sendEmergencyDisconnectToAll();
 
+    // Clear all ECDH sessions for security
+    try {
+      ECDHKeyExchangeService.clearAllSessions();
+      logInfo('P2PServiceManager: Cleared all ECDH sessions');
+    } catch (e) {
+      logError('P2PServiceManager: Failed to clear ECDH sessions: $e');
+    }
+
     // Remove listeners
     _networkService.removeListener(_onNetworkServiceChange);
     _discoveryService.removeListener(_onDiscoveryServiceChange);
     _transferService.removeListener(_onTransferServiceChange);
+    _remoteControlService.removeListener(_onRemoteControlServiceChange);
+    _screenSharingService.removeListener(_onScreenSharingServiceChange);
 
     // Dispose all services
     _transferService.dispose();
+    _remoteControlService.dispose();
+    _screenSharingService.dispose();
     _discoveryService.dispose();
     _networkService.dispose();
 
